@@ -263,7 +263,7 @@ def test_evaluate_turns_to_wait():
                              (('hearts', 'J'), '8', '8'),
                              (('hearts', 'J'), '9', '9'),
                              (('hearts', 'J'), '10', '10'),
-                             (('hearts', 'J'), 'gsdgs', None),
+                             (('hearts', 'J'), 'this makes no sense', None),
                              (('hearts', 'J'), '2', None),
                              (('hearts', 'J'), '3', None),
                              (('hearts', 'J'), '4', None),
@@ -286,7 +286,7 @@ def test_evaluate_requested_value(card, response, returned):
                              (('hearts', 'J'), '5', None),
                              (('hearts', 'J'), 'hearts', None),
                              (('hearts', 'A'), '10', None),
-                             (('hearts', 'A'), 'gsdgs', None),
+                             (('hearts', 'A'), 'this make no sense', None),
                              (('hearts', 'A'), 'pikes', 'pikes'),
                              (('hearts', 'A'), 'clovers', 'clovers'),
                              (('hearts', 'A'), 'tiles', 'tiles'),
@@ -345,6 +345,27 @@ def test_convert_to_card(entered, card):
     assert logic.convert_to_card(entered) == card
 
 
+@pytest.mark.parametrize('hand, lied_card, deck_len, hand_len, table_len', [
+                            ([('tiles', '8')], ('tiles', '5'), 52, 0, 1),
+                            ([('hearts', '5')], ('tiles', '5'), 52, 0, 1),
+                            ([('hearts', '7')], ('tiles', '5'), 51, 2, 1),
+                            ([('hearts', 'Q')], ('tiles', '5'), 52, 0, 1),
+                            ([('hearts', '5')], ('tiles', 'Q'), 52, 0, 1),
+                         ])
+def test_play_move_nonactive_card(hand, lied_card, deck_len, hand_len, table_len, deck):
+    players = {'One': Player('One')}
+    players['One'].hand = hand
+    card = players['One'].hand[0]
+
+    table = []
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, lied_card=lied_card,
+                        interaction_foo=lambda x='': f'{card[0]} {card[1]}')
+    assert len(deck) == deck_len
+    assert len(players['One'].hand) == hand_len
+    assert len(table) == table_len
+
+
 def test_play_move_card4(deck):
     players = {'One': Player('One')}
     players['One'].hand = [('tiles', '8')]
@@ -360,11 +381,8 @@ def test_play_move_card4(deck):
 
     card = players['One'].hand[0]
 
-    def helper_input(msg=None):
-        return f'{card[0]} {card[1]}'
-
     players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
-        logic.play_move(players['One'], deck, table, interaction_foo=helper_input)
+        logic.play_move(players['One'], deck, table, interaction_foo=lambda x='': f'{card[0]} {card[1]}')
 
     assert len(deck) == 52
     assert len(players['One'].hand) == 0
@@ -388,7 +406,7 @@ def test_play_move_card4(deck):
 
     for turns in [3, 2, 1, 0]:
         players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
-            logic.play_move(players['One'], deck, table, interaction_foo=helper_input)
+            logic.play_move(players['One'], deck, table, interaction_foo=lambda x='': f'{card[0]} {card[1]}')
         assert len(deck) == 52
         assert len(players['One'].hand) == 1
         assert turns_to_wait == 0
@@ -397,7 +415,7 @@ def test_play_move_card4(deck):
         assert players['One'].turns_to_skip == turns
 
     players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
-        logic.play_move(players['One'], deck, table, interaction_foo=helper_input)
+        logic.play_move(players['One'], deck, table, interaction_foo=lambda x='': f'{card[0]} {card[1]}')
     assert len(deck) == 52
     assert len(players['One'].hand) == 0
     assert turns_to_wait == 0
@@ -407,6 +425,37 @@ def test_play_move_card4(deck):
     assert players['One'].turns_to_skip == 0
 
 
+def test_play_move_23cards(deck):
+    players = {'One': Player('One')}
+    players['One'].hand = [('tiles', '8')]
+    table = []
+    assert len(deck) == 52
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, lied_card=('tiles', '3'), cards_to_take=3)
+    assert len(players['One'].hand) == 4
+    assert len(deck) == 49
+    assert len(table) == 1
+    assert cards_to_take == 0
+
+    card = players['One'].hand[0]
+
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, interaction_foo=lambda x='': f'{card[0]} {card[1]}')
+    assert len(players['One'].hand) == 3
+    assert len(deck) == 49
+    assert len(table) == 1
+    assert lied_card == ('tiles', '8')
+    assert ('tiles', '8') not in players['One'].hand
+    assert cards_to_take == 0
+
+    players['One'].hand = [('tiles', '8')]
+    table = []
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, lied_card=('tiles', '2'), cards_to_take=13)
+    assert len(players['One'].hand) == 14
+    assert len(deck) == 36
+    assert len(table) == 1
+    assert cards_to_take == 0
 
 
 def test_play_move_ace_requests(deck):
@@ -418,20 +467,19 @@ def test_play_move_ace_requests(deck):
         logic.play_move(players['One'], deck, table, lied_card=('tiles', 'A'), requested_color='pikes')
     assert len(players['One'].hand) == 2
     assert len(deck) == 51
-    assert len(table) == 0
+    assert len(table) == 1
     assert requested_color == 'pikes'
     assert requested_value is None
+    assert lied_card is None
 
     players['One'].hand = [('hearts', '8')]
     card = players['One'].hand[0]
 
-    def helper_input(msg=None):
-        return f'{card[0]} {card[1]}'
-
     table = []
     players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
         logic.play_move(players['One'], deck, table,
-                        lied_card=('tiles', 'A'), requested_color='hearts', interaction_foo=helper_input)
+                        lied_card=('tiles', 'A'), requested_color='hearts',
+                        interaction_foo=lambda x='': f'{card[0]} {card[1]}')
     assert len(players['One'].hand) == 0
     assert len(deck) == 51
     assert len(table) == 1
@@ -448,20 +496,19 @@ def test_play_move_jack_requests(deck):
         logic.play_move(players['One'], deck, table, lied_card=('tiles', 'J'), requested_value='7')
     assert len(players['One'].hand) == 2
     assert len(deck) == 51
-    assert len(table) == 0
+    assert len(table) == 1
     assert requested_value == '7'
     assert requested_color is None
+    assert lied_card is None
 
     players['One'].hand = [('hearts', '10')]
     card = players['One'].hand[0]
 
-    def helper_input(msg=None):
-        return f'{card[0]} {card[1]}'
-
     table = []
     players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
         logic.play_move(players['One'], deck, table,
-                        lied_card=('tiles', 'J'), requested_value='10', interaction_foo=helper_input)
+                        lied_card=('tiles', 'J'), requested_value='10',
+                        interaction_foo=lambda x='': f'{card[0]} {card[1]}')
     assert len(players['One'].hand) == 0
     assert len(deck) == 51
     assert len(table) == 1
@@ -473,10 +520,10 @@ def test_play_move_jack_requests(deck):
     table = []
     players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
         logic.play_move(players['One'], deck, table,
-                        lied_card=('tiles', 'J'), requested_value='10', interaction_foo=helper_input)
+                        lied_card=('tiles', 'J'), requested_value='10',
+                        interaction_foo=lambda x='': f'{card[0]} {card[1]}')
     assert len(players['One'].hand) == 2
     assert len(deck) == 50
     assert len(table) == 0
     assert requested_value == '10'
     assert requested_color is None
-

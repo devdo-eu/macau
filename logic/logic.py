@@ -296,6 +296,9 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
             cards, deck, _ = deal_cards(deck, 1)
 
         player.hand += cards
+        if lied_card:
+            table.append(lied_card)
+        lied_card = None
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
     played_card = interaction_foo()
