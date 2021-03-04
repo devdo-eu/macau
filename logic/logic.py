@@ -259,81 +259,81 @@ def convert_to_card(played):
     return card
 
 
-def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value=None,
-              requested_color=None, interaction_foo=input):
+def additional_actions(played_card, cards_to_take, turns_to_wait, interaction_foo):
+    """
+    Function combines all other functions used to take additional action for played card.
+    :param played_card: tuple with played card
+    :param cards_to_take: integer value of cards to take
+    :param turns_to_wait: integer value of turns to skip
+    :param interaction_foo: function used to ask player about value
+    :return: integer with cards to take, string with requested color,
+     string with requested value, integer value with turns to skip
+    """
+    requested_value = evaluate_requested_value(played_card, interaction_foo)
+    requested_color = evaluate_requested_color(played_card, interaction_foo)
+    cards_to_take = evaluate_cards_to_take(played_card, cards_to_take)
+    turns_to_wait = evaluate_turns_to_wait(played_card, turns_to_wait)
+    return cards_to_take, requested_color, requested_value, turns_to_wait
 
-    if player.turns_to_skip > 0:
-        player.turns_to_skip -= 1
-        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
-    top_card = lied_card
-    if not top_card:
-        top_card = table[-1]
-
-    active = check_card_played_active(top_card)
-    if active and lied_card:
-        possible_plays, can_move = active_card_possible_plays(player.hand, top_card, requested_color, requested_value)
+def punish_player(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0):
+    """
+    Function combines the action of two punishing functions.
+    With it, the player receives a penalty in turns or in cards.
+    :param player: Player objects
+    :param deck: list with cards inside deck
+    :param table: list with cards on table
+    :param lied_card: tuple with last lied card
+    :param cards_to_take: integer value of take card punishment
+    :param turns_to_wait: integer value of skip turns punishment
+    :return: integer of cards to take, list with cards inside deck, last lied card, integer of turns to skip
+    """
+    if turns_to_wait > 0:
+        lied_card, turns_to_wait = skip_punishment(player, table, lied_card, turns_to_wait)
     else:
-        possible_plays, can_move = nonactive_card_possible_plays(player.hand, top_card)
+        cards_to_take, deck, lied_card = take_cards_punishment(player, deck, table, lied_card, cards_to_take)
+    return cards_to_take, deck, lied_card, turns_to_wait
 
-    if not can_move and turns_to_wait > 0:
-        player.turns_to_skip = turns_to_wait - 1
-        turns_to_wait = 0
-        if lied_card:
-            table.append(lied_card)
-        lied_card = None
 
-        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+def take_cards_punishment(player, deck, table, lied_card=None, cards_to_take=0):
+    """
+    Function used to punish player with cards.
+    :param player: Player objects
+    :param deck: list with cards inside deck
+    :param table: list with cards on table
+    :param lied_card: tuple with last lied card
+    :param cards_to_take: integer value of take card punishment
+    :return: integer of cards to take, list with cards inside deck, last lied card
+    """
+    if len(deck) <= cards_to_take:
+        clean_table(deck, table)
 
-    if not can_move:
-        if len(deck) <= cards_to_take:
-            clean_table(deck, table)
+    if cards_to_take > 0:
+        cards, deck, _ = deal_cards(deck, cards_to_take)
+        cards_to_take = 0
+    else:
+        cards, deck, _ = deal_cards(deck, 1)
 
-        if cards_to_take > 0:
-            cards, deck, _ = deal_cards(deck, cards_to_take)
-            cards_to_take = 0
-        else:
-            cards, deck, _ = deal_cards(deck, 1)
-
-        player.hand += cards
-        if lied_card:
-            table.append(lied_card)
-        lied_card = None
-        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
-
-    played_card = interaction_foo()
-    played_card = convert_to_card(played_card)
-
-    if played_card not in possible_plays:
-        if turns_to_wait > 0:
-            player.turns_to_skip = turns_to_wait - 1
-            turns_to_wait = 0
-            return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
-
-        if len(deck) <= cards_to_take:
-            clean_table(deck, table)
-
-        if cards_to_take > 0:
-            cards, deck, _ = deal_cards(deck, cards_to_take)
-            cards_to_take = 0
-        else:
-            cards, deck, _ = deal_cards(deck, 1)
-
-        player.hand += cards
-        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
-
-    played_card_active = check_card_played_active(played_card)
-    if played_card_active:
-        requested_value = evaluate_requested_value(played_card, interaction_foo)
-        requested_color = evaluate_requested_color(played_card, interaction_foo)
-        cards_to_take = evaluate_cards_to_take(played_card, cards_to_take)
-        turns_to_wait = evaluate_turns_to_wait(played_card, turns_to_wait)
-
-    player.hand.remove(played_card)
+    player.hand += cards
     if lied_card:
         table.append(lied_card)
-    lied_card = played_card
-    return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+    lied_card = None
+    return cards_to_take, deck, lied_card
 
 
+def skip_punishment(player, table, lied_card=None, turns_to_wait=0):
+    """
+    Function used to punish player with turns to skip.
+    :param player: Player object
+    :param table: list with cards on table
+    :param lied_card: tuple with last lied card
+    :param turns_to_wait: integer value of take card punishment
+    :return: tuple with last lied card, integer value of turns to skip
+    """
+    player.turns_to_skip = turns_to_wait - 1
+    turns_to_wait = 0
+    if lied_card:
+        table.append(lied_card)
+    lied_card = None
 
+    return lied_card, turns_to_wait
