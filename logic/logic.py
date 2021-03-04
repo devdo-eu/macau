@@ -245,6 +245,20 @@ def prepare_game(players_names):
     return deck, table, players
 
 
+def convert_to_card(played):
+    """
+    Function used to convert player response as a string to card tuple.
+    :param played: string description of a card
+    :return: tuple with color and value of a card
+    """
+    card = None
+    chopped = played.split(' ')
+    if len(chopped) == 2 and chopped[0] in colors and chopped[1] in values:
+        card = (chopped[0], chopped[1])
+
+    return card
+
+
 def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value=None,
               requested_color=None, interaction_foo=input):
 
@@ -281,6 +295,26 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
     played_card = interaction_foo()
+    played_card = convert_to_card(played_card)
+
+    if played_card not in possible_plays:
+        if turns_to_wait > 0:
+            player.turns_to_skip = turns_to_wait - 1
+            turns_to_wait = 0
+            return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+
+        if len(deck) <= cards_to_take:
+            clean_table(deck, table)
+
+        if cards_to_take > 0:
+            cards, deck, _ = deal_cards(deck, cards_to_take)
+            cards_to_take = 0
+        else:
+            cards, deck, _ = deal_cards(deck, 1)
+
+        player.hand += cards
+        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+
     played_card_active = check_card_played_active(played_card)
     if played_card_active:
         requested_value = evaluate_requested_value(played_card, interaction_foo)

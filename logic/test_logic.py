@@ -182,8 +182,7 @@ def test_active_card_possible_plays():
     assert ('hearts', 'A') in possible_plays
 
 
-@pytest.mark.parametrize('card, returned',
-                         [
+@pytest.mark.parametrize('card, returned', [
                              (('hearts', 'K'), True),
                              (('hearts', '4'), True),
                              (('tiles', '4'), True),
@@ -195,8 +194,7 @@ def test_active_card_possible_plays():
                              (('clovers', 'K'), False),
                              (('tiles', 'K'), False),
                              (('hearts', '8'), False),
-                         ]
-                         )
+                         ])
 def test_check_card_played_active(card, returned):
     assert logic.check_card_played_active(card) == returned
 
@@ -253,8 +251,7 @@ def test_evaluate_turns_to_wait():
     assert turns_to_wait == 2
 
 
-@pytest.mark.parametrize('card, response, returned',
-                         [
+@pytest.mark.parametrize('card, response, returned', [
                              (('hearts', '5'), '', None),
                              (('hearts', 'Q'), '', None),
                              (('hearts', '2'), '', None),
@@ -274,14 +271,12 @@ def test_evaluate_turns_to_wait():
                              (('hearts', 'J'), 'Q', None),
                              (('hearts', 'J'), 'K', None),
                              (('hearts', 'J'), 'A', None),
-                         ]
-                         )
+                         ])
 def test_evaluate_requested_value(card, response, returned):
     assert logic.evaluate_requested_value(card, lambda x: response) is returned
 
 
-@pytest.mark.parametrize('card, response, returned',
-                         [
+@pytest.mark.parametrize('card, response, returned', [
                              (('hearts', '5'), '', None),
                              (('hearts', 'Q'), '', None),
                              (('hearts', '2'), '', None),
@@ -296,8 +291,7 @@ def test_evaluate_requested_value(card, response, returned):
                              (('hearts', 'A'), 'clovers', 'clovers'),
                              (('hearts', 'A'), 'tiles', 'tiles'),
                              (('hearts', 'A'), 'hearts', 'hearts'),
-                         ]
-                         )
+                         ])
 def test_evaluate_requested_color(card, response, returned):
     assert logic.evaluate_requested_color(card, lambda x: response) is returned
 
@@ -338,6 +332,19 @@ def test_prepare_game():
     assert len(players) == 0
 
 
+@pytest.mark.parametrize('entered, card', [
+                             ('hearts 4', ('hearts', '4')),
+                             ('hearts 7', ('hearts', '7')),
+                             ('hearts 11', None),
+                             ('tiles 3', ('tiles', '3')),
+                             ('pikes 2', ('pikes', '2')),
+                             ('clovers 9', ('clovers', '9')),
+                             ('black 10', None),
+                         ])
+def test_convert_to_card(entered, card):
+    assert logic.convert_to_card(entered) == card
+
+
 def test_play_move_jack_requests(deck):
     players = {'One': Player('One')}
     players['One'].hand = [('hearts', '10')]
@@ -349,13 +356,13 @@ def test_play_move_jack_requests(deck):
     assert len(deck) == 51
     assert len(table) == 0
     assert requested_value == '7'
-    assert not requested_color
+    assert requested_color is None
 
     players['One'].hand = [('hearts', '10')]
     card = players['One'].hand[0]
 
     def helper_input(msg=None):
-        return card
+        return f'{card[0]} {card[1]}'
 
     table = []
     players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
@@ -366,4 +373,16 @@ def test_play_move_jack_requests(deck):
     assert len(table) == 1
     assert ('tiles', 'J') in table
     assert lied_card == card
+
+    players['One'].hand = [('hearts', '10')]
+    card = ('tiles', '7')
+    table = []
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table,
+                        lied_card=('tiles', 'J'), requested_value='10', interaction_foo=helper_input)
+    assert len(players['One'].hand) == 2
+    assert len(deck) == 50
+    assert len(table) == 0
+    assert requested_value == '10'
+    assert requested_color is None
 
