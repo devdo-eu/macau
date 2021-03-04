@@ -345,6 +345,100 @@ def test_convert_to_card(entered, card):
     assert logic.convert_to_card(entered) == card
 
 
+def test_play_move_card4(deck):
+    players = {'One': Player('One')}
+    players['One'].hand = [('tiles', '8')]
+    table = []
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, lied_card=('tiles', '4'), turns_to_wait=1)
+    assert len(deck) == 52
+    assert len(players['One'].hand) == 1
+    assert turns_to_wait == 0
+    assert len(table) == 1
+    assert ('tiles', '4') in table
+    assert players['One'].turns_to_skip == 0
+
+    card = players['One'].hand[0]
+
+    def helper_input(msg=None):
+        return f'{card[0]} {card[1]}'
+
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, interaction_foo=helper_input)
+
+    assert len(deck) == 52
+    assert len(players['One'].hand) == 0
+    assert turns_to_wait == 0
+    assert len(table) == 1
+    assert players['One'].turns_to_skip == 0
+    assert ('tiles', '8') == lied_card
+
+    players['One'].hand = [('tiles', '8')]
+    table = []
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, lied_card=('tiles', '4'), turns_to_wait=5)
+    assert len(deck) == 52
+    assert len(players['One'].hand) == 1
+    assert turns_to_wait == 0
+    assert len(table) == 1
+    assert ('tiles', '4') in table
+    assert players['One'].turns_to_skip == 4
+
+    card = players['One'].hand[0]
+
+    for turns in [3, 2, 1, 0]:
+        players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+            logic.play_move(players['One'], deck, table, interaction_foo=helper_input)
+        assert len(deck) == 52
+        assert len(players['One'].hand) == 1
+        assert turns_to_wait == 0
+        assert len(table) == 1
+        assert ('tiles', '4') in table
+        assert players['One'].turns_to_skip == turns
+
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, interaction_foo=helper_input)
+    assert len(deck) == 52
+    assert len(players['One'].hand) == 0
+    assert turns_to_wait == 0
+    assert len(table) == 1
+    assert ('tiles', '4') in table
+    assert ('tiles', '8') == lied_card
+    assert players['One'].turns_to_skip == 0
+
+
+
+
+def test_play_move_ace_requests(deck):
+    players = {'One': Player('One')}
+    players['One'].hand = [('hearts', '8')]
+    table = []
+    assert len(deck) == 52
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table, lied_card=('tiles', 'A'), requested_color='pikes')
+    assert len(players['One'].hand) == 2
+    assert len(deck) == 51
+    assert len(table) == 0
+    assert requested_color == 'pikes'
+    assert requested_value is None
+
+    players['One'].hand = [('hearts', '8')]
+    card = players['One'].hand[0]
+
+    def helper_input(msg=None):
+        return f'{card[0]} {card[1]}'
+
+    table = []
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        logic.play_move(players['One'], deck, table,
+                        lied_card=('tiles', 'A'), requested_color='hearts', interaction_foo=helper_input)
+    assert len(players['One'].hand) == 0
+    assert len(deck) == 51
+    assert len(table) == 1
+    assert ('tiles', 'A') in table
+    assert lied_card == card
+
+
 def test_play_move_jack_requests(deck):
     players = {'One': Player('One')}
     players['One'].hand = [('hearts', '10')]

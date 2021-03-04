@@ -279,6 +279,10 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
     if not can_move and turns_to_wait > 0:
         player.turns_to_skip = turns_to_wait - 1
         turns_to_wait = 0
+        if lied_card:
+            table.append(lied_card)
+        lied_card = None
+
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
     if not can_move:
