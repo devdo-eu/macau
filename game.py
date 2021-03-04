@@ -24,7 +24,7 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
             rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
-    played_card = interaction_foo()
+    played_card = interaction_foo('Which card from your hand do you want to play: ')
     played_card = rules.convert_to_card(played_card)
 
     if played_card not in possible_plays:
