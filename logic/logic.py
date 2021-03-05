@@ -301,13 +301,13 @@ def take_cards_punishment(player, deck, table, lied_card=None, cards_to_take=0):
     if cards_to_take > 0:
         cards, deck, _ = deal_cards(deck, cards_to_take)
         cards_to_take = 0
+        if lied_card:
+            table.append(lied_card)
+        lied_card = None
     else:
         cards, deck, _ = deal_cards(deck, 1)
 
     player.hand += cards
-    if lied_card:
-        table.append(lied_card)
-    lied_card = None
     return cards_to_take, deck, lied_card
 
 

@@ -34,7 +34,7 @@ def test_prepare_game():
 @pytest.mark.parametrize('hand, lied_card, deck_len, hand_len, table_len', [
                             ([('tiles', '8')], ('tiles', '5'), 52, 0, 1),
                             ([('hearts', '5')], ('tiles', '5'), 52, 0, 1),
-                            ([('hearts', '7')], ('tiles', '5'), 51, 2, 1),
+                            ([('hearts', '7')], ('tiles', '5'), 51, 2, 0),
                             ([('hearts', 'Q')], ('tiles', '5'), 52, 0, 1),
                             ([('hearts', '5')], ('tiles', 'Q'), 52, 0, 1),
                          ])
@@ -153,10 +153,10 @@ def test_play_move_ace_requests(deck):
         game.play_move(players['One'], deck, table, lied_card=('tiles', 'A'), requested_color='pikes')
     assert len(players['One'].hand) == 2
     assert len(deck) == 51
-    assert len(table) == 1
+    assert len(table) == 0
+    assert lied_card == ('tiles', 'A')
     assert requested_color == 'pikes'
     assert requested_value is None
-    assert lied_card is None
 
     players['One'].hand = [('hearts', '8')]
     card = players['One'].hand[0]
@@ -165,7 +165,7 @@ def test_play_move_ace_requests(deck):
     players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
         game.play_move(players['One'], deck, table,
                        lied_card=('tiles', 'A'), requested_color='hearts',
-                       interaction_foo=lambda x='': f'{card[0]} {card[1]}')
+                       interaction_foo=lambda x: f'{card[0]} {card[1]}')
     assert len(players['One'].hand) == 0
     assert len(deck) == 51
     assert len(table) == 1
@@ -182,10 +182,10 @@ def test_play_move_jack_requests(deck):
         game.play_move(players['One'], deck, table, lied_card=('tiles', 'J'), requested_value='7')
     assert len(players['One'].hand) == 2
     assert len(deck) == 51
-    assert len(table) == 1
+    assert len(table) == 0
+    assert lied_card == ('tiles', 'J')
     assert requested_value == '7'
     assert requested_color is None
-    assert lied_card is None
 
     players['One'].hand = [('hearts', '10')]
     card = players['One'].hand[0]
@@ -210,7 +210,8 @@ def test_play_move_jack_requests(deck):
                        interaction_foo=lambda x='': f'{card[0]} {card[1]}')
     assert len(players['One'].hand) == 2
     assert len(deck) == 50
-    assert len(table) == 1
+    assert len(table) == 0
+    assert lied_card == ('tiles', 'J')
     assert requested_value == '10'
     assert requested_color is None
 
@@ -368,3 +369,56 @@ def test_play_round_pikes_king_logic():
     assert cards_to_take == 0
     assert len(table) == 3
     assert ('hearts', 'K') in table
+
+    deck, table, players = game.prepare_game(['One', 'Two'])
+    deck_len = len(deck)
+    players['One'].hand = [('hearts', 'K'), ('pikes', '3')]
+    players['Two'].hand = [('pikes', 'K'), ('clovers', '7')]
+    table = [('hearts', '10')]
+    helper_move = 0
+
+    def helper(_):
+        global helper_move
+        if helper_move == 0:
+            helper_move += 1
+            return 'hearts K'
+        return 'pikes K'
+
+    players, deck, table, lied_card, cards_to_take, _, _, _, _ = \
+        game.play_round(players, deck, table, interaction_foo=helper)
+    assert len(players['One'].hand) == 11
+    assert len(players['Two'].hand) == 1
+    assert len(deck) == deck_len - 10
+    assert cards_to_take == 0
+    assert len(table) == 3
+    assert ('hearts', 'K') in table
+    assert ('pikes', 'K') in table
+
+
+def test_play_round_ace_logic():
+    global helper_move
+    deck, table, players = game.prepare_game(['One', 'Two'])
+    deck_len = len(deck)
+    players['One'].hand = [('clovers', 'A'), ('tiles', '5')]
+    players['Two'].hand = [('clovers', 'K'), ('clovers', '9')]
+    table = [('clovers', '7')]
+    helper_move = 0
+
+    def helper(_):
+        global helper_move
+        if helper_move == 0:
+            helper_move += 1
+            return 'clovers A'
+        elif helper_move == 1:
+            helper_move += 1
+            return 'tiles'
+        return 'clovers K'
+
+    players, deck, table, lied_card, _, _, _, _, requested_color = \
+        game.play_round(players, deck, table, interaction_foo=helper)
+    assert requested_color == 'tiles'
+    assert len(deck) == deck_len - 1
+    assert len(players['One'].hand) == 1
+    assert len(players['Two'].hand) == 3
+    assert lied_card == ('clovers', 'A')
+    assert len(table) == 1
