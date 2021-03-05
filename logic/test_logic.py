@@ -312,18 +312,28 @@ def test_evaluate_requested_color(card, response, returned):
     assert logic.evaluate_requested_color(card, lambda x: response) is returned
 
 
-def test_check_if_pack_on_hand():
-    hand = [('hearts', '7'), ('clovers', '7'), ('tiles', '7'), ('pikes', '7'), ('hearts', '5')]
-    assert logic.check_if_pack_on_hand(hand) == ['7']
-    hand = [('hearts', '7'), ('tiles', '7'), ('pikes', '7'), ('hearts', '5')]
-    assert logic.check_if_pack_on_hand(hand) == ['7']
-    hand = [('hearts', '7'), ('clovers', '7'), ('hearts', '5')]
-    assert logic.check_if_pack_on_hand(hand) == []
-    hand = [('hearts', '8'), ('clovers', '8'), ('tiles', '8'), ('pikes', '7'), ('hearts', '5')]
-    assert logic.check_if_pack_on_hand(hand) == ['8']
-    hand = [('hearts', '8'), ('clovers', '8'), ('tiles', '8'), ('pikes', '7'),
-            ('hearts', '6'), ('clovers', '6'), ('tiles', '6')]
-    assert logic.check_if_pack_on_hand(hand) == ['8', '6']
+@pytest.mark.parametrize('hand, pack', [
+    ([('hearts', '7'), ('clovers', '7'), ('tiles', '7'), ('pikes', '7'), ('hearts', '5')], ['7']),
+    ([('hearts', '7'), ('tiles', '7'), ('pikes', '7'), ('hearts', '5')], ['7']),
+    ([('hearts', '5'), ('tiles', '5'), ('pikes', '5'), ('clovers', '5')], ['5']),
+    ([('hearts', '7'), ('clovers', '7'), ('hearts', '5')], []),
+    ([('hearts', '8'), ('clovers', '8'), ('tiles', '8'), ('pikes', '7'), ('hearts', '5')], ['8']),
+    ([('hearts', '8'), ('clovers', '8'), ('tiles', '8'), ('pikes', '7'), ('hearts', '6'), ('clovers', '6'),
+      ('tiles', '6')], ['8', '6'])
+                         ])
+def test_check_if_pack_on_hand(hand, pack):
+    assert logic.check_if_pack_on_hand(hand) == pack
+
+
+@pytest.mark.parametrize('packs, possible_plays, possible_packs', [
+    (['7'], [('tiles', '5'), ('clovers', '7')], ['7']),
+    (['7', '8'], [('tiles', '5'), ('clovers', '7')], ['7']),
+    (['7', '5'], [('tiles', '5'), ('clovers', '7')], ['7', '5']),
+    (['8'], [('tiles', '5'), ('clovers', '7')], []),
+    ([], [('tiles', '5'), ('clovers', '7')], []),
+                         ])
+def test_check_if_packs_can_be_played(packs, possible_plays, possible_packs):
+    assert logic.check_if_packs_can_be_played(packs, possible_plays) == possible_packs
 
 
 @pytest.mark.parametrize('entered, card', [

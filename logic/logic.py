@@ -215,7 +215,7 @@ def evaluate_requested_color(laid_card, interaction_foo=input):
 
 def check_if_pack_on_hand(hand):
     """
-    Function used to check if player can play a pack of cards in turn.
+    Function used to check if player have a pack of cards on hand.
     :param hand: list of cards on player hand
     :return: list of cards values which can be played as pack
     """
@@ -233,6 +233,18 @@ def check_if_pack_on_hand(hand):
             packs.append(key)
 
     return packs
+
+
+def check_if_packs_can_be_played(packs, possible_plays):
+    """
+    Function used to check if player can play a pack of cards in turn.
+    :param packs: list with packs of cards on hand
+    :param possible_plays: list with all possible cards to play
+    :return: list with possible to play packs
+    """
+    possible_packs = []
+    [possible_packs.append(pack) for pack in packs for card in possible_plays if pack == card[1]]
+    return possible_packs
 
 
 def convert_to_card(played):
