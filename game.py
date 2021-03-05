@@ -60,6 +60,7 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
     player.hand.remove(played_card)
     if lied_card:
         table.append(lied_card)
+    if lied_card and played_card[1] != 'A':
         requested_color = None
     lied_card = played_card
     return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
@@ -73,11 +74,12 @@ def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_w
         else:
             requested_value = None
 
+        last_card = lied_card
         player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
             play_move(player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value,
                       requested_color, interaction_foo)
 
-        if lied_card is not None and lied_card[1] == 'J':
+        if lied_card is not None and lied_card[1] == 'J' and last_card != lied_card:
             requested_value_rounds = len(players)
 
         if lied_card is not None and lied_card == ('pikes', 'K'):
