@@ -216,7 +216,7 @@ def test_play_move_jack_requests(deck):
     assert requested_color is None
 
 
-def test_play_round_no_move():
+def test_play_round_no_move_logic():
     deck, table, players = game.prepare_game(['One', 'Two'])
     deck_len = len(deck)
     assert len(players['One'].hand) == 5
@@ -230,7 +230,7 @@ def test_play_round_no_move():
 helper_move = 0
 
 
-def test_play_round_mundane_moves():
+def test_play_round_mundane_moves_logic():
     global helper_move
     deck, table, players = game.prepare_game(['One', 'Two'])
     deck_len = len(deck)
@@ -287,7 +287,7 @@ def test_play_round_mundane_moves():
     assert lied_card == ('tiles', '9')
 
 
-def test_play_round_take_cards_attack():
+def test_play_round_take_cards_attack_logic():
     global helper_move
     deck, table, players = game.prepare_game(['One', 'Two'])
     deck_len = len(deck)
@@ -514,3 +514,66 @@ def test_play_round_jack_logic():
     assert lied_card == ('tiles', 'J')
     assert len(table) == 2
     assert ('clovers', 'J') in table
+
+
+def test_play_round_skip_turns_logic():
+    global helper_move
+    deck, table, players = game.prepare_game(['One', 'Two'])
+    deck_len = len(deck)
+    players['One'].hand = [('pikes', '4'), ('tiles', '5')]
+    players['Two'].hand = [('clovers', 'K'), ('tiles', '6')]
+    table = [('pikes', '8')]
+    players, deck, table, lied_card, _, turns_to_wait, _, _, _ = \
+        game.play_round(players, deck, table, interaction_foo=lambda x: 'pikes 4')
+    assert len(deck) == deck_len
+    assert len(players['One'].hand) == 1
+    assert len(players['Two'].hand) == 2
+    assert turns_to_wait == 0
+    assert len(table) == 2
+    assert ('pikes', '4') in table
+    assert lied_card is None
+
+    players['One'].hand = [('pikes', '4'), ('tiles', '5')]
+    players['Two'].hand = [('clovers', 'K'), ('clovers', '4'), ('clovers', '7')]
+    table = [('pikes', '8')]
+    helper_move = -1
+
+    def helper(_):
+        global helper_move
+        helper_move += 1
+        commands = ['pikes 4', 'clovers 4']
+        return commands[helper_move]
+
+    players, deck, table, lied_card, _, turns_to_wait, _, _, _ = \
+        game.play_round(players, deck, table, interaction_foo=helper)
+    assert len(deck) == deck_len
+    assert len(players['One'].hand) == 1
+    assert len(players['Two'].hand) == 2
+    assert turns_to_wait == 2
+    assert len(table) == 2
+    assert ('pikes', '4') in table
+    assert lied_card == ('clovers', '4')
+
+    players, deck, table, lied_card, _, turns_to_wait, _, _, _ = \
+        game.play_round(players, deck, table, lied_card, turns_to_wait=turns_to_wait,
+                        interaction_foo=lambda x: 'clovers K')
+    assert len(deck) == deck_len
+    assert len(players['One'].hand) == 1
+    assert players['One'].turns_to_skip == 1
+    assert len(players['Two'].hand) == 1
+    assert turns_to_wait == 0
+    assert len(table) == 3
+    assert ('clovers', '4') in table
+    assert lied_card == ('clovers', 'K')
+
+    players, deck, table, lied_card, _, turns_to_wait, _, _, _ = \
+        game.play_round(players, deck, table, lied_card, turns_to_wait=turns_to_wait,
+                        interaction_foo=lambda x: 'clovers 7')
+    assert len(deck) == deck_len
+    assert len(players['One'].hand) == 1
+    assert players['One'].turns_to_skip == 0
+    assert len(players['Two'].hand) == 0
+    assert turns_to_wait == 0
+    assert len(table) == 4
+    assert ('clovers', 'K') in table
+    assert lied_card == ('clovers', '7')
