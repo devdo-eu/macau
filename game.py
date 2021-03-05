@@ -79,5 +79,23 @@ def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_w
         if lied_card is not None and lied_card[1] == 'J':
             requested_value_rounds = len(players)
 
+        if lied_card is not None and lied_card == ('pikes', 'K'):
+            cards_to_take, deck, lied_card = \
+                pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take)
+
     return players, deck, table, lied_card, cards_to_take, \
            turns_to_wait, requested_value_rounds, requested_value, requested_color
+
+
+def pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take):
+    players_list = list(players)
+    players_list += players_list
+    for index in range(1, len(players_list) - 1):
+        if players_list[index + 1] == player.name:
+            cards, deck, _ = rules.deal_cards(deck, cards_to_take)
+            players[players_list[index]].hand += cards
+            cards_to_take = 0
+            table.append(lied_card)
+            lied_card = None
+            break
+    return cards_to_take, deck, lied_card
