@@ -400,7 +400,7 @@ def test_play_round_ace_logic():
     deck, table, players = game.prepare_game(['One', 'Two'])
     deck_len = len(deck)
     players['One'].hand = [('clovers', 'A'), ('tiles', '5')]
-    players['Two'].hand = [('clovers', 'K'), ('clovers', '9')]
+    players['Two'].hand = [('clovers', 'K'), ('clovers', '5')]
     table = [('clovers', '7')]
     helper_move = 0
 
@@ -422,3 +422,21 @@ def test_play_round_ace_logic():
     assert len(players['Two'].hand) == 3
     assert lied_card == ('clovers', 'A')
     assert len(table) == 1
+    helper_move = 0
+
+    def helper(_):
+        global helper_move
+        if helper_move == 0:
+            helper_move += 1
+            return 'tiles 5'
+        return 'clovers 5'
+
+    players, deck, table, lied_card, _, _, _, _, requested_color = \
+        game.play_round(players, deck, table, lied_card, requested_color=requested_color, interaction_foo=helper)
+    assert requested_color is None
+    assert len(deck) == deck_len - 1
+    assert len(players['One'].hand) == 0
+    assert len(players['Two'].hand) == 2
+    assert lied_card == ('clovers', '5')
+    assert len(table) == 3
+    assert ('clovers', 'A') in table

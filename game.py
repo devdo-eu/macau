@@ -60,6 +60,7 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
     player.hand.remove(played_card)
     if lied_card:
         table.append(lied_card)
+        requested_color = None
     lied_card = played_card
     return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
