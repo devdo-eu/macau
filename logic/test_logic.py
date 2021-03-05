@@ -128,6 +128,22 @@ def test_nonactive_card_possible_plays(deck):
     assert len(hand) == 0
 
 
+def test_nonactive_card_possible_plays_with_requested_value(deck):
+    top_card = ('hearts', 'J')
+    hand = [('hearts', 'K'), ('tiles', '6'), ('clovers', '9'), ('pikes', '10')]
+    possible_plays, can_move = logic.nonactive_card_possible_plays(hand, top_card, '10')
+    assert can_move
+    assert len(possible_plays) == 1
+
+    possible_plays, can_move = logic.nonactive_card_possible_plays(hand, top_card, '9')
+    assert can_move
+    assert len(possible_plays) == 1
+
+    possible_plays, can_move = logic.nonactive_card_possible_plays(hand, top_card, '7')
+    assert not can_move
+    assert len(possible_plays) == 0
+
+
 def test_active_card_possible_plays():
     top_card = ('hearts', 'J')
     hand = [('hearts', 'K'), ('tiles', '6'), ('clovers', '9'), ('pikes', '10')]

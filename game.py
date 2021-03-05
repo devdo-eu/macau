@@ -17,7 +17,7 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
         possible_plays, can_move = \
             rules.active_card_possible_plays(player.hand, top_card, requested_color, requested_value)
     else:
-        possible_plays, can_move = rules.nonactive_card_possible_plays(player.hand, top_card)
+        possible_plays, can_move = rules.nonactive_card_possible_plays(player.hand, top_card, requested_value)
 
     if not can_move:
         cards_to_take, deck, lied_card, turns_to_wait = \

@@ -81,11 +81,12 @@ def deal_cards(deck, how_many):
     return cards, deck, cards_dealt
 
 
-def nonactive_card_possible_plays(hand, top_card):
+def nonactive_card_possible_plays(hand, top_card, requested_value=None):
     """
     Function used to evaluate possible plays for given hand and card on top of a table.
     :param hand: list of cards on player hand
     :param top_card: tuple with card on top of a table
+    :param requested_value: string with requested value
     :return: list of possible plays, bool value if there is any move
     """
     if top_card[1] == 'Q':
@@ -96,9 +97,13 @@ def nonactive_card_possible_plays(hand, top_card):
     from_value = [(color, top_card[1]) for color in colors]
     from_color = [(top_card[0], value) for value in values]
 
-    [possible_plays.append(card) for card in hand if card in queens + from_color + from_value]
+    if requested_value is None:
+        [possible_plays.append(card) for card in hand if card in queens + from_color + from_value]
+    else:
+        req_value = [(color, requested_value) for color in colors]
+        [possible_plays.append(card) for card in hand if card in req_value]
 
-    return possible_plays, len(possible_plays)
+    return possible_plays, len(possible_plays) > 0
 
 
 def active_card_possible_plays(hand, top_card, requested_color=None, requested_value=None):
@@ -119,7 +124,7 @@ def active_card_possible_plays(hand, top_card, requested_color=None, requested_v
 
     [possible_plays.append(card) for card in hand if card in req_color + req_value + from_value]
 
-    return possible_plays, len(possible_plays)
+    return possible_plays, len(possible_plays) > 0
 
 
 def check_card_played_active(laid_card):
