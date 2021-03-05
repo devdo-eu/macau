@@ -29,7 +29,7 @@ def prepare_deck(table=None, players=None):
     Function used to prepare deck of 52 cards and shuffle it.
     If cards was dealt to players, this cards will not be in newly prepared deck.
     :param table: list with cards lied on table
-    :param players: list of Player objects which contains players hands
+    :param players: dictionary of Player objects which contains players hands
     :return: list with deck, list with table, dictionary with players
     """
     deck = [(color, value) for value in values for color in colors]
