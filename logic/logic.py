@@ -116,7 +116,12 @@ def active_card_possible_plays(hand, top_card, requested_color=None, requested_v
     :return: list of possible plays, bool value if there is any move
     """
     possible_plays, req_value, req_color = [], [], []
-    from_value = [(color, top_card[1]) for color in colors]
+    if top_card[1] in '2 3 K'.split():
+        from_value = [(color, value) for color in colors for value in ['2', '3']]
+        from_value += [('hearts', 'K'), ('pikes', 'K')]
+    else:
+        from_value = [(color, top_card[1]) for color in colors]
+
     if requested_value:
         req_value = [(color, requested_value) for color in colors]
     if requested_color:
@@ -228,26 +233,6 @@ def check_if_pack_on_hand(hand):
             packs.append(key)
 
     return packs
-
-
-def prepare_game(players_names):
-    """
-    Function used to prepare game to be played.
-    :param players_names: list with names of players
-    :return: list with deck, list with table, dictionary with players
-    """
-    deck, table, _ = prepare_deck()
-    players = {}
-    for player in players_names:
-        players[player], deck, _ = deal_cards(deck, 5)
-
-    table, deck, _ = deal_cards(deck, 1)
-
-    while check_card_played_active(table[-1]):
-        card, deck, _ = deal_cards(deck, 1)
-        table += card
-
-    return deck, table, players
 
 
 def convert_to_card(played):

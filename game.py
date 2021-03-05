@@ -1,9 +1,29 @@
 import logic.logic as rules
 
 
+def prepare_game(players_names):
+    """
+    Function used to prepare game to be played.
+    :param players_names: list with names of players
+    :return: list with deck, list with table, dictionary with players
+    """
+    deck, table, _ = rules.prepare_deck()
+    players = {}
+    for name in players_names:
+        players[name] = rules.Player(name)
+        players[name].hand, deck, _ = rules.deal_cards(deck, 5)
+
+    table, deck, _ = rules.deal_cards(deck, 1)
+
+    while rules.check_card_played_active(table[-1]):
+        card, deck, _ = rules.deal_cards(deck, 1)
+        table += card
+
+    return deck, table, players
+
+
 def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value=None,
               requested_color=None, interaction_foo=input):
-
     if player.turns_to_skip > 0:
         player.turns_to_skip -= 1
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
@@ -42,3 +62,22 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
         table.append(lied_card)
     lied_card = played_card
     return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+
+
+def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value_rounds=0,
+               requested_value=None, requested_color=None, interaction_foo=input):
+    for player in players.values():
+        if requested_value_rounds > 0:
+            requested_value_rounds -= 1
+        else:
+            requested_value = None
+
+        player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+            play_move(player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value,
+                      requested_color, interaction_foo)
+
+        if lied_card is not None and lied_card[1] == 'J':
+            requested_value_rounds = len(players)
+
+    return players, deck, table, lied_card, cards_to_take, \
+           turns_to_wait, requested_value_rounds, requested_value, requested_color

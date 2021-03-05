@@ -189,6 +189,14 @@ def test_active_card_possible_plays():
     assert len(possible_plays) == 1
     assert ('hearts', 'A') in possible_plays
 
+    top_card = ('hearts', 'K')
+    hand = [('hearts', '2'), ('hearts', '3'), ('hearts', '4'), ('hearts', '5'), ('tiles', 'K')]
+    possible_plays, can_move = logic.active_card_possible_plays(hand, top_card)
+    assert can_move
+    assert len(possible_plays) == 2
+    assert ('hearts', '2') in possible_plays
+    assert ('hearts', '3') in possible_plays
+
 
 @pytest.mark.parametrize('card, returned', [
                              (('hearts', 'K'), True),
@@ -316,28 +324,6 @@ def test_check_if_pack_on_hand():
     hand = [('hearts', '8'), ('clovers', '8'), ('tiles', '8'), ('pikes', '7'),
             ('hearts', '6'), ('clovers', '6'), ('tiles', '6')]
     assert logic.check_if_pack_on_hand(hand) == ['8', '6']
-
-
-def test_prepare_game():
-    deck, table, players = logic.prepare_game(['One', 'Two'])
-    assert len(table) > 0
-    assert len(deck) <= 41
-    assert len(players) == 2
-    assert len(players['One']) == 5
-    assert len(players['Two']) == 5
-
-    deck, table, players = logic.prepare_game(['One', 'Two', 'Three'])
-    assert len(table) > 0
-    assert len(deck) <= 36
-    assert len(players) == 3
-    assert len(players['One']) == 5
-    assert len(players['Two']) == 5
-    assert len(players['Three']) == 5
-
-    deck, table, players = logic.prepare_game([])
-    assert len(table) > 0
-    assert len(deck) <= 51
-    assert len(players) == 0
 
 
 @pytest.mark.parametrize('entered, card', [
