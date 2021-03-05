@@ -237,14 +237,13 @@ def test_play_round_mundane_moves():
     table = [('hearts', 'K')]
     players['One'].hand = [('hearts', '5'), ('pikes', '8'), ('tiles', '6')]
     players['Two'].hand = [('tiles', '9'), ('tiles', '8'), ('pikes', '5')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'hearts 5'
-        return 'pikes 5'
+        helper_move += 1
+        commands = ['hearts 5', 'pikes 5']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, _, _, _ = \
         game.play_round(players, deck, table, interaction_foo=helper)
@@ -254,14 +253,13 @@ def test_play_round_mundane_moves():
     assert len(table) == 2
     assert ('hearts', '5') in table
     assert lied_card == ('pikes', '5')
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'pikes 8'
-        return 'tiles 8'
+        helper_move += 1
+        commands = ['pikes 8', 'tiles 8']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, _, _, _ = \
         game.play_round(players, deck, table, lied_card, interaction_foo=helper)
@@ -271,14 +269,13 @@ def test_play_round_mundane_moves():
     assert len(table) == 4
     assert ('pikes', '8') in table
     assert lied_card == ('tiles', '8')
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'tiles 6'
-        return 'tiles 9'
+        helper_move += 1
+        commands = ['tiles 6', 'tiles 9']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, _, _, _ = \
         game.play_round(players, deck, table, lied_card, interaction_foo=helper)
@@ -307,14 +304,13 @@ def test_play_round_take_cards_attack():
     players['One'].hand = [('tiles', '7'), ('hearts', 'K')]
     players['Two'].hand = [('hearts', '2'), ('hearts', '9')]
     table = [('hearts', '5')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'hearts K'
-        return 'hearts 2'
+        helper_move += 1
+        commands = ['hearts K', 'hearts 2']
+        return commands[helper_move]
 
     players, deck, table, lied_card, cards_to_take, _, _, _, _ =\
         game.play_round(players, deck, table, interaction_foo=helper)
@@ -338,14 +334,13 @@ def test_play_round_pikes_king_logic():
     players['One'].hand = [('pikes', 'K'), ('tiles', '5')]
     players['Two'].hand = [('hearts', 'K'), ('clovers', '7')]
     table = [('pikes', '10')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'pikes K'
-        return 'hearts K'
+        helper_move += 1
+        commands = ['pikes K', 'hearts K']
+        return commands[helper_move]
 
     players, deck, table, lied_card, cards_to_take, _, _, _, _ = \
         game.play_round(players, deck, table, interaction_foo=helper)
@@ -356,13 +351,9 @@ def test_play_round_pikes_king_logic():
     assert len(table) == 2
     assert ('pikes', 'K') in table
     assert lied_card == ('hearts', 'K')
-    helper_move = 0
-
-    def helper(_):
-        return 'clovers 7'
 
     players, deck, table, lied_card, cards_to_take, _, _, _, _ = \
-        game.play_round(players, deck, table, lied_card, cards_to_take, interaction_foo=helper)
+        game.play_round(players, deck, table, lied_card, cards_to_take, interaction_foo=lambda x: 'clovers 7')
     assert len(players['One'].hand) == 6
     assert len(players['Two'].hand) == 7
     assert len(deck) == deck_len - 11
@@ -375,14 +366,13 @@ def test_play_round_pikes_king_logic():
     players['One'].hand = [('hearts', 'K'), ('pikes', '3')]
     players['Two'].hand = [('pikes', 'K'), ('clovers', '7')]
     table = [('hearts', '10')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'hearts K'
-        return 'pikes K'
+        helper_move += 1
+        commands = ['hearts K', 'pikes K']
+        return commands[helper_move]
 
     players, deck, table, lied_card, cards_to_take, _, _, _, _ = \
         game.play_round(players, deck, table, interaction_foo=helper)
@@ -402,17 +392,13 @@ def test_play_round_ace_logic():
     players['One'].hand = [('clovers', 'A'), ('tiles', '5')]
     players['Two'].hand = [('clovers', 'K'), ('clovers', '5')]
     table = [('clovers', '7')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'clovers A'
-        elif helper_move == 1:
-            helper_move += 1
-            return 'tiles'
-        return 'clovers K'
+        helper_move += 1
+        commands = ['clovers A', 'tiles', 'clovers K']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, _, _, requested_color = \
         game.play_round(players, deck, table, interaction_foo=helper)
@@ -422,14 +408,13 @@ def test_play_round_ace_logic():
     assert len(players['Two'].hand) == 3
     assert lied_card == ('clovers', 'A')
     assert len(table) == 1
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'tiles 5'
-        return 'clovers 5'
+        helper_move += 1
+        commands = ['tiles 5', 'clovers 5']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, _, _, requested_color = \
         game.play_round(players, deck, table, lied_card, requested_color=requested_color, interaction_foo=helper)
@@ -445,20 +430,13 @@ def test_play_round_ace_logic():
     players['One'].hand = [('clovers', 'A'), ('tiles', '5')]
     players['Two'].hand = [('pikes', 'A'), ('clovers', '5')]
     table = [('clovers', '7')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'clovers A'
-        elif helper_move == 1:
-            helper_move += 1
-            return 'tiles'
-        elif helper_move == 2:
-            helper_move += 1
-            return 'pikes A'
-        return 'clovers'
+        helper_move += 1
+        commands = ['clovers A', 'tiles', 'pikes A', 'clovers']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, _, _, requested_color = \
         game.play_round(players, deck, table, interaction_foo=helper)
@@ -478,17 +456,13 @@ def test_play_round_jack_logic():
     players['One'].hand = [('clovers', 'J'), ('tiles', '5')]
     players['Two'].hand = [('clovers', 'K'), ('tiles', '6')]
     table = [('clovers', '7')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'clovers J'
-        elif helper_move == 1:
-            helper_move += 1
-            return '5'
-        return 'clovers K'
+        helper_move += 1
+        commands = ['clovers J', '5', 'clovers K']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, requested_value_rounds, requested_value, _ = \
         game.play_round(players, deck, table, interaction_foo=helper)
@@ -499,14 +473,13 @@ def test_play_round_jack_logic():
     assert len(players['Two'].hand) == 3
     assert lied_card == ('clovers', 'J')
     assert len(table) == 1
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'tiles 5'
-        return 'tiles 6'
+        helper_move += 1
+        commands = ['tiles 5', 'tiles 6']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, requested_value_rounds, requested_value, _ = \
         game.play_round(players, deck, table, lied_card, requested_value_rounds=requested_value_rounds,
@@ -523,21 +496,13 @@ def test_play_round_jack_logic():
     players['One'].hand = [('clovers', 'J'), ('tiles', '5')]
     players['Two'].hand = [('clovers', '10'), ('tiles', 'J')]
     table = [('clovers', '7')]
-    helper_move = 0
+    helper_move = -1
 
     def helper(_):
         global helper_move
-        if helper_move == 0:
-            helper_move += 1
-            return 'clovers J'
-        elif helper_move == 1:
-            helper_move += 1
-            return '5'
-        elif helper_move == 2:
-            helper_move += 1
-            return 'tiles J'
-        else:
-            return '10'
+        helper_move += 1
+        commands = ['clovers J', '5', 'tiles J', '10']
+        return commands[helper_move]
 
     players, deck, table, lied_card, _, _, requested_value_rounds, requested_value, _ = \
         game.play_round(players, deck, table, interaction_foo=helper)
