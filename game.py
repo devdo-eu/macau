@@ -58,25 +58,66 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
     played = interaction_foo('Which card from your hand do you want to play: ')
-    played_card = rules.convert_to_card(played)
+    if len(played.split(',')) > 1:
+        packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
+        if not valid:
+            cards_to_take, deck, lied_card, turns_to_wait = \
+                rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
+            return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+    else:
+        played_cards = [rules.convert_to_card(played)]
 
-    if played_card not in possible_plays:
+    if played_cards[0] not in possible_plays:
         cards_to_take, deck, lied_card, turns_to_wait = \
             rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
-    played_card_active = rules.check_card_played_active(played_card)
-    if played_card_active:
-        cards_to_take, requested_color, requested_value, turns_to_wait = \
-            rules.additional_actions(played_card, cards_to_take, turns_to_wait, interaction_foo)
+    for played_card in played_cards:
+        played_card_active = rules.check_card_played_active(played_card)
+        if played_card_active:
+            cards_to_take, requested_color, requested_value, turns_to_wait = \
+                rules.additional_actions(played_card, cards_to_take, turns_to_wait, interaction_foo)
 
-    player.hand.remove(played_card)
-    if lied_card:
-        table.append(lied_card)
-    if lied_card and played_card[1] != 'A':
-        requested_color = None
-    lied_card = played_card
+        player.hand.remove(played_card)
+        if lied_card:
+            table.append(lied_card)
+        if lied_card and played_card[1] != 'A':
+            requested_color = None
+        lied_card = played_card
     return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+
+
+def convert_input_to_cards(player, played, possible_plays):
+    """
+    Function used to convert player input to list of cards
+    :param player: Player objects
+    :param played: input given by player
+    :param possible_plays: list of possible plays from players hand
+    :return: packs of cards possible to be played, list of cards played by player, True if cards are valid or False
+    """
+    played_cards = []
+    valid = True
+    cards_value = ''
+    packs = rules.check_if_pack_on_hand(player.hand)
+    packs = rules.check_if_packs_can_be_played(packs, possible_plays)
+    for card_data in played.split(','):
+        card = rules.convert_to_card(card_data)
+        if card is None:
+            continue
+        cards_value = card[1]
+        if cards_value not in packs or card not in player.hand:
+            valid = False
+            break
+        played_cards.append(card)
+
+    if len(played_cards) < 3:
+        valid = False
+
+    for card in played_cards:
+        if cards_value != card[1]:
+            valid = False
+
+    return packs, played_cards, valid
 
 
 def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value_rounds=0,

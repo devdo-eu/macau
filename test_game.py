@@ -52,6 +52,55 @@ def test_play_move_nonactive_card(hand, lied_card, deck_len, hand_len, table_len
     assert len(table) == table_len
 
 
+@pytest.mark.parametrize('hand, play, check_table_len', [
+    ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'tiles 5, clovers 5, hearts 5', 3),
+    ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '5'), ('pikes', '8')],
+     'tiles 5, clovers 5, pikes 5, hearts 5', 4),
+                         ])
+def test_play_move_pack_of_nonactive_cards(deck, hand, play, check_table_len):
+    players = {'One': Player('One')}
+    players['One'].hand = hand
+    lied_card = ('tiles', '8')
+    table = []
+    deck_len = len(deck)
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        game.play_move(players['One'], deck, table, lied_card=lied_card,
+                       interaction_foo=lambda x='': play)
+    assert len(deck) == deck_len
+    assert len(table) == check_table_len
+    assert len(players['One'].hand) == 1
+    assert ('pikes', '8') in players['One'].hand
+    assert ('tiles', '8') in table
+    assert ('tiles', '5') in table
+    assert ('clovers', '5') in table
+    assert lied_card == ('hearts', '5')
+
+
+@pytest.mark.parametrize('hand, play, check_hand_len', [
+    ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'pikes 8, clovers 5, hearts 5', 5),
+    ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'tiles 5, clovers 5,', 5),
+    ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'tiles 5, clovers 5, hearts 5, pikes 5', 5),
+    ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8'), ('tiles', '8'), ('clovers', '8')],
+     'pikes 8, clovers 5, hearts 5', 7),
+    ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'pikes 5, clovers 5, hearts 5', 5),
+    ([('tiles', '5'), ('hearts', '5'), ('pikes', '8')], 'tiles 5, clovers 5, hearts 5', 4),
+                         ])
+def test_play_move_pack_of_nonactive_cards_invalid(deck, hand, play, check_hand_len):
+
+    players = {'One': Player('One')}
+    players['One'].hand = hand
+    lied_card = ('tiles', '8')
+    table = []
+    deck_len = len(deck)
+    players['One'], deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
+        game.play_move(players['One'], deck, table, lied_card=lied_card,
+                       interaction_foo=lambda x='': play)
+    assert len(deck) == deck_len - 1
+    assert len(table) == 0
+    assert len(players['One'].hand) == check_hand_len
+    assert lied_card == ('tiles', '8')
+
+
 def test_play_move_card4(deck):
     players = {'One': Player('One')}
     players['One'].hand = [('tiles', '8')]

@@ -337,13 +337,17 @@ def test_check_if_packs_can_be_played(packs, possible_plays, possible_packs):
 
 
 @pytest.mark.parametrize('entered, card', [
-                             ('hearts 4', ('hearts', '4')),
-                             ('hearts 7', ('hearts', '7')),
-                             ('hearts 11', None),
-                             ('tiles 3', ('tiles', '3')),
-                             ('pikes 2', ('pikes', '2')),
-                             ('clovers 9', ('clovers', '9')),
-                             ('black 10', None),
+    ('hearts 4', ('hearts', '4')),
+    ('hearts 7', ('hearts', '7')),
+    ('hearts 11', None),
+    ('tiles 3', ('tiles', '3')),
+    ('pikes 2', ('pikes', '2')),
+    ('clovers 9', ('clovers', '9')),
+    ('black 10', None),
+    (' hearts 4', ('hearts', '4')),
+    (' hearts  4', ('hearts', '4')),
+    ('hearts  4', ('hearts', '4')),
+    ('    hearts    4', ('hearts', '4')),
                          ])
 def test_convert_to_card(entered, card):
     assert logic.convert_to_card(entered) == card

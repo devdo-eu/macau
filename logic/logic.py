@@ -253,12 +253,17 @@ def convert_to_card(played):
     :param played: string description of a card
     :return: tuple with color and value of a card
     """
-    card = None
+    color = None
+    value = None
     chopped = played.split(' ')
-    if len(chopped) == 2 and chopped[0] in colors and chopped[1] in values:
-        card = (chopped[0], chopped[1])
-
-    return card
+    for _, data in enumerate(chopped):
+        if data in colors:
+            color = data
+        elif data in values:
+            value = data
+    if color is not None and value is not None:
+        return color, value
+    return None
 
 
 def additional_actions(played_card, cards_to_take, turns_to_wait, interaction_foo):
