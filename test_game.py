@@ -756,3 +756,33 @@ def test_play_round_skip_turns_logic():
     assert len(table) == 4
     assert ('clovers', 'K') in table
     assert lied_card == ('clovers', '7')
+
+
+@pytest.mark.parametrize('how_many_players, who_played_pikes_king', [
+                        (6, 1),
+                        (6, 2),
+                        (6, 6),
+                        (3, 2),
+                        (2, 1),
+                        (2, 2)
+                         ])
+def test_pikes_king_punishment(how_many_players, who_played_pikes_king):
+    players_name_list = [str(number) for number in range(1, how_many_players+1)]
+    deck, table, players = game.prepare_game(players_name_list)
+    who_will_be_punished = (who_played_pikes_king - 1)
+    if who_will_be_punished == 0:
+        who_will_be_punished = how_many_players
+
+    deck = table + deck
+    table = []
+    lied_card = ('pikes', 'K')
+    deck_len = len(deck)
+    cards_to_take = 5
+    player = players[str(who_played_pikes_king)]
+    cards_to_take, deck, lied_card = game.pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take)
+    assert cards_to_take == 0
+    assert lied_card is None
+    assert len(table) == 1
+    assert ('pikes', 'K') in table
+    assert len(deck) == deck_len - 5
+    assert len(players[str(who_will_be_punished)].hand) == 10
