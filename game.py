@@ -209,7 +209,7 @@ def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_w
                 pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take)
 
     return players, deck, table, lied_card, cards_to_take, \
-           turns_to_wait, requested_value_rounds, requested_value, requested_color
+        turns_to_wait, requested_value_rounds, requested_value, requested_color
 
 
 def pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take):
