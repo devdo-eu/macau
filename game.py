@@ -1,4 +1,5 @@
 import logic.logic as rules
+import os
 
 
 def prepare_game(players_names):
@@ -20,6 +21,47 @@ def prepare_game(players_names):
         table += card
 
     return deck, table, players
+
+
+def gui_builder(player, deck, top_card, cards_to_take, turns_to_wait, requested_value, requested_color, possible_plays):
+    """
+    Function used to build information message for players
+    :param player: Player object
+    :param deck: list with cards inside deck
+    :param top_card: tuple with card on top of a table
+    :param cards_to_take: integer value of take card punishment
+    :param turns_to_wait: integer value of skip turns punishment
+    :param requested_value: string with requested value
+    :param requested_color: string with requested color
+    :param possible_plays: list of cards possible to be played
+    :return: string message with information about state of game
+    """
+    gui = f'\n{player.name}' \
+          f'\n---------------------Punishments---------------------' \
+          f'\nCards: {cards_to_take}' \
+          f'\nSkip turns: {turns_to_wait}' \
+          f'\n----------------------Requests-----------------------' \
+          f'\nColor: {requested_color}' \
+          f'\nValue: {requested_value}' \
+          f'\n-----------------------Table-------------------------' \
+          f'\nCards in deck: {len(deck)}' \
+          f'\nOn top: {top_card[0]} {top_card[1]}' \
+          f'\n------------------------Hand-------------------------'
+    cards = ''
+    for index, card in enumerate(player.hand):
+        if card in possible_plays:
+            cards += f'*{card[0]} {card[1]}*'
+        else:
+            cards += f'{card[0]} {card[1]}'
+        if index < len(player.hand) - 1:
+            cards += ', '
+        if index % 5 == 4 and index != len(player.hand) - 1:
+            cards += '\n'
+    gui += f'\n{cards}' \
+           f'\n-----------------------------------------------------' \
+           f'\n*color value* -> means that this card can be played' \
+           f'\nWhich card(s) from your hand do you want to play?: '
+    return gui
 
 
 def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value=None,
@@ -57,7 +99,9 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
             rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
-    played = interaction_foo('Which card from your hand do you want to play: ')
+    message = gui_builder(player, deck, top_card, cards_to_take,
+                          turns_to_wait, requested_value, requested_color, possible_plays)
+    played = interaction_foo(message)
     if len(played.split(',')) > 1:
         packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
         if not valid:
@@ -122,7 +166,7 @@ def convert_input_to_cards(player, played, possible_plays):
 
 
 def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value_rounds=0,
-               requested_value=None, requested_color=None, interaction_foo=input):
+               requested_value=None, requested_color=None, interaction_foo=input, output_foo=print):
     """
     Function used to process logic of one round (one move per every player in game).
     :param players: dictionary of Player objects which contains players hands
@@ -135,10 +179,18 @@ def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_w
     :param requested_value: string with requested value
     :param requested_color: string with requested color
     :param interaction_foo: function used to ask player about value
+    :param output_foo: function used to show information to player
     :return: players, deck, table, lied_card, cards_to_take, turns_to_wait,
     requested_value_rounds, requested_value, requested_color
     """
     for player in players.values():
+        if output_foo == print and interaction_foo == input:
+            os.system('cls')
+            input(f'{player.name} Turn Now!')
+        for check in players.values():
+            if len(check.hand) == 1:
+                output_foo(f"{check.name} has macau!")
+
         if requested_value_rounds > 0:
             requested_value_rounds -= 1
         else:

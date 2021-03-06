@@ -1,5 +1,5 @@
-import logic.logic as logic
 import pytest
+import logic.logic as logic
 from logic.logic import Player
 
 
@@ -196,6 +196,24 @@ def test_active_card_possible_plays():
     assert len(possible_plays) == 2
     assert ('hearts', '2') in possible_plays
     assert ('hearts', '3') in possible_plays
+
+    top_card = ('hearts', '2')
+    hand = [('hearts', '4'), ('pikes', '6'), ('pikes', 'K'), ('pikes', 'A')]
+    possible_plays, can_move = logic.active_card_possible_plays(hand, top_card)
+    assert not can_move
+    assert len(possible_plays) == 0
+
+    top_card = ('hearts', 'K')
+    hand = [('tiles', '3'), ('tiles', '6'), ('tiles', '8')]
+    possible_plays, can_move = logic.active_card_possible_plays(hand, top_card)
+    assert not can_move
+    assert len(possible_plays) == 0
+
+    top_card = ('hearts', '3')
+    hand = [('tiles', '2'), ('pikes', '2'), ('clovers', 'K')]
+    possible_plays, can_move = logic.active_card_possible_plays(hand, top_card)
+    assert not can_move
+    assert len(possible_plays) == 0
 
 
 @pytest.mark.parametrize('card, returned', [

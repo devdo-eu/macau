@@ -105,19 +105,19 @@ def active_card_possible_plays(hand, top_card, requested_color=None, requested_v
     :param requested_value: string with requested value
     :return: list of possible plays, bool value if there is any move
     """
-    possible_plays, req_value, req_color = [], [], []
+    possible_plays, req_value, req_color, from_color = [], [], [], []
+    from_value = [(color, top_card[1]) for color in colors]
     if top_card[1] in '2 3 K'.split():
-        from_value = [(color, value) for color in colors for value in ['2', '3']]
-        from_value += [('hearts', 'K'), ('pikes', 'K')]
-    else:
-        from_value = [(color, top_card[1]) for color in colors]
+        from_color = [(top_card[0], value) for value in '2 3 K'.split()]
 
     if requested_value:
         req_value = [(color, requested_value) for color in colors]
     if requested_color:
         req_color = [(requested_color, value) for value in values]
 
-    [possible_plays.append(card) for card in hand if card in req_color + req_value + from_value]
+    [possible_plays.append(card) for card in hand if card in req_color + req_value + from_value + from_color]
+    possible_plays = list(set(possible_plays))
+    [possible_plays.remove(king) for king in [('tiles', 'K'), ('clovers', 'K')] if king in possible_plays]
 
     return possible_plays, len(possible_plays) > 0
 
@@ -179,7 +179,7 @@ def evaluate_requested_value(laid_card, interaction_foo=input):
     value = laid_card[1]
     requested_value = None
     if value == 'J':
-        requested_value = interaction_foo('Enter value of requested cards:')
+        requested_value = interaction_foo('Enter VALUE of requested cards: ')
         if requested_value not in '5 6 7 8 9 10'.split():
             requested_value = None
 
@@ -196,7 +196,7 @@ def evaluate_requested_color(laid_card, interaction_foo=input):
     value = laid_card[1]
     requested_color = None
     if value == 'A':
-        requested_color = interaction_foo('Enter value of requested cards:')
+        requested_color = interaction_foo('Enter COLOR of requested cards: ')
         if requested_color not in colors:
             requested_color = None
 
