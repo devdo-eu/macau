@@ -330,6 +330,85 @@ def test_play_move_pack_of_aces(deck):
     assert requested_color == 'clovers'
 
 
+def test_play_move_pack_2_and_3(deck):
+    players = {'One': Player('One')}
+    players['One'].hand = [('tiles', '3'), ('pikes', '3'), ('hearts', '3'), ('clovers', '10')]
+    lied_card = ('pikes', '6')
+    table = []
+    deck_len = len(deck)
+
+    players['One'], deck, table, lied_card, cards_to_take, _, _, _ = \
+        game.play_move(players['One'], deck, table, lied_card=lied_card,
+                       interaction_foo=lambda x: 'pikes 3, tiles 3, hearts 3')
+    assert len(deck) == deck_len
+    assert len(table) == 3
+    assert ('pikes', '3') in table
+    assert ('tiles', '3') in table
+    assert len(players['One'].hand) == 1
+    assert ('clovers', '10') in players['One'].hand
+    assert lied_card == ('hearts', '3')
+    assert cards_to_take == 9
+
+    players = {'One': Player('One')}
+    players['One'].hand = [('tiles', '3'), ('clovers', '3'), ('pikes', '3'), ('hearts', '3'), ('clovers', '10')]
+    lied_card = ('pikes', '6')
+    table = []
+    deck_len = len(deck)
+
+    players['One'], deck, table, lied_card, cards_to_take, _, _, _ = \
+        game.play_move(players['One'], deck, table, lied_card=lied_card,
+                       interaction_foo=lambda x: 'pikes 3, clovers 3, tiles 3, hearts 3')
+    assert len(deck) == deck_len
+    assert len(table) == 4
+    assert ('pikes', '3') in table
+    assert ('tiles', '3') in table
+    assert ('clovers', '3') in table
+    assert len(players['One'].hand) == 1
+    assert ('clovers', '10') in players['One'].hand
+    assert lied_card == ('hearts', '3')
+    assert cards_to_take == 12
+
+    players = {'One': Player('One')}
+    players['One'].hand = [('tiles', '2'), ('clovers', '2'), ('pikes', '2'), ('hearts', '2'), ('clovers', '5')]
+    lied_card = ('pikes', '6')
+    table = []
+    deck_len = len(deck)
+
+    players['One'], deck, table, lied_card, cards_to_take, _, _, _ = \
+        game.play_move(players['One'], deck, table, lied_card=lied_card,
+                       interaction_foo=lambda x: 'pikes 2, hearts 2, tiles 2, clovers 2')
+    assert len(deck) == deck_len
+    assert len(table) == 4
+    assert ('pikes', '2') in table
+    assert ('tiles', '2') in table
+    assert ('hearts', '2') in table
+    assert len(players['One'].hand) == 1
+    assert ('clovers', '5') in players['One'].hand
+    assert lied_card == ('clovers', '2')
+    assert cards_to_take == 8
+
+
+def test_play_move_pack_4(deck):
+    players = {'One': Player('One')}
+    players['One'].hand = [('tiles', '4'), ('pikes', '4'), ('hearts', '4'), ('clovers', '4'), ('clovers', '7')]
+    lied_card = ('hearts', '6')
+    table = []
+    deck_len = len(deck)
+
+    players['One'], deck, table, lied_card, _, turns_to_wait, _, _ = \
+        game.play_move(players['One'], deck, table, lied_card=lied_card,
+                       interaction_foo=lambda x: 'hearts 4, tiles 4, clovers 4, pikes 4')
+    assert len(deck) == deck_len
+    assert len(table) == 4
+    assert ('hearts', '4') in table
+    assert ('tiles', '4') in table
+    assert ('clovers', '4') in table
+    assert len(players['One'].hand) == 1
+    assert ('clovers', '7') in players['One'].hand
+    assert lied_card == ('pikes', '4')
+    assert turns_to_wait == 4
+
+
 def test_play_round_mundane_moves_logic():
     global helper_move
     deck, table, players = game.prepare_game(['One', 'Two'])
