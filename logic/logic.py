@@ -1,16 +1,6 @@
 from random import shuffle
 
 
-class Color:
-    hearts = 'hearts'
-    tiles = 'tiles'
-    clovers = 'clovers'
-    pikes = 'pikes'
-
-    def all(self):
-        return [self.hearts, self.tiles, self.clovers, self.pikes]
-
-
 class Player:
     hand = []
     name = ''
