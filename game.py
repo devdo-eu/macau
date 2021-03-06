@@ -116,6 +116,28 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
             rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
+    lied_card, cards_to_take, turns_to_wait, requested_color, requested_value = \
+        cards_play_evaluate(player, played_cards, table, lied_card, cards_to_take, turns_to_wait,
+                            requested_color, requested_value, interaction_foo)
+    return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+
+
+def cards_play_evaluate(player, played_cards, table, lied_card, cards_to_take, turns_to_wait, requested_color,
+                        requested_value, interaction_foo):
+    """
+    Function used to evaluate the effect of played cards on the current game state.
+    :param player: Player objects
+    :param played_cards: list with tuples with cards data
+    :param table: list with cards on table
+    :param lied_card: tuple with last lied card
+    :param cards_to_take: integer value of take card punishment
+    :param turns_to_wait: integer value of skip turns punishment
+    :param requested_value: string with requested value
+    :param requested_color: string with requested color
+    :param interaction_foo: function used to ask player about value
+    :return: tuple with lied card, integer with cards to take, integer with turns to wait,
+     string of requested card color, string of requested card value
+    """
     ace_jacks_requested = False
     for played_card in played_cards:
         played_card_active = rules.check_card_played_active(played_card)
@@ -130,7 +152,7 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
         if lied_card and played_card[1] != 'A':
             requested_color = None
         lied_card = played_card
-    return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+    return lied_card, cards_to_take, turns_to_wait, requested_color, requested_value
 
 
 def convert_input_to_cards(player, played, possible_plays):
