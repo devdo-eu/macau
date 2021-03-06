@@ -72,11 +72,13 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
             rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
+    ace_jacks_requested = False
     for played_card in played_cards:
         played_card_active = rules.check_card_played_active(played_card)
-        if played_card_active:
+        if played_card_active and not ace_jacks_requested:
             cards_to_take, requested_color, requested_value, turns_to_wait = \
                 rules.additional_actions(played_card, cards_to_take, turns_to_wait, interaction_foo)
+            ace_jacks_requested = played_card[1] == 'J' or played_card[1] == 'A'
 
         player.hand.remove(played_card)
         if lied_card:
@@ -107,7 +109,6 @@ def convert_input_to_cards(player, played, possible_plays):
         cards_value = card[1]
         if cards_value not in packs or card not in player.hand:
             valid = False
-            break
         played_cards.append(card)
 
     if len(played_cards) < 3:
