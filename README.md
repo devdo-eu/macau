@@ -1,5 +1,6 @@
 # Macau
 ![Python application](https://github.com/devdo-eu/macau/workflows/Python%20application/badge.svg?branch=master)
+[![codecov](https://codecov.io/gh/devdo-eu/macau/branch/master/graph/badge.svg?token=Z48WS8CTVX)](https://codecov.io/gh/devdo-eu/macau)
 
 This is the Macau project.   
 Install the [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
