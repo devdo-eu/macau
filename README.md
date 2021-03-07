@@ -1,6 +1,11 @@
 # Macau
-![Python application](https://github.com/devdo-eu/macau/workflows/Python%20application/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/devdo-eu/macau/branch/master/graph/badge.svg?token=Z48WS8CTVX)](https://codecov.io/gh/devdo-eu/macau)
+![License](https://img.shields.io/github/license/devdo-eu/macau?style=plastic)
+![Tests](https://github.com/devdo-eu/macau/workflows/Tests/badge.svg?branch=master)
+![Quality](https://github.com/devdo-eu/macau/workflows/Quality/badge.svg?branch=master)
+![lgtm-grade](https://img.shields.io/lgtm/grade/python/github/devdo-eu/macau?style=plastic)
+![lgtm-alerts](https://img.shields.io/lgtm/alerts/github/devdo-eu/macau?style=plastic)
+![coverage](https://img.shields.io/codecov/c/github/devdo-eu/macau?style=plastic)
+![last-commit](https://img.shields.io/github/last-commit/devdo-eu/macau?style=plastic)
 
 This is the Macau project.   
 Install the [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
