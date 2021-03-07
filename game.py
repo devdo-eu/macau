@@ -95,7 +95,7 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
         possible_plays, can_move = rules.nonactive_card_possible_plays(player.hand, top_card, requested_value)
 
     if not can_move:
-        cards_to_take, deck, lied_card, turns_to_wait = \
+        deck, table, lied_card, cards_to_take, turns_to_wait = \
             rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
@@ -105,14 +105,14 @@ def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wai
     if len(played.split(',')) > 1:
         packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
         if not valid:
-            cards_to_take, deck, lied_card, turns_to_wait = \
+            deck, table, lied_card, cards_to_take, turns_to_wait = \
                 rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
             return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
     else:
         played_cards = [rules.convert_to_card(played)]
 
     if played_cards[0] not in possible_plays:
-        cards_to_take, deck, lied_card, turns_to_wait = \
+        deck, table, lied_card, cards_to_take, turns_to_wait = \
             rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
         return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
 
@@ -223,7 +223,7 @@ def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_w
             play_move(player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value,
                       requested_color, interaction_foo)
 
-        if lied_card is not None and lied_card[1] == 'J' and last_card != lied_card:
+        if last_card != lied_card and requested_value is not None and lied_card[1] == 'J':
             requested_value_rounds = len(players)
 
         if lied_card is not None and lied_card == ('pikes', 'K'):

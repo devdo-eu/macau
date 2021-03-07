@@ -19,14 +19,15 @@ There are unit tests for this project.
 You can run tests using `pytest` in project directory.
 
 # Rules and Features
-This Macau game rules are standard.
-After start of macau.py script you will see:  
+![movie](./media/JeIjc1OvHi.gif)
+This is standard [Macau](https://en.wikipedia.org/wiki/Macau_(card_game)) game.
+After start of `macau.py` script you will see:  
 ```
 Welcome to Macau Game!
 How many players will play? (max is 6):
 ```
 You can choose any number of players between 2-6.
-Game window looks like:  
+Game window looks like:
 ```
 Grzesiek Turn Now!
 

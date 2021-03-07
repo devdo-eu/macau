@@ -105,19 +105,25 @@ def active_card_possible_plays(hand, top_card, requested_color=None, requested_v
     :param requested_value: string with requested value
     :return: list of possible plays, bool value if there is any move
     """
+    attack = False
     possible_plays, req_value, req_color, from_color = [], [], [], []
     from_value = [(color, top_card[1]) for color in colors]
     if top_card[1] in '2 3 K'.split():
         from_color = [(top_card[0], value) for value in '2 3 K'.split()]
+        attack = True
 
     if requested_value:
         req_value = [(color, requested_value) for color in colors]
+    elif top_card[1] == 'J':
+        req_color = [(top_card[0], value) for value in values]
+
     if requested_color:
         req_color = [(requested_color, value) for value in values]
+    elif top_card[1] == 'A':
+        req_color = [(top_card[0], value) for value in values]
 
     [possible_plays.append(card) for card in hand if card in req_color + req_value + from_value + from_color]
-    possible_plays = list(set(possible_plays))
-    [possible_plays.remove(king) for king in [('tiles', 'K'), ('clovers', 'K')] if king in possible_plays]
+    [possible_plays.remove(king) for king in [('tiles', 'K'), ('clovers', 'K')] if king in possible_plays and attack]
 
     return possible_plays, len(possible_plays) > 0
 
@@ -288,8 +294,8 @@ def punish_player(player, deck, table, lied_card=None, cards_to_take=0, turns_to
     if turns_to_wait > 0:
         lied_card, turns_to_wait = skip_punishment(player, table, lied_card, turns_to_wait)
     else:
-        cards_to_take, deck, lied_card = take_cards_punishment(player, deck, table, lied_card, cards_to_take)
-    return cards_to_take, deck, lied_card, turns_to_wait
+        deck, table, lied_card, cards_to_take = take_cards_punishment(player, deck, table, lied_card, cards_to_take)
+    return deck, table, lied_card, cards_to_take, turns_to_wait
 
 
 def take_cards_punishment(player, deck, table, lied_card=None, cards_to_take=0):
@@ -303,7 +309,7 @@ def take_cards_punishment(player, deck, table, lied_card=None, cards_to_take=0):
     :return: integer of cards to take, list with cards inside deck, last lied card
     """
     if len(deck) <= cards_to_take:
-        clean_table(deck, table)
+        deck, table = clean_table(deck, table)
 
     if cards_to_take > 0:
         cards, deck, _ = deal_cards(deck, cards_to_take)
@@ -315,7 +321,7 @@ def take_cards_punishment(player, deck, table, lied_card=None, cards_to_take=0):
         cards, deck, _ = deal_cards(deck, 1)
 
     player.hand += cards
-    return cards_to_take, deck, lied_card
+    return deck, table, lied_card, cards_to_take
 
 
 def skip_punishment(player, table, lied_card=None, turns_to_wait=0):
