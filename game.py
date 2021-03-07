@@ -1,5 +1,39 @@
 import logic.logic as rules
 import os
+from typing import Any
+
+
+def gui_default(game_state, possible_plays):
+    return ''
+
+
+class GameState:
+    deck: list
+    table: list
+    players: dict
+    gui_foo: Any
+    lied_card: Any
+    cards_to_take: int
+    turns_to_wait: int
+    requested_value_rounds: int
+    requested_value: Any
+    requested_color: Any
+    interaction_foo: Any
+    output_foo: Any
+
+    def __init__(self):
+        self.gui_foo = gui_default
+        self.interaction_foo = input
+        self.output_foo = print
+        self.deck = []
+        self.table = []
+        self.players = {}
+        self.lied_card = None
+        self.cards_to_take = 0
+        self.turns_to_wait = 0
+        self.requested_value_rounds = 0
+        self.requested_color = None
+        self.requested_value = None
 
 
 def prepare_game(players_names):
@@ -187,51 +221,39 @@ def convert_input_to_cards(player, played, possible_plays):
     return packs, played_cards, valid
 
 
-def play_round(players, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value_rounds=0,
-               requested_value=None, requested_color=None, interaction_foo=input, output_foo=print):
+def play_round(game_state):
     """
     Function used to process logic of one round (one move per every player in game).
-    :param players: dictionary of Player objects which contains players hands
-    :param deck: list with cards inside deck
-    :param table: list with cards on table
-    :param lied_card: tuple with last lied card
-    :param cards_to_take: integer value of take card punishment
-    :param turns_to_wait: integer value of skip turns punishment
-    :param requested_value_rounds: integer value of how many moves value card request will be valid
-    :param requested_value: string with requested value
-    :param requested_color: string with requested color
-    :param interaction_foo: function used to ask player about value
-    :param output_foo: function used to show information to player
-    :return: players, deck, table, lied_card, cards_to_take, turns_to_wait,
-    requested_value_rounds, requested_value, requested_color
+    :param game_state: GameState object with all information about state of game
+    :return: Updated GameState object with all information about state of game
     """
-    for player in players.values():
-        if output_foo == print and interaction_foo == input:
+    gs = game_state
+    for player in gs.players.values():
+        if gs.output_foo == print and gs.interaction_foo == input:
             os.system('cls')
             input(f'{player.name} Turn Now!')
-        for check in players.values():
+        for check in gs.players.values():
             if len(check.hand) == 1:
-                output_foo(f"{check.name} has macau!")
+                gs.output_foo(f"{check.name} has macau!")
 
-        if requested_value_rounds > 0:
-            requested_value_rounds -= 1
+        if gs.requested_value_rounds > 0:
+            gs.requested_value_rounds -= 1
         else:
-            requested_value = None
+            gs.requested_value = None
 
-        last_card = lied_card
-        player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color = \
-            play_move(player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value,
-                      requested_color, interaction_foo)
+        last_card = gs.lied_card
+        player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take, gs.turns_to_wait, gs.requested_value, gs.requested_color = \
+            play_move(player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take, gs.turns_to_wait, gs.requested_value,
+                      gs.requested_color, gs.interaction_foo)
 
-        if last_card != lied_card and requested_value is not None and lied_card[1] == 'J':
-            requested_value_rounds = len(players)
+        if last_card != gs.lied_card and gs.requested_value is not None and gs.lied_card[1] == 'J':
+            gs.requested_value_rounds = len(gs.players)
 
-        if lied_card is not None and lied_card == ('pikes', 'K'):
-            cards_to_take, deck, lied_card = \
-                pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take)
+        if gs.lied_card is not None and gs.lied_card == ('pikes', 'K'):
+            gs.cards_to_take, gs.deck, gs.lied_card = \
+                pikes_king_punishment(gs.players, player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take)
 
-    return players, deck, table, lied_card, cards_to_take, \
-        turns_to_wait, requested_value_rounds, requested_value, requested_color
+    return gs
 
 
 def pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take):
