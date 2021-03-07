@@ -19,7 +19,8 @@ There are unit tests for this project.
 You can run tests using `pytest` in project directory.
 
 # Rules and Features
-![movie](./media/JeIjc1OvHi.gif)
+![movie](./media/JeIjc1OvHi.gif)  
+
 This is standard [Macau](https://en.wikipedia.org/wiki/Macau_(card_game)) game.
 After start of `macau.py` script you will see:  
 ```
