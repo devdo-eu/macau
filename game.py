@@ -1,25 +1,12 @@
 import logic.logic as rules
 import os
-from typing import Any
 
 
-def gui_default(game_state, possible_plays):
+def gui_default(_):
     return ''
 
 
 class GameState:
-    deck: list
-    table: list
-    players: dict
-    gui_foo: Any
-    lied_card: Any
-    cards_to_take: int
-    turns_to_wait: int
-    requested_value_rounds: int
-    requested_value: Any
-    requested_color: Any
-    interaction_foo: Any
-    output_foo: Any
 
     def __init__(self):
         self.gui_foo = gui_default
@@ -57,28 +44,25 @@ def prepare_game(players_names):
     return deck, table, players
 
 
-def gui_builder(player, deck, top_card, cards_to_take, turns_to_wait, requested_value, requested_color, possible_plays):
+def gui_builder(player, game_state, top_card, possible_plays):
     """
     Function used to build information message for players
     :param player: Player object
-    :param deck: list with cards inside deck
+    :param game_state: GameState object with all information about state of game
     :param top_card: tuple with card on top of a table
-    :param cards_to_take: integer value of take card punishment
-    :param turns_to_wait: integer value of skip turns punishment
-    :param requested_value: string with requested value
-    :param requested_color: string with requested color
     :param possible_plays: list of cards possible to be played
     :return: string message with information about state of game
     """
+    gs = game_state
     gui = f'\n{player.name}' \
           f'\n---------------------Punishments---------------------' \
-          f'\nCards: {cards_to_take}' \
-          f'\nSkip turns: {turns_to_wait}' \
+          f'\nCards: {gs.cards_to_take}' \
+          f'\nSkip turns: {gs.turns_to_wait}' \
           f'\n----------------------Requests-----------------------' \
-          f'\nColor: {requested_color}' \
-          f'\nValue: {requested_value}' \
+          f'\nColor: {gs.requested_color}' \
+          f'\nValue: {gs.requested_value}' \
           f'\n-----------------------Table-------------------------' \
-          f'\nCards in deck: {len(deck)}' \
+          f'\nCards in deck: {len(gs.deck)}' \
           f'\nOn top: {top_card[0]} {top_card[1]}' \
           f'\n------------------------Hand-------------------------'
     cards = ''
@@ -98,95 +82,92 @@ def gui_builder(player, deck, top_card, cards_to_take, turns_to_wait, requested_
     return gui
 
 
-def play_move(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0, requested_value=None,
-              requested_color=None, interaction_foo=input):
+def play_move(player, game_state):
     """
     Function used to process logic of player move.
     :param player: Player objects
-    :param deck: list with cards inside deck
-    :param table: list with cards on table
-    :param lied_card: tuple with last lied card
-    :param cards_to_take: integer value of take card punishment
-    :param turns_to_wait: integer value of skip turns punishment
-    :param requested_value: string with requested value
-    :param requested_color: string with requested color
-    :param interaction_foo: function used to ask player about value
-    :return: player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+    :param game_state: GameState object with all information about state of game
+    :return: Updated player, updated game_state
     """
+    gs = game_state
     if player.turns_to_skip > 0:
         player.turns_to_skip -= 1
-        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+        return player, gs
 
-    top_card = lied_card
+    top_card = gs.lied_card
     if not top_card:
-        top_card = table[-1]
+        top_card = gs.table[-1]
 
     active = rules.check_card_played_active(top_card)
-    if active and lied_card:
+    if active and gs.lied_card:
         possible_plays, can_move = \
-            rules.active_card_possible_plays(player.hand, top_card, requested_color, requested_value)
+            rules.active_card_possible_plays(player.hand, top_card, gs.requested_color, gs.requested_value)
     else:
-        possible_plays, can_move = rules.nonactive_card_possible_plays(player.hand, top_card, requested_value)
+        possible_plays, can_move = rules.nonactive_card_possible_plays(player.hand, top_card, gs.requested_value)
 
     if not can_move:
-        deck, table, lied_card, cards_to_take, turns_to_wait = \
-            rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
-        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+        gs = punish_player(player, gs)
+        return player, gs
 
-    message = gui_builder(player, deck, top_card, cards_to_take,
-                          turns_to_wait, requested_value, requested_color, possible_plays)
-    played = interaction_foo(message)
+    message = gui_builder(player, gs, top_card, possible_plays)
+    played = gs.interaction_foo(message)
     if len(played.split(',')) > 1:
         packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
         if not valid:
-            deck, table, lied_card, cards_to_take, turns_to_wait = \
-                rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
-            return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+            gs = punish_player(player, gs)
+            return player, gs
     else:
         played_cards = [rules.convert_to_card(played)]
 
     if played_cards[0] not in possible_plays:
-        deck, table, lied_card, cards_to_take, turns_to_wait = \
-            rules.punish_player(player, deck, table, lied_card, cards_to_take, turns_to_wait)
-        return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+        gs = punish_player(player, gs)
+        return player, gs
 
-    lied_card, cards_to_take, turns_to_wait, requested_color, requested_value = \
-        cards_play_evaluate(player, played_cards, table, lied_card, cards_to_take, turns_to_wait,
-                            requested_color, requested_value, interaction_foo)
-    return player, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value, requested_color
+    gs = cards_play_evaluate(player, played_cards, gs)
+    return player, gs
 
 
-def cards_play_evaluate(player, played_cards, table, lied_card, cards_to_take, turns_to_wait, requested_color,
-                        requested_value, interaction_foo):
+def punish_player(player, game_state):
+    """
+    Function combines the action of two punishing functions.
+    With it, the player receives a penalty in turns or in cards.
+    :param player: Player objects
+    :param game_state: GameState object with all information about state of game
+    :return: Updated GameState object with all information about state of game
+    """
+    gs = game_state
+    if gs.turns_to_wait > 0:
+        gs.lied_card, gs.turns_to_wait = rules.skip_punishment(player, gs.table, gs.lied_card, gs.turns_to_wait)
+    else:
+        gs.deck, gs.table, gs.lied_card, gs.cards_to_take = \
+            rules.take_cards_punishment(player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take)
+    return gs
+
+
+def cards_play_evaluate(player, played_cards, game_state):
     """
     Function used to evaluate the effect of played cards on the current game state.
     :param player: Player objects
     :param played_cards: list with tuples with cards data
-    :param table: list with cards on table
-    :param lied_card: tuple with last lied card
-    :param cards_to_take: integer value of take card punishment
-    :param turns_to_wait: integer value of skip turns punishment
-    :param requested_value: string with requested value
-    :param requested_color: string with requested color
-    :param interaction_foo: function used to ask player about value
-    :return: tuple with lied card, integer with cards to take, integer with turns to wait,
-     string of requested card color, string of requested card value
+    :param game_state: GameState object with all information about state of game
+    :return: Updated player, updated game_state
     """
+    gs = game_state
     ace_jacks_requested = False
     for played_card in played_cards:
         played_card_active = rules.check_card_played_active(played_card)
         if played_card_active and not ace_jacks_requested:
-            cards_to_take, requested_color, requested_value, turns_to_wait = \
-                rules.additional_actions(played_card, cards_to_take, turns_to_wait, interaction_foo)
+            gs.cards_to_take, gs.requested_color, gs.requested_value, gs.turns_to_wait = \
+                rules.additional_actions(played_card, gs.cards_to_take, gs.turns_to_wait, gs.interaction_foo)
             ace_jacks_requested = played_card[1] == 'J' or played_card[1] == 'A'
 
         player.hand.remove(played_card)
-        if lied_card:
-            table.append(lied_card)
-        if lied_card and played_card[1] != 'A':
-            requested_color = None
-        lied_card = played_card
-    return lied_card, cards_to_take, turns_to_wait, requested_color, requested_value
+        if gs.lied_card:
+            gs.table.append(gs.lied_card)
+        if gs.lied_card and played_card[1] != 'A':
+            gs.requested_color = None
+        gs.lied_card = played_card
+    return gs
 
 
 def convert_input_to_cards(player, played, possible_plays):
@@ -242,39 +223,33 @@ def play_round(game_state):
             gs.requested_value = None
 
         last_card = gs.lied_card
-        player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take, gs.turns_to_wait, gs.requested_value, gs.requested_color = \
-            play_move(player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take, gs.turns_to_wait, gs.requested_value,
-                      gs.requested_color, gs.interaction_foo)
+        player, gs = play_move(player, gs)
 
         if last_card != gs.lied_card and gs.requested_value is not None and gs.lied_card[1] == 'J':
             gs.requested_value_rounds = len(gs.players)
 
         if gs.lied_card is not None and gs.lied_card == ('pikes', 'K'):
-            gs.cards_to_take, gs.deck, gs.lied_card = \
-                pikes_king_punishment(gs.players, player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take)
+            gs = pikes_king_punishment(player, gs)
 
     return gs
 
 
-def pikes_king_punishment(players, player, deck, table, lied_card, cards_to_take):
+def pikes_king_punishment(player, game_state):
     """
     Function used to punish with cards last player (one back from current).
-    :param players: dictionary of Player objects which contains players hands and players names
     :param player: Player object of current player
-    :param deck: list with deck of cards from which cards will be dealt
-    :param table: list with cards lied on table
-    :param lied_card: tuple with last lied card
-    :param cards_to_take: integer value of take card punishment
-    :return: integer with cards to take, list with deck of cards, tuple with last lied card
+    :param game_state: GameState object with all information about state of game
+    :return: Updated game_state object
     """
-    players_list = list(players)
+    gs = game_state
+    players_list = list(gs.players)
     players_list += players_list
     for index in range(1, len(players_list) - 1):
         if players_list[index + 1] == player.name:
-            cards, deck, _ = rules.deal_cards(deck, cards_to_take)
-            players[players_list[index]].hand += cards
-            cards_to_take = 0
-            table.append(lied_card)
-            lied_card = None
+            cards, gs.deck, _ = rules.deal_cards(gs.deck, gs.cards_to_take)
+            gs.players[players_list[index]].hand += cards
+            gs.cards_to_take = 0
+            gs.table.append(gs.lied_card)
+            gs.lied_card = None
             break
-    return cards_to_take, deck, lied_card
+    return gs
