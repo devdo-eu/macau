@@ -15,22 +15,14 @@ if __name__ == '__main__':
         name = input(f'Enter name for player#{index} : ')
         names.append(name)
 
-    deck, table, players = game.prepare_game(names)
-    lied_card = None
-    cards_to_take = 0
-    turns_to_wait = 0
-    requested_value_rounds = 0
-    requested_value = None
-    requested_color = None
+    gs = game.GameState()
+    gs.deck, gs.table, gs.players = game.prepare_game(names)
     print('Game is set and ready to be played !')
 
     while True:
-        players, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value_rounds,\
-            requested_value, requested_color =\
-            game.play_round(players, deck, table, lied_card, cards_to_take, turns_to_wait, requested_value_rounds,
-                            requested_value, requested_color)
+        gs = game.play_round(gs)
         winners = []
-        for player in players.values():
+        for player in gs.players.values():
             if len(player.hand) == 0:
                 winners.append(player.name)
         if len(winners) > 0:

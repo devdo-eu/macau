@@ -279,25 +279,6 @@ def additional_actions(played_card, cards_to_take, turns_to_wait, interaction_fo
     return cards_to_take, requested_color, requested_value, turns_to_wait
 
 
-def punish_player(player, deck, table, lied_card=None, cards_to_take=0, turns_to_wait=0):
-    """
-    Function combines the action of two punishing functions.
-    With it, the player receives a penalty in turns or in cards.
-    :param player: Player objects
-    :param deck: list with cards inside deck
-    :param table: list with cards on table
-    :param lied_card: tuple with last lied card
-    :param cards_to_take: integer value of take card punishment
-    :param turns_to_wait: integer value of skip turns punishment
-    :return: integer of cards to take, list with cards inside deck, last lied card, integer of turns to skip
-    """
-    if turns_to_wait > 0:
-        lied_card, turns_to_wait = skip_punishment(player, table, lied_card, turns_to_wait)
-    else:
-        deck, table, lied_card, cards_to_take = take_cards_punishment(player, deck, table, lied_card, cards_to_take)
-    return deck, table, lied_card, cards_to_take, turns_to_wait
-
-
 def take_cards_punishment(player, deck, table, lied_card=None, cards_to_take=0):
     """
     Function used to punish player with cards.
