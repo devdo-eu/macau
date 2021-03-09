@@ -2,14 +2,10 @@ import logic.logic as rules
 import os
 
 
-def gui_default(_):
-    return ''
-
-
 class GameState:
 
     def __init__(self):
-        self.gui_foo = gui_default
+        self.gui_foo = lambda x: ''
         self.interaction_foo = input
         self.output_foo = print
         self.deck = []
@@ -54,17 +50,26 @@ def gui_builder(player, game_state, top_card, possible_plays):
     :return: string message with information about state of game
     """
     gs = game_state
-    gui = f'\n{player.name}' \
-          f'\n---------------------Punishments---------------------' \
-          f'\nCards: {gs.cards_to_take}' \
-          f'\nSkip turns: {gs.turns_to_wait}' \
-          f'\n----------------------Requests-----------------------' \
-          f'\nColor: {gs.requested_color}' \
-          f'\nValue: {gs.requested_value}' \
-          f'\n-----------------------Table-------------------------' \
-          f'\nCards in deck: {len(gs.deck)}' \
-          f'\nOn top: {top_card[0]} {top_card[1]}' \
-          f'\n------------------------Hand-------------------------'
+    gui = ''
+    if gs.interaction_foo == input and gs.output_foo == print:
+        os.system('cls||clear')
+        gs.interaction_foo(f'{player.name} Turn Now!')
+    for check in gs.players.values():
+        if len(check.hand) == 1:
+            gui += f"\n{check.name} has macau!"
+
+    gui += f'\n{player.name}' \
+           f'\n---------------------Punishments---------------------' \
+           f'\nCards: {gs.cards_to_take}' \
+           f'\nSkip turns: {gs.turns_to_wait}' \
+           f'\n----------------------Requests-----------------------' \
+           f'\nColor: {gs.requested_color}' \
+           f'\nValue: {gs.requested_value}' \
+           f'\n-----------------------Table-------------------------' \
+           f'\nCards in deck: {len(gs.deck)}' \
+           f'\nCards on table: {len(gs.table)}' \
+           f'\nOn top: {top_card[0]} {top_card[1]}' \
+           f'\n------------------------Hand-------------------------'
     cards = ''
     for index, card in enumerate(player.hand):
         if card in possible_plays:
@@ -127,6 +132,46 @@ def play_move(player, game_state):
     return player, gs
 
 
+def play_round(game_state):
+    """
+    Function used to process logic of one round (one move per every player in game).
+    :param game_state: GameState object with all information about state of game
+    :return: Updated GameState object with all information about state of game
+    """
+    gs = game_state
+    for player in gs.players.values():
+        if gs.requested_value_rounds > 0:
+            gs.requested_value_rounds -= 1
+        else:
+            gs.requested_value = None
+
+        last_card = gs.lied_card
+        player, gs = play_move(player, gs)
+
+        if last_card != gs.lied_card and gs.requested_value is not None and gs.lied_card[1] == 'J':
+            gs.requested_value_rounds = len(gs.players)
+
+        if gs.lied_card is not None and gs.lied_card == ('pikes', 'K'):
+            gs = pikes_king_punishment(player, gs)
+
+    return gs
+
+
+def play_game(game_state):
+    """
+    Function used to play game on terminal locally
+    :param game_state: GameState object
+    :return: list of winners
+    """
+    winners = []
+    while len(winners) == 0:
+        game_state = play_round(game_state)
+        for player in game_state.players.values():
+            if len(player.hand) == 0:
+                winners.append(player.name)
+    return winners
+
+
 def punish_player(player, game_state):
     """
     Function combines the action of two punishing functions.
@@ -141,6 +186,27 @@ def punish_player(player, game_state):
     else:
         gs.deck, gs.table, gs.lied_card, gs.cards_to_take = \
             rules.take_cards_punishment(player, gs.deck, gs.table, gs.lied_card, gs.cards_to_take)
+    return gs
+
+
+def pikes_king_punishment(player, game_state):
+    """
+    Function used to punish with cards last player (one back from current).
+    :param player: Player object of current player
+    :param game_state: GameState object with all information about state of game
+    :return: Updated game_state object
+    """
+    gs = game_state
+    players_list = list(gs.players)
+    players_list += players_list
+    for index in range(1, len(players_list) - 1):
+        if players_list[index + 1] == player.name:
+            cards, gs.deck, _ = rules.deal_cards(gs.deck, gs.cards_to_take)
+            gs.players[players_list[index]].hand += cards
+            gs.cards_to_take = 0
+            gs.table.append(gs.lied_card)
+            gs.lied_card = None
+            break
     return gs
 
 
@@ -200,56 +266,3 @@ def convert_input_to_cards(player, played, possible_plays):
             valid = False
 
     return packs, played_cards, valid
-
-
-def play_round(game_state):
-    """
-    Function used to process logic of one round (one move per every player in game).
-    :param game_state: GameState object with all information about state of game
-    :return: Updated GameState object with all information about state of game
-    """
-    gs = game_state
-    for player in gs.players.values():
-        if gs.output_foo == print and gs.interaction_foo == input:
-            os.system('cls')
-            input(f'{player.name} Turn Now!')
-        for check in gs.players.values():
-            if len(check.hand) == 1:
-                gs.output_foo(f"{check.name} has macau!")
-
-        if gs.requested_value_rounds > 0:
-            gs.requested_value_rounds -= 1
-        else:
-            gs.requested_value = None
-
-        last_card = gs.lied_card
-        player, gs = play_move(player, gs)
-
-        if last_card != gs.lied_card and gs.requested_value is not None and gs.lied_card[1] == 'J':
-            gs.requested_value_rounds = len(gs.players)
-
-        if gs.lied_card is not None and gs.lied_card == ('pikes', 'K'):
-            gs = pikes_king_punishment(player, gs)
-
-    return gs
-
-
-def pikes_king_punishment(player, game_state):
-    """
-    Function used to punish with cards last player (one back from current).
-    :param player: Player object of current player
-    :param game_state: GameState object with all information about state of game
-    :return: Updated game_state object
-    """
-    gs = game_state
-    players_list = list(gs.players)
-    players_list += players_list
-    for index in range(1, len(players_list) - 1):
-        if players_list[index + 1] == player.name:
-            cards, gs.deck, _ = rules.deal_cards(gs.deck, gs.cards_to_take)
-            gs.players[players_list[index]].hand += cards
-            gs.cards_to_take = 0
-            gs.table.append(gs.lied_card)
-            gs.lied_card = None
-            break
-    return gs
