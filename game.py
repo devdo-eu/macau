@@ -1,5 +1,5 @@
 import logic.logic as rules
-from player.player import Player
+from player.player import Player, CPUPlayer
 
 
 class GameState:
@@ -26,6 +26,8 @@ def prepare_game(players_names):
     players = {}
     for name in players_names:
         players[name] = Player(name)
+        if 'CPU' in name:
+            players[name] = CPUPlayer(name)
         players[name].hand, deck, _ = rules.deal_cards(deck, 5)
 
     table, deck, _ = rules.deal_cards(deck, 1)
