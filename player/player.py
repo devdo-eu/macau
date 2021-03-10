@@ -71,6 +71,14 @@ class CPUPlayer(Player):
         self.input_foo = self.__cpu_input
 
     def __cpu_gui(self, _game_state, _top_card, possible_plays):
+        """
+        Function used to get gui information to cpu player.
+        It is responsible for building strategy of this player.
+        :param _game_state: GameState object with all information about state of game
+        :param _top_card: tuple with card on top of a table
+        :param possible_plays: list of cards possible to be played
+        :return: empty string object
+        """
         self.move_counter = -1
         self.next_moves = [choice(possible_plays)]
         if self.next_moves[0][1] == 'A':
@@ -78,8 +86,13 @@ class CPUPlayer(Player):
             self.next_moves.append(biggest_color)
         if self.next_moves[0][1] == 'J':
             self.next_moves.append(self.__evaluate_jack_request())
+        return ''
 
     def __evaluate_jack_request(self):
+        """
+        Helper function used to find best request after jack card play.
+        :return: string with requested value of cards
+        """
         biggest_value, appearances_value = self.__find_biggest('value')
         biggest_color, appearances_color = self.__find_biggest('color')
         hand_copy = copy(self.hand)
@@ -93,6 +106,12 @@ class CPUPlayer(Player):
         return chosen_card[1]
 
     def __find_biggest(self, what='color'):
+        """
+        Helper function used to find color of value most frequent in hand
+        :param what: string which allow to choose what trait needs to be found
+        :return: string with biggest trait on hand,
+        int with how many cards on hand have this trait
+        """
         index = bool(what != 'color')
         hand_copy = copy(self.hand)
         hand_copy.remove(self.next_moves[0])
@@ -109,9 +128,18 @@ class CPUPlayer(Player):
         return biggest, on_hand[biggest]
 
     def __cpu_print(self, _message):
+        """
+        Function used as a printer function for cpu players
+        :param _message: string with information to print
+        """
         pass
 
     def __cpu_input(self, _message):
+        """
+        Function used as a input function for cpu players.
+        :param _message: string with information about what needs to be entered
+        :return: string with next move of cpu player
+        """
         self.move_counter += 1
         if len(self.next_moves) > self.move_counter:
             if type(self.next_moves[self.move_counter]) is str:
