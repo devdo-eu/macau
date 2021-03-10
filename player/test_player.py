@@ -146,3 +146,7 @@ def test_cpu_input(gs_cpu):
     cpu_move = cpu.input_foo('Message')
     assert cpu_move == 'pikes'
     assert cpu.move_counter == 1
+
+    cpu_move = cpu.input_foo('Message')
+    assert cpu_move == ''
+    assert cpu.move_counter == 2
