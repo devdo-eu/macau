@@ -36,7 +36,10 @@ class Player:
                f'\n----------------------Requests-----------------------' \
                f'\nColor: {gs.requested_color}' \
                f'\nValue: {gs.requested_value}' \
-               f'\n-----------------------Table-------------------------' \
+               f'\n----------------------Players------------------------'
+        for rival in game_state.players.values():
+            gui += f'\n{rival.name} has: {len(rival.hand)} cards on hand.'
+        gui += f'\n-----------------------Table-------------------------' \
                f'\nCards in deck: {len(gs.deck)}' \
                f'\nCards on table: {len(gs.table)}' \
                f'\nOn top: {top_card[0]} {top_card[1]}' \

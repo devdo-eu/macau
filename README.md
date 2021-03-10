@@ -27,7 +27,9 @@ After start of `macau.py` script you will see:
 Welcome to Macau Game!
 How many players will play? (max is 6):
 ```
-You can choose any number of players between 2-6.
+You can choose any number of players between 2-6.  
+If name of player contains `CPU` then this player will be controlled by a computer.  
+This means that player with name `Test_CPU` will be cpu-player.  
 Game window looks like:
 ```
 Grzesiek Turn Now!
@@ -37,13 +39,17 @@ Grzesiek
 Cards: 0
 Skip turns: 0
 ----------------------Requests-----------------------
-Color: None
+Color: hearts
 Value: None
+----------------------Players------------------------
+Grzesiek has: 2 cards on hand.
+Aga has: 2 cards on hand.
 -----------------------Table-------------------------
-Cards in deck: 41
-On top: hearts 10
+Cards in deck: 31
+Cards on table: 16
+On top: tiles A
 ------------------------Hand-------------------------
-clovers 3, *hearts 3*, clovers 8, pikes 9, *hearts J*
+tiles 5, *hearts 4*
 -----------------------------------------------------
 *color value* -> means that this card can be played
 Which card(s) from your hand do you want to play?:
