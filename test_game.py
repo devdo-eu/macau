@@ -2,7 +2,7 @@ import game
 import pytest
 from copy import deepcopy
 from logic.logic import values, colors
-from player.player import Player
+from player.player import Player, CPUPlayer
 
 
 def show(_):
@@ -54,6 +54,15 @@ def test_prepare_game():
     assert len(table) > 0
     assert len(deck) <= 51
     assert len(players) == 0
+
+
+def test_prepare_game_with_cpus():
+    deck, table, players = game.prepare_game(['One', 'CPU_Two', 'Three_CPU', 'CPU'])
+    cpus = 0
+    for player in players.values():
+        if type(player) is CPUPlayer:
+            cpus += 1
+    assert cpus == 3
 
 
 @pytest.mark.parametrize('hand, lied_card, check_lied_card, deck_len, hand_len, table_len', [

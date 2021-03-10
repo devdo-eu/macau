@@ -65,26 +65,31 @@ class CPUPlayer(Player):
         self.move_counter = -1
         self.gui_foo = self.__cpu_gui
         self.print_foo = self.__cpu_print
+        self.input_foo = self.__cpu_input
 
     def __cpu_gui(self, _game_state, _top_card, possible_plays):
+        self.move_counter = -1
         self.next_moves = [choice(possible_plays)]
         if self.next_moves[0][1] == 'A':
-            biggest_color, _ = self.find_biggest('color')
+            biggest_color, _ = self.__find_biggest('color')
             self.next_moves.append(biggest_color)
         if self.next_moves[0][1] == 'J':
-            self.next_moves.append(self.evaluate_jack_request())
+            self.next_moves.append(self.__evaluate_jack_request())
 
-    def evaluate_jack_request(self):
-        biggest_value, appearances_value = self.find_biggest('value')
-        biggest_color, appearances_color = self.find_biggest('color')
+    def __evaluate_jack_request(self):
+        biggest_value, appearances_value = self.__find_biggest('value')
+        biggest_color, appearances_color = self.__find_biggest('color')
+        hand_copy = copy(self.hand)
+        hand_copy.remove(self.next_moves[0])
         if appearances_color > appearances_value:
-            biggest_cards = [card for card in self.hand if card[0] == biggest_color]
+            biggest_cards = [card for card in hand_copy
+                             if card[0] == biggest_color and card[1] not in '2 3 4 J Q K A'.split()]
         else:
-            biggest_cards = [card for card in self.hand if card[1] == biggest_value]
+            biggest_cards = [card for card in hand_copy if card[1] == biggest_value]
         chosen_card = choice(biggest_cards)
         return chosen_card[1]
 
-    def find_biggest(self, what='color'):
+    def __find_biggest(self, what='color'):
         index = bool(what != 'color')
         hand_copy = copy(self.hand)
         hand_copy.remove(self.next_moves[0])
@@ -95,11 +100,19 @@ class CPUPlayer(Player):
                 on_hand[trait] += 1
             else:
                 on_hand[trait] = 1
+        if index == 1:
+            [on_hand.pop(value) for value in '2 3 4 J Q K A'.split() if value in on_hand.keys()]
         biggest = max(on_hand, key=on_hand.get)
         return biggest, on_hand[biggest]
 
     def __cpu_print(self, _message):
         pass
 
-    #def cpu_input(self, _message):
-    #    self.move_counter += 1
+    def __cpu_input(self, _message):
+        self.move_counter += 1
+        if len(self.next_moves) > self.move_counter:
+            if type(self.next_moves[self.move_counter]) is str:
+                return self.next_moves[self.move_counter]
+            else:
+                return f'{self.next_moves[self.move_counter][0]} {self.next_moves[self.move_counter][1]}'
+        return ''
