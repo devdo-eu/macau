@@ -1,13 +1,10 @@
 import logic.logic as rules
-import os
+from player.player import Player
 
 
 class GameState:
 
     def __init__(self):
-        self.gui_foo = lambda x: ''
-        self.interaction_foo = input
-        self.output_foo = print
         self.deck = []
         self.table = []
         self.players = {}
@@ -28,7 +25,7 @@ def prepare_game(players_names):
     deck, table, _ = rules.prepare_deck()
     players = {}
     for name in players_names:
-        players[name] = rules.Player(name)
+        players[name] = Player(name)
         players[name].hand, deck, _ = rules.deal_cards(deck, 5)
 
     table, deck, _ = rules.deal_cards(deck, 1)
@@ -38,53 +35,6 @@ def prepare_game(players_names):
         table += card
 
     return deck, table, players
-
-
-def gui_builder(player, game_state, top_card, possible_plays):
-    """
-    Function used to build information message for players
-    :param player: Player object
-    :param game_state: GameState object with all information about state of game
-    :param top_card: tuple with card on top of a table
-    :param possible_plays: list of cards possible to be played
-    :return: string message with information about state of game
-    """
-    gs = game_state
-    gui = ''
-    if gs.interaction_foo == input and gs.output_foo == print:
-        os.system('cls||clear')
-        gs.interaction_foo(f'{player.name} Turn Now!')
-    for check in gs.players.values():
-        if len(check.hand) == 1:
-            gui += f"\n{check.name} has macau!"
-
-    gui += f'\n{player.name}' \
-           f'\n---------------------Punishments---------------------' \
-           f'\nCards: {gs.cards_to_take}' \
-           f'\nSkip turns: {gs.turns_to_wait}' \
-           f'\n----------------------Requests-----------------------' \
-           f'\nColor: {gs.requested_color}' \
-           f'\nValue: {gs.requested_value}' \
-           f'\n-----------------------Table-------------------------' \
-           f'\nCards in deck: {len(gs.deck)}' \
-           f'\nCards on table: {len(gs.table)}' \
-           f'\nOn top: {top_card[0]} {top_card[1]}' \
-           f'\n------------------------Hand-------------------------'
-    cards = ''
-    for index, card in enumerate(player.hand):
-        if card in possible_plays:
-            cards += f'*{card[0]} {card[1]}*'
-        else:
-            cards += f'{card[0]} {card[1]}'
-        if index < len(player.hand) - 1:
-            cards += ', '
-        if index % 5 == 4 and index != len(player.hand) - 1:
-            cards += '\n'
-    gui += f'\n{cards}' \
-           f'\n-----------------------------------------------------' \
-           f'\n*color value* -> means that this card can be played' \
-           f'\nWhich card(s) from your hand do you want to play?: '
-    return gui
 
 
 def play_move(player, game_state):
@@ -114,8 +64,8 @@ def play_move(player, game_state):
         gs = punish_player(player, gs)
         return player, gs
 
-    message = gui_builder(player, gs, top_card, possible_plays)
-    played = gs.interaction_foo(message)
+    message = player.gui_foo(gs, top_card, possible_plays)
+    played = player.input_foo(message)
     if len(played.split(',')) > 1:
         packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
         if not valid:
@@ -224,7 +174,7 @@ def cards_play_evaluate(player, played_cards, game_state):
         played_card_active = rules.check_card_played_active(played_card)
         if played_card_active and not ace_jacks_requested:
             gs.cards_to_take, gs.requested_color, gs.requested_value, gs.turns_to_wait = \
-                rules.additional_actions(played_card, gs.cards_to_take, gs.turns_to_wait, gs.interaction_foo)
+                rules.additional_actions(played_card, gs.cards_to_take, gs.turns_to_wait, player.input_foo)
             ace_jacks_requested = played_card[1] == 'J' or played_card[1] == 'A'
 
         player.hand.remove(played_card)
