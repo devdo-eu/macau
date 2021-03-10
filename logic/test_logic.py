@@ -1,6 +1,6 @@
 import pytest
 import logic.logic as logic
-from logic.logic import Player
+from player.player import Player
 
 
 @pytest.fixture

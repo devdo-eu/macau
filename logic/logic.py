@@ -1,15 +1,6 @@
 from random import shuffle
 
 
-class Player:
-    hand = []
-    name = ''
-    turns_to_skip = 0
-
-    def __init__(self, name):
-        self.name = name
-
-
 colors = 'hearts tiles clovers pikes'.split()
 values = '2 3 4 5 6 7 8 9 10 J Q K A'.split()
 
@@ -175,34 +166,34 @@ def evaluate_turns_to_wait(laid_card, turns_to_wait=0):
     return turns_to_wait
 
 
-def evaluate_requested_value(laid_card, interaction_foo=input):
+def evaluate_requested_value(laid_card, input_foo=input):
     """
     Function used to evaluate requested value of cards when player play jack special card.
     :param laid_card: tuple with last played card
-    :param interaction_foo: function used to ask player about value
+    :param input_foo: function used to ask player about value
     :return: string object of requested value or None
     """
     value = laid_card[1]
     requested_value = None
     if value == 'J':
-        requested_value = interaction_foo('Enter VALUE of requested cards: ')
+        requested_value = input_foo('Enter VALUE of requested cards: ')
         if requested_value not in '5 6 7 8 9 10'.split():
             requested_value = None
 
     return requested_value
 
 
-def evaluate_requested_color(laid_card, interaction_foo=input):
+def evaluate_requested_color(laid_card, input_foo=input):
     """
     Function used to evaluate requested color of cards when player play ace special card.
     :param laid_card: tuple with last played card
-    :param interaction_foo: function used to ask player about value
+    :param input_foo: function used to ask player about value
     :return: string object of requested color or None
     """
     value = laid_card[1]
     requested_color = None
     if value == 'A':
-        requested_color = interaction_foo('Enter COLOR of requested cards: ')
+        requested_color = input_foo('Enter COLOR of requested cards: ')
         if requested_color not in colors:
             requested_color = None
 
@@ -262,18 +253,18 @@ def convert_to_card(played):
     return None
 
 
-def additional_actions(played_card, cards_to_take, turns_to_wait, interaction_foo):
+def additional_actions(played_card, cards_to_take, turns_to_wait, input_foo):
     """
     Function combines all other functions used to take additional action for played card.
     :param played_card: tuple with played card
     :param cards_to_take: integer value of cards to take
     :param turns_to_wait: integer value of turns to skip
-    :param interaction_foo: function used to ask player about value
+    :param input_foo: function used to ask player about value
     :return: integer with cards to take, string with requested color,
      string with requested value, integer value with turns to skip
     """
-    requested_value = evaluate_requested_value(played_card, interaction_foo)
-    requested_color = evaluate_requested_color(played_card, interaction_foo)
+    requested_value = evaluate_requested_value(played_card, input_foo)
+    requested_color = evaluate_requested_color(played_card, input_foo)
     cards_to_take = evaluate_cards_to_take(played_card, cards_to_take)
     turns_to_wait = evaluate_turns_to_wait(played_card, turns_to_wait)
     return cards_to_take, requested_color, requested_value, turns_to_wait
