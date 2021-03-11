@@ -98,15 +98,15 @@ class CPUPlayer(Player):
         :return: empty string object
         """
         self.move_counter = -1
-        self.__choose_first_move(game_state, possible_plays)
+        self.choose_first_move(game_state, possible_plays)
         if len(self.next_moves[0]) > 1 and self.next_moves[0][1] == 'A':
-            biggest_color, _ = self.__find_biggest('color')
+            biggest_color, _ = self.find_biggest('color')
             self.next_moves.append(biggest_color)
         if len(self.next_moves[0]) > 1 and self.next_moves[0][1] == 'J':
-            self.next_moves.append(self.__evaluate_jack_request())
+            self.next_moves.append(self.evaluate_jack_request())
         return ''
 
-    def __choose_first_move(self, game_state, possible_plays):
+    def choose_first_move(self, game_state, possible_plays):
         """
         Helper function used to choose first move of cpu player.
         :param game_state: GameState object with all information about state of game
@@ -115,7 +115,7 @@ class CPUPlayer(Player):
         if len(possible_plays) == 0:
             self.next_moves = ['']
         else:
-            if not self.__need_to_attack(game_state):
+            if not self.need_to_attack(game_state):
                 self.next_moves = [choice(possible_plays)]
             else:
                 offensive_plays = find_offensive_plays(possible_plays)
@@ -124,7 +124,7 @@ class CPUPlayer(Player):
                 else:
                     self.next_moves = [choice(possible_plays)]
 
-    def __need_to_attack(self, game_state):
+    def need_to_attack(self, game_state):
         """
         Helper function used to evaluate if attacking now is good strategy.
         :param game_state: GameState object with all information about state of game
@@ -141,13 +141,13 @@ class CPUPlayer(Player):
                 after_me = 2
         return need_to_attack
 
-    def __evaluate_jack_request(self):
+    def evaluate_jack_request(self):
         """
         Helper function used to find best request after jack card play.
         :return: string with requested value of cards
         """
-        biggest_value, appearances_value = self.__find_biggest('value')
-        biggest_color, appearances_color = self.__find_biggest('color')
+        biggest_value, appearances_value = self.find_biggest('value')
+        biggest_color, appearances_color = self.find_biggest('color')
         hand_copy = copy(self.hand)
         hand_copy.remove(self.next_moves[0])
         if appearances_color > appearances_value:
@@ -160,7 +160,7 @@ class CPUPlayer(Player):
             chosen_card = choice(biggest_cards)
         return chosen_card[1]
 
-    def __find_biggest(self, what='color'):
+    def find_biggest(self, what='color'):
         """
         Helper function used to find color of value most frequent in hand
         :param what: string which allow to choose what trait needs to be found

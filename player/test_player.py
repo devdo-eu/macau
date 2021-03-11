@@ -1,5 +1,6 @@
 import game
 import pytest
+import player.player as player_lib
 from player.player import CPUPlayer
 
 
@@ -197,3 +198,157 @@ def test_cpu_input(moves, gs_cpu):
     cpu_move = cpu.input_foo('Message')
     assert cpu.move_counter == 2
     assert cpu_move == ''
+
+
+def test_find_offensive_plays():
+    possible_plays = [('hearts', '6'), ('tiles', '7'), ('pikes', '6')]
+    offensive_plays = player_lib.find_offensive_plays(possible_plays)
+    assert len(offensive_plays) == 0
+
+    possible_plays = [('tiles', '2'), ('hearts', '6'), ('tiles', '7'), ('pikes', '6')]
+    offensive_plays = player_lib.find_offensive_plays(possible_plays)
+    assert len(offensive_plays) == 1
+    assert ('tiles', '2') in offensive_plays
+
+    possible_plays = [('tiles', '2'), ('tiles', '3'), ('hearts', '6'), ('tiles', '7'), ('pikes', '6')]
+    offensive_plays = player_lib.find_offensive_plays(possible_plays)
+    assert len(offensive_plays) == 2
+    assert ('tiles', '2') in offensive_plays and ('tiles', '3') in offensive_plays
+
+    possible_plays = [('tiles', 'J'), ('hearts', '6'), ('tiles', '7'), ('pikes', '6')]
+    offensive_plays = player_lib.find_offensive_plays(possible_plays)
+    assert len(offensive_plays) == 1
+    assert ('tiles', 'J') in offensive_plays
+
+    possible_plays = [('pikes', '4'), ('hearts', '6'), ('tiles', '7'), ('pikes', '6')]
+    offensive_plays = player_lib.find_offensive_plays(possible_plays)
+    assert len(offensive_plays) == 1
+    assert ('pikes', '4') in offensive_plays
+
+    possible_plays = [('pikes', 'K'), ('hearts', 'K'), ('tiles', '7'), ('pikes', '6')]
+    offensive_plays = player_lib.find_offensive_plays(possible_plays)
+    assert len(offensive_plays) == 2
+    assert ('pikes', 'K') in offensive_plays and ('hearts', 'K') in offensive_plays
+
+
+def test_cpu_need_to_attack_logic():
+    gs = game.GameState()
+    gs.deck, gs.table, gs.players = game.prepare_game(['CPU1', '2', '3', 'CPU4'])
+    cpu = gs.players['CPU1']
+    assert not cpu.need_to_attack(gs)
+
+    cpu.hand = [('pikes', 'K')]
+    assert not cpu.need_to_attack(gs)
+
+    gs.players['CPU4'].hand = [('pikes', '3')]
+    assert not cpu.need_to_attack(gs)
+
+    gs.players['2'].hand = [('pikes', '2')]
+    assert cpu.need_to_attack(gs)
+
+    gs.players['2'].hand = [('pikes', 'K'), ('pikes', '5'), ('hearts', '7')]
+    assert not cpu.need_to_attack(gs)
+
+    gs.players['3'].hand = [('clovers', '9')]
+    assert cpu.need_to_attack(gs)
+
+    gs.deck, gs.table, gs.players = game.prepare_game(['CPU1', '2', '3', 'CPU4'])
+    cpu = gs.players['CPU4']
+    assert not cpu.need_to_attack(gs)
+
+    cpu.hand = [('pikes', 'K')]
+    assert not cpu.need_to_attack(gs)
+
+    gs.players['3'].hand = [('clovers', '9')]
+    assert not cpu.need_to_attack(gs)
+
+    gs.players['2'].hand = [('pikes', '2')]
+    assert cpu.need_to_attack(gs)
+
+    gs.players['2'].hand = [('pikes', 'K'), ('pikes', '5'), ('hearts', '7')]
+    assert not cpu.need_to_attack(gs)
+
+    gs.players['CPU1'].hand = [('pikes', '3')]
+    assert cpu.need_to_attack(gs)
+
+
+def test_choose_first_move():
+    gs = game.GameState()
+    gs.deck, gs.table, gs.players = game.prepare_game(['CPU1', '2'])
+    cpu = gs.players['CPU1']
+    rival = gs.players['2']
+    cpu.choose_first_move(gs, [])
+    assert len(cpu.next_moves) == 1
+    assert cpu.next_moves[0] == ''
+
+    gs.table.append(('hearts', '5'))
+    rival.hand = [('hearts', '6'), ('pikes', '7'), ('clovers', 'J')]
+    cpu.hand = [('hearts', '3'), ('pikes', 'K'), ('hearts', '7')]
+    possible = [('hearts', '3'), ('hearts', '7')]
+    cpu.choose_first_move(gs, possible)
+    assert len(cpu.next_moves) == 1
+    assert cpu.next_moves[0] == ('hearts', '3') or cpu.next_moves[0] == ('hearts', '7')
+
+    rival.hand = [('hearts', '6'), ('pikes', '7')]
+    cpu.choose_first_move(gs, possible)
+    assert len(cpu.next_moves) == 1
+    assert cpu.next_moves[0] == ('hearts', '3')
+
+
+def test_find_biggest_color():
+    cpu = CPUPlayer('1')
+    cpu.next_moves.append(('hearts', 'A'))
+    cpu.hand = [('hearts', '6'), ('hearts', '7'), ('clovers', 'J'), ('hearts', 'A')]
+    biggest, appearances = cpu.find_biggest('color')
+    assert appearances == 2
+    assert biggest == 'hearts'
+
+    cpu.hand = [('clovers', '6'), ('clovers', '7'), ('clovers', 'J'), ('hearts', 'A')]
+    biggest, appearances = cpu.find_biggest('color')
+    assert appearances == 3
+    assert biggest == 'clovers'
+
+    cpu.hand = [('tiles', '6'), ('tiles', '7'), ('clovers', 'J'), ('hearts', 'A')]
+    biggest, appearances = cpu.find_biggest('color')
+    assert appearances == 2
+    assert biggest == 'tiles'
+
+    cpu.next_moves = [('pikes', 'A')]
+    cpu.hand = [('hearts', '6'), ('pikes', '7'), ('pikes', 'A'), ('hearts', 'A')]
+    biggest, appearances = cpu.find_biggest('color')
+    assert appearances == 2
+    assert biggest == 'hearts'
+
+
+def test_find_biggest_value():
+    cpu = CPUPlayer('1')
+    cpu.next_moves = [('clovers', 'J')]
+    cpu.hand = [('hearts', '6'), ('pikes', '6'), ('clovers', 'J'), ('tiles', '6')]
+    biggest, appearances = cpu.find_biggest('value')
+    assert appearances == 3
+    assert biggest == '6'
+
+    cpu.hand = [('hearts', 'J'), ('pikes', '6'), ('clovers', 'J'), ('tiles', 'J')]
+    biggest, appearances = cpu.find_biggest('value')
+    assert appearances == 1
+    assert biggest == '6'
+
+    cpu.hand = [('hearts', 'K'), ('pikes', '6'), ('clovers', 'J'), ('tiles', 'K')]
+    biggest, appearances = cpu.find_biggest('value')
+    assert appearances == 1
+    assert biggest == '6'
+
+    cpu.hand = [('hearts', 'A'), ('pikes', '9'), ('clovers', 'J'), ('tiles', 'A'), ('clovers', 'Q'), ('tiles', 'Q')]
+    biggest, appearances = cpu.find_biggest('value')
+    assert appearances == 1
+    assert biggest == '9'
+
+    cpu.hand = [('hearts', 'J'), ('hearts', '10'), ('clovers', 'J'), ('tiles', 'J')]
+    biggest, appearances = cpu.find_biggest('value')
+    assert appearances == 1
+    assert biggest == '10'
+
+    cpu.hand = [('hearts', '7'), ('hearts', '10'), ('clovers', 'J'), ('tiles', '7')]
+    biggest, appearances = cpu.find_biggest('value')
+    assert appearances == 2
+    assert biggest == '7'
