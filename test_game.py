@@ -65,6 +65,33 @@ def test_prepare_game_with_cpus():
     assert cpus == 3
 
 
+@pytest.mark.parametrize('how_many_decks', [2, 3, 5])
+def test_prepare_game_with_more_decks(how_many_decks):
+    deck, table, players = game.prepare_game(['One'], how_many_decks)
+    all_cards = len(deck) + len(table) + 5
+    assert all_cards == 52 * how_many_decks
+
+
+def test_prepare_game_with_no_decks():
+    deck, table, players = game.prepare_game(['One'], 0)
+    assert len(deck) == 0
+    assert len(table) == 0
+    assert len(players['One'].hand) == 0
+
+
+@pytest.mark.parametrize('how_many_cards', [2, 5, 15, 20])
+def test_prepare_game_with_more_dealt_cards(how_many_cards):
+    deck, table, players = game.prepare_game(['One'], how_many_cards=how_many_cards)
+    player = players['One']
+    assert len(player.hand) == how_many_cards
+
+
+def test_prepare_game_with_more_cards_to_deal_than_in_deck():
+    deck, table, players = game.prepare_game(['One'], how_many_cards=60)
+    player = players['One']
+    assert len(player.hand) == 52 - len(table)
+
+
 @pytest.mark.parametrize('hand, lied_card, check_lied_card, deck_len, hand_len, table_len', [
                             ([('tiles', '8')], ('tiles', '5'), ('tiles', '8'), 52, 0, 1),
                             ([('hearts', '5')], ('tiles', '5'), ('hearts', '5'), 52, 0, 1),
