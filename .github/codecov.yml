@@ -5,9 +5,9 @@ coverage:
   status:
     project:
       default:
-      target: auto
-      threshold: 5%
-      base: auto
+        target: auto
+        threshold: 5%
+        base: auto
     patch:
       default:
         enabled: no
@@ -17,4 +17,3 @@ comment:
   require_changes: false
   require_base: no
   require_head: yes    
-  
