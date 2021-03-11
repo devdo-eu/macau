@@ -19,7 +19,8 @@ now you can run the game locally using `python macau.py`.
 There are unit tests for this project.  
 You can run tests using `pytest` in project directory.
 
-#Features
+# Features  
+
 ![movie](./media/JeIjc1OvHi.gif)  
 
 This is standard [Macau](https://en.wikipedia.org/wiki/Macau_(card_game)) game.
