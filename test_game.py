@@ -799,3 +799,12 @@ def test_play_game_logic(game_state):
     assert len(winners) == 2
     assert '1' in winners
     assert '2' in winners
+
+
+def test_cpu_self_game():
+    game_state = game.GameState()
+    names = [f'CPU{index}' for index in range(1, 18)]
+    game_state.deck, game_state.table, game_state.players = game.prepare_game(names, 20, 50)
+    winners = game.play_game(game_state)
+    assert len(winners) > 0
+    assert len(game_state.players[winners[0]].hand) == 0
