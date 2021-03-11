@@ -61,6 +61,21 @@ class Player:
         return gui
 
 
+def find_offensive_plays(possible_plays):
+    """
+    Helper function used to find offensive plays in possible plays.
+    :param possible_plays: list of cards possible to be played
+    :return: list of cards which can be played as attack
+    """
+    offensive_plays = []
+    for card in possible_plays:
+        if card == ('pikes', 'K') or card == ('hearts', 'K'):
+            offensive_plays.append(card)
+        elif card[1] in '2 3 4 J'.split():
+            offensive_plays.append(card)
+    return offensive_plays
+
+
 class CPUPlayer(Player):
     def __init__(self, name):
         Player.__init__(self, name)
@@ -100,12 +115,7 @@ class CPUPlayer(Player):
             if not self.__need_to_attack(game_state):
                 self.next_moves = [choice(possible_plays)]
             else:
-                offensive_plays = []
-                for card in possible_plays:
-                    if card == ('pikes', 'K') or card == ('hearts', 'K'):
-                        offensive_plays.append(card)
-                    elif card[1] in '2 3 4 J'.split():
-                        offensive_plays.append(card)
+                offensive_plays = find_offensive_plays(possible_plays)
                 if len(offensive_plays) > 0:
                     self.next_moves = [choice(offensive_plays)]
                 else:
@@ -121,11 +131,11 @@ class CPUPlayer(Player):
         after_me = 0
         need_to_attack = False
         for rival in copy_players:
-            if rival.name == self.name:
-                after_me = 2
             if after_me > 0 and len(rival.hand) < 3:
                 need_to_attack = True
             after_me -= 1
+            if rival.name == self.name:
+                after_me = 2
         return need_to_attack
 
     def __evaluate_jack_request(self):
