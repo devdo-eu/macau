@@ -5,15 +5,16 @@ colors = 'hearts tiles clovers pikes'.split()
 values = '2 3 4 5 6 7 8 9 10 J Q K A'.split()
 
 
-def prepare_deck(table=None, players=None):
+def prepare_deck(table=None, players=None, how_many=1):
     """
     Function used to prepare deck of 52 cards and shuffle it.
     If cards was dealt to players, this cards will not be in newly prepared deck.
     :param table: list with cards lied on table
     :param players: dictionary of Player objects which contains players hands
+    :param how_many: integer of how many decks will be in game
     :return: list with deck, list with table, dictionary with players
     """
-    deck = [(color, value) for value in values for color in colors]
+    deck = [(color, value) for value in values for color in colors] * how_many
 
     if players:
         [deck.remove(card) for player in players.values() for card in player.hand]

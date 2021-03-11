@@ -2,13 +2,15 @@ import game
 
 
 def main():
-    max_players = 6
-    min_players = 2
     print('Welcome to Macau Game!')
-    how_many_players = input('How many players will play? (max is 6): ')
-    how_many_players = int(how_many_players)
-    if how_many_players > max_players or how_many_players < min_players:
+    how_many_players = int(input('How many players will play?: '))
+    if how_many_players < 2:
         raise Exception('Wrong number of players entered!')
+    how_many_cards = int(input('How many cards on start? (min=3): '))
+    if how_many_cards < 3:
+        raise Exception('Wrong number of starting cards entered!')
+    how_many_deck = round(0.5 + ((how_many_players * how_many_cards) * 2) / 52)
+    print(f'Game will be played with {how_many_deck} decks.')
 
     names = []
     for index in range(1, how_many_players + 1):
@@ -16,7 +18,7 @@ def main():
         names.append(name)
 
     game_state = game.GameState()
-    game_state.deck, game_state.table, game_state.players = game.prepare_game(names)
+    game_state.deck, game_state.table, game_state.players = game.prepare_game(names, how_many_deck, how_many_cards)
     winners = game.play_game(game_state)
     print(f"Game won by: {winners} !")
 

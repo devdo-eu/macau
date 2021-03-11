@@ -23,6 +23,21 @@ def test_prepare_deck_no_param():
     assert card[1] in logic.values
 
 
+@pytest.mark.parametrize('how_many', [2, 3, 4])
+def test_prepare_deck_with_more_cards(how_many):
+    deck, _, _ = logic.prepare_deck(how_many=how_many)
+    assert len(deck) == 52 * how_many
+    assert type(deck[0]) == tuple
+    assert type(deck[-1]) == tuple
+    card = deck[0]
+    assert type(card[0]) == str
+    assert type(card[1]) == str
+    assert card[0] in logic.colors
+    assert card[1] not in logic.colors
+    assert card[0] not in logic.values
+    assert card[1] in logic.values
+
+
 def test_prepare_deck_with_table(deck):
     table = deck[:6]
     [deck.remove(card) for card in table]

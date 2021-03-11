@@ -16,19 +16,21 @@ class GameState:
         self.requested_value = None
 
 
-def prepare_game(players_names):
+def prepare_game(players_names, how_many_decks=1, how_many_cards=5):
     """
     Function used to prepare game to be played.
     :param players_names: list with names of players
+    :param how_many_decks: integer of how many decks will be in game
+    :param how_many_cards: integer of how many cards will be dealt to players at start
     :return: list with deck, list with table, dictionary with players
     """
-    deck, table, _ = rules.prepare_deck()
+    deck, table, _ = rules.prepare_deck(how_many=how_many_decks)
     players = {}
     for name in players_names:
         players[name] = Player(name)
         if 'CPU' in name:
             players[name] = CPUPlayer(name)
-        players[name].hand, deck, _ = rules.deal_cards(deck, 5)
+        players[name].hand, deck, _ = rules.deal_cards(deck, how_many_cards)
 
     table, deck, _ = rules.deal_cards(deck, 1)
 
