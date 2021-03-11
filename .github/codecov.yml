@@ -2,6 +2,7 @@ coverage:
   range: 90..100
   precision: 2
   round: nearest
+  threshold: 5%
   status:
     patch:
       default:
