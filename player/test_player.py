@@ -36,19 +36,43 @@ def test_cpu_player_init():
 def test_cpu_gui_call_resets_move_counter(gs_cpu):
     cpu = gs_cpu.players['cpu']
     possible_plays = [('hearts', '6')]
-    top_card = ('hearts', '9')
     cpu.move_counter = 50
-    cpu.gui_foo(gs_cpu, top_card, possible_plays)
+    cpu.gui_foo(gs_cpu, ('hearts', '9'), possible_plays)
     assert cpu.move_counter == -1
 
 
 def test_cpu_mundane_move(gs_cpu):
     cpu = gs_cpu.players['cpu']
     possible_plays = [('hearts', '6')]
-    top_card = ('hearts', '9')
-    cpu.gui_foo(gs_cpu, top_card, possible_plays)
+    cpu.gui_foo(gs_cpu, ('hearts', '9'), possible_plays)
     assert len(cpu.next_moves) == 1
     assert ('hearts', '6') in cpu.next_moves
+
+
+def test_cpu_no_possible_move(gs_cpu):
+    cpu = gs_cpu.players['cpu']
+    possible_plays = []
+    cpu.gui_foo(gs_cpu, ('tiles', '9'), possible_plays)
+    assert len(cpu.next_moves) == 1
+    assert '' in cpu.next_moves[0]
+
+
+@pytest.mark.parametrize('special', [
+    ('tiles', '2'), ('tiles', '3'), ('tiles', '4'), ('pikes', 'K'),
+    ('tiles', 'J'), ('hearts', 'K'),
+])
+def test_cpu_need_of_offensive_play(special, gs_cpu):
+    gs_cpu.players['other'] = CPUPlayer('other')
+    gs_cpu.players['other'].hand = [('tiles', '6'), ('hearts', '5')]
+    cpu = gs_cpu.players['cpu']
+    cpu.hand = [('tiles', '5'), ('tiles', '6'), ('tiles', '7'), ('tiles', '8'),
+                ('tiles', '9'), ('tiles', '10'), ('tiles', 'Q'), special]
+    possible_plays = cpu.hand
+    cpu.gui_foo(gs_cpu, ('tiles', 'K'), possible_plays)
+    moves_len = 1
+    moves_len += special[1] == 'J'
+    assert len(cpu.next_moves) == moves_len
+    assert cpu.next_moves[0] == special
 
 
 def test_cpu_ace_move(gs_cpu):
@@ -67,6 +91,17 @@ def test_cpu_ace_move(gs_cpu):
     assert 'pikes' == cpu.next_moves[1]
     assert ('pikes', 'A') in cpu.next_moves
     assert len(cpu.hand) == 5
+
+
+def test_cpu_ace_move_last_card(gs_cpu):
+    cpu = gs_cpu.players['cpu']
+    possible_plays = [('pikes', 'A')]
+    cpu.hand = [('pikes', 'A')]
+    cpu.gui_foo(gs_cpu, ('pikes', '5'), possible_plays)
+    assert len(cpu.next_moves) == 2
+    assert '' == cpu.next_moves[1]
+    assert ('pikes', 'A') in cpu.next_moves
+    assert len(cpu.hand) == 1
 
 
 def test_cpu_jack_move_color_biggest(gs_cpu):
@@ -123,30 +158,42 @@ def test_cpu_jack_move_value_biggest(gs_cpu):
     assert len(cpu.hand) == 12
 
 
-def test_cpu_input(gs_cpu):
+def test_cpu_jack_move_no_cards_to_request(gs_cpu):
     cpu = gs_cpu.players['cpu']
-    cpu.next_moves = [('clovers', 'J'), '10']
+    possible_plays = [('pikes', 'J')]
+    cpu.hand = [('pikes', 'J'), ('pikes', '3')]
+    cpu.gui_foo(gs_cpu, ('pikes', '5'), possible_plays)
+    assert len(cpu.next_moves) == 2
+    assert '' == cpu.next_moves[1]
+    assert ('pikes', 'J') in cpu.next_moves
+    assert len(cpu.hand) == 2
+
+
+def test_cpu_jack_move_last_card(gs_cpu):
+    cpu = gs_cpu.players['cpu']
+    possible_plays = [('pikes', 'J')]
+    cpu.hand = [('pikes', 'J')]
+    cpu.gui_foo(gs_cpu, ('pikes', '5'), possible_plays)
+    assert len(cpu.next_moves) == 2
+    assert '' == cpu.next_moves[1]
+    assert ('pikes', 'J') in cpu.next_moves
+    assert len(cpu.hand) == 1
+
+
+@pytest.mark.parametrize('moves', [[('clovers', 'J'), '10'], [('clovers', 'A'), 'pikes']])
+def test_cpu_input(moves, gs_cpu):
+    cpu = gs_cpu.players['cpu']
+    cpu.next_moves = moves
     assert cpu.move_counter == -1
 
     cpu_move = cpu.input_foo('Message')
-    assert cpu_move == 'clovers J'
     assert cpu.move_counter == 0
+    assert cpu_move == f'{moves[cpu.move_counter][0]} {moves[cpu.move_counter][1]}'
 
     cpu_move = cpu.input_foo('Message')
-    assert cpu_move == '10'
     assert cpu.move_counter == 1
-
-    cpu.next_moves = [('clovers', 'A'), 'pikes']
-    cpu.move_counter = -1
+    assert cpu_move == moves[cpu.move_counter]
 
     cpu_move = cpu.input_foo('Message')
-    assert cpu_move == 'clovers A'
-    assert cpu.move_counter == 0
-
-    cpu_move = cpu.input_foo('Message')
-    assert cpu_move == 'pikes'
-    assert cpu.move_counter == 1
-
-    cpu_move = cpu.input_foo('Message')
-    assert cpu_move == ''
     assert cpu.move_counter == 2
+    assert cpu_move == ''
