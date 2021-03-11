@@ -6,7 +6,7 @@ def main():
     how_many_players = int(input('How many players will play?: '))
     if how_many_players < 2:
         raise Exception('Wrong number of players entered!')
-    how_many_cards = int(input('How many cards on start? (min=3): '))
+    how_many_cards = int(input('How many cards on start?: '))
     if how_many_cards < 3:
         raise Exception('Wrong number of starting cards entered!')
     how_many_deck = round(0.5 + ((how_many_players * how_many_cards) * 2) / 52)

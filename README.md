@@ -6,6 +6,7 @@
 ![lgtm-alerts](https://img.shields.io/lgtm/alerts/github/devdo-eu/macau?style=plastic)
 ![coverage](https://img.shields.io/codecov/c/github/devdo-eu/macau?style=plastic)
 ![last-commit](https://img.shields.io/github/last-commit/devdo-eu/macau?style=plastic)
+![code-size](https://img.shields.io/github/languages/code-size/devdo-eu/macau?style=plastic)
 
 This is the Macau project.   
 Install the [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
@@ -18,16 +19,32 @@ now you can run the game locally using `python macau.py`.
 There are unit tests for this project.  
 You can run tests using `pytest` in project directory.
 
-# Rules and Features
+#Features
 ![movie](./media/JeIjc1OvHi.gif)  
 
 This is standard [Macau](https://en.wikipedia.org/wiki/Macau_(card_game)) game.
 After start of `macau.py` script you will see:  
 ```
 Welcome to Macau Game!
-How many players will play? (max is 6):
+How many players will play?:
 ```
-You can choose any number of players between 2-6.  
+You can choose any number of players bigger than 2.  
+After you enter number of players you need to enter starting number of cards:  
+```
+Welcome to Macau Game!
+How many players will play?: 2
+How many cards on start?:
+```
+You can choose any number of players bigger than 3.  
+Number of decks will be calculated.  
+Next step is to enter names of all players:  
+```
+Welcome to Macau Game!
+How many players will play?: 2
+How many cards on start?: 3
+Game will be played with 1 decks.
+Enter name for player#1 :
+```
 If name of player contains `CPU` then this player will be controlled by a computer.  
 This means that player with name `Test_CPU` will be cpu-player.  
 Game window looks like:
@@ -61,7 +78,27 @@ For example: `hearts 3`
 
 If you have pack of cards on your hand e.g. like: `hears 7, tiles 7, pikes 7`  
 then you can put on table all of them in one move.  
-Pack is 3 or 4 cards with same value, jacks, aces, queens, 2, 3 and 4 included.  
+Pack is 3 or 4 cards with same value, jacks, aces, queens, 2, 3 and 4 included. 
+
+### CPU self play
+If all players in game will have `CPU` inside their name,   
+then only cpu players will play macau.  
+In such a case, the game window will look like:  
+```
+CPU_A plays: tiles 3, on hand left: 2 cards
+CPU_B plays: hearts 3, on hand left: 2 cards
+CPU_A plays: pikes 3, on hand left: 7 cards
+CPU_A plays: pikes J, on hand left: 6 cards
+CPU_A plays: 10, on hand left: 6 cards
+CPU_B plays: hearts 10, on hand left: 5 cards
+CPU_A plays: tiles 10, on hand left: 5 cards
+CPU_B plays: hearts Q, on hand left: 4 cards
+CPU_A plays: clovers 3, on hand left: 4 cards
+CPU_A plays: pikes Q, on hand left: 3 cards
+CPU_B plays: clovers 7, on hand left: 6 cards
+```
+
+# Rules 
 
 If you play jacks, then you can request cards with chosen value.  
 If you play aces, then you can request cards with chosen color.
@@ -84,8 +121,13 @@ then `Name has Macau!` message will be shown on top of player screen.
 
 Game will end if one or more players finish round with no cards on hand.
 
-# Further Development
-This project is starting point for more complex development of Macau card game implementation.
+# Development
+This project is starting point for more complex development.
++ implemented:
+  + macau card game logic for 1 deck and max 6 players
+  + terminal interface
+  + cpu players
+  + macau can be played with more than 1 deck and more than 6 players
 
 # License
 
