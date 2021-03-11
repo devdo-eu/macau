@@ -115,8 +115,8 @@ def active_card_possible_plays(hand, top_card, requested_color=None, requested_v
         req_color = [(top_card[0], value) for value in values]
 
     [possible_plays.append(card) for card in hand if card in req_color + req_value + from_value + from_color]
-    [possible_plays.remove(king) for king in [('tiles', 'K'), ('clovers', 'K')] if king in possible_plays and attack]
-
+    possible_plays = list(set(possible_plays))
+    [possible_plays.remove(king) for king in [('tiles', 'K'), ('clovers', 'K')] if attack and king in possible_plays]
     return possible_plays, len(possible_plays) > 0
 
 

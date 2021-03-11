@@ -230,6 +230,24 @@ def test_active_card_possible_plays():
     assert not can_move
     assert len(possible_plays) == 0
 
+    top_card = ('clovers', '3')
+    hand = [('tiles', '2'), ('pikes', '2'), ('clovers', 'K')]
+    possible_plays, can_move = logic.active_card_possible_plays(hand, top_card)
+    assert not can_move
+    assert len(possible_plays) == 0
+
+    top_card = ('clovers', '3')
+    hand = [('tiles', '2'), ('clovers', 'K'), ('clovers', 'K')]
+    possible_plays, can_move = logic.active_card_possible_plays(hand, top_card)
+    assert not can_move
+    assert len(possible_plays) == 0
+
+    top_card = ('tiles', '3')
+    hand = [('pikes', '2'), ('tiles', 'K'), ('tiles', 'K')]
+    possible_plays, can_move = logic.active_card_possible_plays(hand, top_card)
+    assert not can_move
+    assert len(possible_plays) == 0
+
 
 @pytest.mark.parametrize('card, returned', [
                              (('hearts', 'K'), True),
