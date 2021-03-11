@@ -352,3 +352,30 @@ def test_find_biggest_value():
     biggest, appearances = cpu.find_biggest('value')
     assert appearances == 2
     assert biggest == '7'
+
+
+def test_cpu_evaluate_jack_request():
+    cpu = CPUPlayer('1')
+    cpu.next_moves = [('clovers', 'J')]
+    cpu.hand = [('hearts', '6'), ('pikes', '6'), ('clovers', 'J'), ('tiles', '6')]
+    assert cpu.evaluate_jack_request() == '6'
+
+    cpu.hand = [('hearts', '6'), ('pikes', '6'), ('clovers', 'J'), ('tiles', '6'), ('clovers', '8'),
+                ('clovers', '9'), ('clovers', '10'), ('clovers', '5'), ('clovers', '7')]
+    assert cpu.evaluate_jack_request() != '6'
+
+    cpu.hand = [('hearts', 'K'), ('pikes', 'K'), ('clovers', 'J'), ('tiles', 'K')]
+    assert cpu.evaluate_jack_request() == ''
+
+
+@pytest.mark.parametrize('possible, chosen', [
+    ([('hearts', 'Q'), ('hearts', '5')], ('hearts', '5')),
+    ([('hearts', 'Q'), ('pikes', 'Q')], ''),
+    ([('hearts', 'Q'), ('hearts', '5'), ('hearts', '3')], ('hearts', '3')),
+    ([('hearts', 'Q'), ('hearts', '5'), ('hearts', '4')], ('hearts', '4')),
+    ([('hearts', 'Q'), ('hearts', '5'), ('hearts', 'K')], ('hearts', 'K')),
+    ([('hearts', 'Q'), ('hearts', '3'), ('tiles', 'K')], ('hearts', '3')),
+])
+def test_find_best_attack_card(possible, chosen):
+    assert len(player_lib.find_best_attack_card(possible)) == 1
+    assert player_lib.find_best_attack_card(possible)[0] == chosen
