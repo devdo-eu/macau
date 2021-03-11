@@ -25,18 +25,19 @@ def prepare_game(players_names, how_many_decks=1, how_many_cards=5):
     :return: list with deck, list with table, dictionary with players
     """
     deck, table, _ = rules.prepare_deck(how_many=how_many_decks)
+    table, deck, _ = rules.deal_cards(deck, 1)
+
+    if len(table) > 0:
+        while rules.check_card_played_active(table[-1]):
+            card, deck, _ = rules.deal_cards(deck, 1)
+            table += card
+
     players = {}
     for name in players_names:
         players[name] = Player(name)
         if 'CPU' in name:
             players[name] = CPUPlayer(name)
         players[name].hand, deck, _ = rules.deal_cards(deck, how_many_cards)
-
-    table, deck, _ = rules.deal_cards(deck, 1)
-
-    while rules.check_card_played_active(table[-1]):
-        card, deck, _ = rules.deal_cards(deck, 1)
-        table += card
 
     return deck, table, players
 
