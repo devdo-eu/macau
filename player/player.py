@@ -20,6 +20,8 @@ class Player:
         :param possible_plays: list of cards possible to be played
         :return: string message with information about state of game
         """
+        value_dict = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
+                      '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
         gs = game_state
         gui = ''
         if self.print_foo == print:
@@ -45,6 +47,7 @@ class Player:
                f'\nOn top: {top_card[0]} {top_card[1]}' \
                f'\n------------------------Hand-------------------------'
         cards = ''
+        self.hand.sort(key=lambda play: value_dict[play[1]])
         for index, card in enumerate(self.hand):
             if card in possible_plays:
                 cards += f'*{card[0]} {card[1]}*'
