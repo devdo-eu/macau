@@ -1,6 +1,7 @@
 import os
 from secrets import choice
 from copy import copy
+from logic.logic import check_if_pack_on_hand, check_if_packs_can_be_played
 
 
 class Player:
@@ -132,6 +133,8 @@ class CPUPlayer(Player):
             self.next_moves = ['']
         else:
             if not self.need_to_attack(game_state):
+                packs = check_if_pack_on_hand(self.hand)
+                packs = check_if_packs_can_be_played(packs, possible_plays)
                 self.next_moves = [choice(possible_plays)]
             else:
                 self.next_moves = find_best_attack_card(possible_plays)
