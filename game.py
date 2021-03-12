@@ -70,7 +70,7 @@ def play_move(player, game_state):
         return player, gs
 
     message = player.gui_foo(gs, top_card, possible_plays)
-    played = player.input_foo(message)
+    played = player.input_foo(message).replace('*', '')
     if len(played.split(',')) > 1:
         packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
         if not valid:
