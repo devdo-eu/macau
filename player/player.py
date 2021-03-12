@@ -21,13 +21,9 @@ class Player:
         :param possible_plays: list of cards possible to be played
         :return: string message with information about state of game
         """
-        value_dict = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
-                      '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
         gs = game_state
         gui = ''
-        if self.print_foo == print:
-            os.system('cls||clear')
-            self.input_foo(f'{self.name} Turn Now!')
+        self.clear_screen_if_hot_seats(game_state)
         for check in gs.players.values():
             if len(check.hand) == 1:
                 gui += f"\n{check.name} has macau!"
@@ -42,11 +38,27 @@ class Player:
                f'\n----------------------Players------------------------'
         for rival in game_state.players.values():
             gui += f'\n{rival.name} has: {len(rival.hand)} cards on hand.'
+
         gui += f'\n-----------------------Table-------------------------' \
                f'\nCards in deck: {len(gs.deck)}' \
                f'\nCards on table: {len(gs.table)}' \
                f'\nOn top: {top_card[0]} {top_card[1]}' \
                f'\n------------------------Hand-------------------------'
+
+        gui += f'\n{self.sort_cards_and_mark_possible_plays(possible_plays)}' \
+               f'\n-----------------------------------------------------' \
+               f'\n*color value* -> means that this card can be played' \
+               f'\nWhich card(s) from your hand do you want to play?: '
+        return gui
+
+    def sort_cards_and_mark_possible_plays(self, possible_plays):
+        """
+        Helper function used to sort cards on hand in ascending order and mark cards possible to be played.
+        :param possible_plays: list of cards possible to be played
+        :return: string with information about players hand
+        """
+        value_dict = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
+                      '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
         cards = ''
         self.hand.sort(key=lambda play: value_dict[play[1]])
         for index, card in enumerate(self.hand):
@@ -58,11 +70,20 @@ class Player:
                 cards += ', '
             if index % 5 == 4 and index != len(self.hand) - 1:
                 cards += '\n'
-        gui += f'\n{cards}' \
-               f'\n-----------------------------------------------------' \
-               f'\n*color value* -> means that this card can be played' \
-               f'\nWhich card(s) from your hand do you want to play?: '
-        return gui
+        return cards
+
+    def clear_screen_if_hot_seats(self, game_state):
+        """
+        Helper function used to clear screen if there are at least two human players.
+        :param game_state: GameState object with all information about state of game
+        """
+        others_are_cpus = True
+        for rival in game_state.players.values():
+            if rival.name != self.name and type(rival) is Player:
+                others_are_cpus = False
+        if not others_are_cpus and self.print_foo == print:
+            os.system('cls||clear')
+            self.input_foo(f'{self.name} Turn Now!')
 
 
 def find_offensive_plays(possible_plays):
@@ -155,9 +176,16 @@ class CPUPlayer(Player):
         if len(packs) > 0 and self.next_moves[0] != '' and self.next_moves[0][1] in packs:
             hand_copy = copy(self.hand)
             hand_copy.remove(self.next_moves[0])
+
+            if self.next_moves[0][1] == 'K' and self.next_moves[0][0] in ['hearts', 'pikes']:
+                hand_copy = [card for card in hand_copy if card[0] in ['hearts', 'pikes']]
+            elif self.next_moves[0][1] == 'K' and self.next_moves[0][0] in ['tiles', 'clovers']:
+                hand_copy = [card for card in hand_copy if card[0] in ['tiles', 'clovers']]
+
             pack_to_play = [self.next_moves[0]]
             [pack_to_play.append(card) for card in hand_copy if card[1] == self.next_moves[0][1]]
-            self.next_moves[0] = pack_to_play
+            if len(pack_to_play) > 2:
+                self.next_moves[0] = pack_to_play
 
     def need_to_attack(self, game_state):
         """

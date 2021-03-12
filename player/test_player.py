@@ -277,15 +277,41 @@ def test_cpu_consider_pack_play_logic():
     cpu.consider_pack_play(possible)
     assert cpu.next_moves[0] == [('tiles', '7'), ('hearts', '7'), ('pikes', '7'), ('clovers', '7')]
 
+    possible = [('tiles', '6')]
     cpu.next_moves = [('tiles', '6')]
     cpu.hand = [('tiles', '6'), ('hearts', '7'), ('pikes', '7'), ('hearts', 'K'), ('clovers', '7')]
     cpu.consider_pack_play(possible)
     assert cpu.next_moves[0] == ('tiles', '6')
 
+    possible = [('clovers', '7')]
     cpu.next_moves = [('clovers', '7')]
     cpu.hand = [('clovers', '7'), ('pikes', '7'), ('pikes', '7'), ('hearts', 'K'), ('pikes', '7')]
     cpu.consider_pack_play(possible)
     assert cpu.next_moves[0] == [('clovers', '7'), ('pikes', '7'), ('pikes', '7'), ('pikes', '7')]
+
+    possible = [('pikes', 'K')]
+    cpu.next_moves = [('pikes', 'K')]
+    cpu.hand = [('pikes', 'K'), ('clovers', 'K'), ('hearts', 'K'), ('tiles', 'K'), ('pikes', '7')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == ('pikes', 'K')
+
+    cpu.next_moves = [('pikes', 'K')]
+    cpu.hand = [('pikes', 'K'), ('clovers', 'K'), ('hearts', 'K'), ('pikes', 'K'), ('pikes', '7')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == [('pikes', 'K'), ('hearts', 'K'), ('pikes', 'K')]
+
+    possible = [('pikes', 'K')]
+    cpu.next_moves = [('pikes', 'K')]
+    cpu.hand = [('pikes', 'K'), ('clovers', 'K'), ('hearts', 'K'), ('pikes', 'K'),
+                ('tiles', 'K'), ('clovers', 'K'), ('tiles', 'K'), ('clovers', 'K')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == [('pikes', 'K'), ('hearts', 'K'), ('pikes', 'K')]
+
+    possible = [('tiles', 'K')]
+    cpu.next_moves = [('tiles', 'K')]
+    cpu.hand = [('pikes', 'K'), ('tiles', 'K'), ('clovers', 'K'), ('tiles', 'K'), ('pikes', '7')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == [('tiles', 'K'), ('clovers', 'K'), ('tiles', 'K')]
 
 
 def test_cpu_need_to_attack_logic():
