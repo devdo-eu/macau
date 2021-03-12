@@ -338,7 +338,7 @@ def test_play_move_pack_of_jacks(game_state):
     gs.players['One'].hand = [('tiles', 'J'), ('pikes', 'J'), ('hearts', 'J'), ('clovers', '10')]
     gs.lied_card = ('tiles', '8')
     deck_len = len(gs.deck)
-    gs.players['One'].input_foo = helper_factory(['', 'tiles J, pikes J, hearts J', '10'])
+    gs.players['One'].input_foo = helper_factory(['tiles J, pikes J, hearts J', '10'])
     gs.players['One'], gs = game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 3
@@ -355,7 +355,7 @@ def test_play_move_pack_of_aces(game_state):
     gs.players['One'].hand = [('tiles', 'A'), ('pikes', 'A'), ('hearts', 'A'), ('clovers', '10')]
     gs.lied_card = ('pikes', '6')
     deck_len = len(gs.deck)
-    gs.players['One'].input_foo = helper_factory(['', 'pikes A, tiles A, hearts A', 'clovers'])
+    gs.players['One'].input_foo = helper_factory(['pikes A, tiles A, hearts A', 'clovers'])
     gs.players['One'], gs = game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 3
