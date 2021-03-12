@@ -1,4 +1,5 @@
 import game
+import os
 
 
 def main():
@@ -19,6 +20,7 @@ def main():
 
     game_state = game.GameState()
     game_state.deck, game_state.table, game_state.players = game.prepare_game(names, how_many_deck, how_many_cards)
+    os.system('cls||clear')
     winners = game.play_game(game_state)
     print(f"Game won by: {winners} !")
 
