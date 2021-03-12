@@ -2,7 +2,8 @@ import game
 import pytest
 from copy import deepcopy
 from logic.logic import values, colors
-from player.player import Player, CPUPlayer
+from player.player import Player
+from player.cpu_player import CPUPlayer
 
 
 def show(_):

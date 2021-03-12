@@ -1,5 +1,6 @@
 import logic.logic as rules
-from player.player import Player, CPUPlayer
+from player.player import Player
+from player.cpu_player import CPUPlayer
 
 
 class GameState:
