@@ -53,6 +53,7 @@ def play_move(player, game_state):
     gs = game_state
     if player.turns_to_skip > 0:
         player.turns_to_skip -= 1
+        player.print_foo(f'{player.name} waits. {player.turns_to_skip} turns to skip left.')
         return player, gs
 
     top_card = gs.lied_card
@@ -67,6 +68,7 @@ def play_move(player, game_state):
         possible_plays, can_move = rules.nonactive_card_possible_plays(player.hand, top_card, gs.requested_value)
 
     if not can_move:
+        player.print_foo(f'{player.name} has no move.')
         gs = punish_player(player, gs)
         return player, gs
 
@@ -75,12 +77,14 @@ def play_move(player, game_state):
     if len(played.split(',')) > 1:
         packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
         if not valid:
+            player.print_foo(f'{player.name} makes invalid move.')
             gs = punish_player(player, gs)
             return player, gs
     else:
         played_cards = [rules.convert_to_card(played)]
 
     if played_cards[0] not in possible_plays:
+        player.print_foo(f'{player.name} makes invalid move.')
         gs = punish_player(player, gs)
         return player, gs
 
@@ -158,8 +162,11 @@ def pikes_king_punishment(player, game_state):
     players_list += players_list
     for index in range(1, len(players_list) - 1):
         if players_list[index + 1] == player.name:
-            cards, gs.deck, _ = rules.deal_cards(gs.deck, gs.cards_to_take)
-            gs.players[players_list[index]].hand += cards
+            rival = gs.players[players_list[index]]
+            rival.print_foo(f'{rival.name} will have to take {gs.cards_to_take} cards.')
+            cards, gs.deck, how_many = rules.deal_cards(gs.deck, gs.cards_to_take)
+            rival.hand += cards
+            rival.print_foo(f'{len(cards)} cards dealt to {rival.name}. | on hand: {len(rival.hand)} cards.')
             gs.cards_to_take = 0
             gs.table.append(gs.lied_card)
             gs.lied_card = None

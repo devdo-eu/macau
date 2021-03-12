@@ -11,7 +11,6 @@ class CPUPlayer(Player):
         self.next_moves = []
         self.move_counter = -1
         self.gui_foo = self.__cpu_gui
-        self.print_foo = self.__cpu_print
         self.input_foo = self.__cpu_input
 
     def __cpu_gui(self, game_state, _top_card, possible_plays):
@@ -147,13 +146,6 @@ class CPUPlayer(Player):
             appearances = on_hand[biggest]
         return biggest, appearances
 
-    def __cpu_print(self, _message):
-        """
-        Function used as a printer function for cpu players
-        :param _message: string with information to print
-        """
-        pass
-
     def __cpu_input(self, _message):
         """
         Function used as a input function for cpu players.
@@ -162,14 +154,18 @@ class CPUPlayer(Player):
         """
         self.move_counter += 1
         cpu_move = ''
+        cards_left = len(self.hand)
         if len(self.next_moves) > self.move_counter:
             if type(self.next_moves[self.move_counter]) is list:
                 for card in self.next_moves[self.move_counter]:
                     cpu_move += f'{card[0]} {card[1]}, '
+                    cards_left -= 1
                 cpu_move = cpu_move[:-2]
             elif type(self.next_moves[self.move_counter]) is str:
                 cpu_move = self.next_moves[self.move_counter]
+                cards_left -= len(self.next_moves[self.move_counter-1])
             else:
                 cpu_move = f'{self.next_moves[self.move_counter][0]} {self.next_moves[self.move_counter][1]}'
-        print(f'{self.name} plays: {cpu_move} | on hand left: {len(self.hand) - 1} cards')
+                cards_left -= 1
+        self.print_foo(f'{self.name} plays: {cpu_move} | on hand: {cards_left} cards.')
         return cpu_move

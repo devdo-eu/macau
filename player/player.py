@@ -26,24 +26,24 @@ class Player:
                 gui += f"\n{check.name} has macau!"
 
         gui += f'\n{self.name}' \
-               f'\n---------------------Punishments---------------------' \
+               f'\n-------------------------Punishments-------------------------' \
                f'\nCards: {gs.cards_to_take}' \
                f'\nSkip turns: {gs.turns_to_wait}' \
-               f'\n----------------------Requests-----------------------' \
+               f'\n--------------------------Requests---------------------------' \
                f'\nColor: {gs.requested_color}' \
                f'\nValue: {gs.requested_value}' \
-               f'\n----------------------Players------------------------'
+               f'\n--------------------------Players----------------------------'
         for rival in game_state.players.values():
             gui += f'\n{rival.name} has: {len(rival.hand)} cards on hand.'
 
-        gui += f'\n-----------------------Table-------------------------' \
+        gui += f'\n---------------------------Table-----------------------------' \
                f'\nCards in deck: {len(gs.deck)}' \
                f'\nCards on table: {len(gs.table)}' \
                f'\nOn top: {top_card[0]} {top_card[1]}' \
-               f'\n------------------------Hand-------------------------'
+               f'\n---------------------------Hand------------------------------'
 
         gui += f'\n{self.sort_cards_and_mark_possible_plays(possible_plays)}' \
-               f'\n-----------------------------------------------------' \
+               f'\n-------------------------------------------------------------' \
                f'\n*color value* -> means that this card can be played' \
                f'\nWhich card(s) from your hand do you want to play?: '
         return gui

@@ -282,18 +282,22 @@ def take_cards_punishment(player, deck, table, lied_card=None, cards_to_take=0):
     :return: integer of cards to take, list with cards inside deck, last lied card
     """
     if len(deck) <= cards_to_take:
+        player.print_foo('Not enough cards in the deck. Grabbing from the table.')
         deck, table = clean_table(deck, table)
 
     if cards_to_take > 0:
-        cards, deck, _ = deal_cards(deck, cards_to_take)
+        player.print_foo(f'{player.name} will have to take {cards_to_take} cards.')
+        cards, deck, how_many = deal_cards(deck, cards_to_take)
         cards_to_take = 0
         if lied_card:
             table.append(lied_card)
         lied_card = None
     else:
-        cards, deck, _ = deal_cards(deck, 1)
+        player.print_foo(f'{player.name} will have to take a card.')
+        cards, deck, how_many = deal_cards(deck, 1)
 
     player.hand += cards
+    player.print_foo(f'{len(cards)} cards dealt to {player.name}. | on hand: {len(player.hand)} cards.')
     return deck, table, lied_card, cards_to_take
 
 
@@ -307,6 +311,7 @@ def skip_punishment(player, table, lied_card=None, turns_to_wait=0):
     :return: tuple with last lied card, integer value of turns to skip
     """
     player.turns_to_skip = turns_to_wait - 1
+    player.print_foo(f'{player.name} will have to skip this and next {player.turns_to_skip} turns.')
     turns_to_wait = 0
     if lied_card:
         table.append(lied_card)
