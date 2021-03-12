@@ -86,19 +86,18 @@ If all players in game will have `CPU` inside their name,
 then only cpu players will play macau.  
 In such a case, the game window will look like:  
 ```
-CPU_A plays: pikes 5 | on hand left: 4 cards
-CPU_B plays: pikes K | on hand left: 2 cards
-CPU_A plays:  | on hand left: 8 cards
-CPU_A plays: tiles Q, clovers Q, pikes Q | on hand left: 9 cards
-CPU_B plays: tiles 3 | on hand left: 2 cards
-CPU_A plays: hearts 3 | on hand left: 6 cards
-CPU_B plays: hearts 2 | on hand left: 1 cards
-CPU_A plays: hearts J, clovers J, tiles J | on hand left: 13 cards
-CPU_A plays: 7 | on hand left: 13 cards
-CPU_A plays: hearts 7 | on hand left: 10 cards
-CPU_A plays: hearts 8 | on hand left: 9 cards
-CPU_A plays: hearts Q | on hand left: 8 cards
-CPU_B plays: tiles 6 | on hand left: 4 cards
+CPU_A plays: hearts A, clovers A, tiles A | on hand: 2 cards.
+CPU_A plays: clovers | on hand: 2 cards.
+CPU_B plays: clovers 6 | on hand: 4 cards.
+CPU_A plays: clovers K | on hand: 1 cards.
+CPU_B has no move.
+CPU_B will have to take a card.
+1 cards dealt to CPU_B. | on hand: 5 cards.
+CPU_A plays: pikes K | on hand: 0 cards.
+CPU_B will have to take 5 cards.
+5 cards dealt to CPU_B. | on hand: 10 cards.
+CPU_B plays: pikes 2 | on hand: 9 cards.
+Game won by: ['CPU_A'] !
 ```
 
 # Rules 
