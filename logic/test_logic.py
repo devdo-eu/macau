@@ -384,7 +384,9 @@ def test_check_if_pack_on_hand(hand, pack):
     ([], [('tiles', '5'), ('clovers', '7')], []),
                          ])
 def test_check_if_packs_can_be_played(packs, possible_plays, possible_packs):
-    assert logic.check_if_packs_can_be_played(packs, possible_plays) == possible_packs
+    to_check = logic.check_if_packs_can_be_played(packs, possible_plays)
+    for pack in to_check:
+        assert pack in possible_packs
 
 
 @pytest.mark.parametrize('entered, card', [

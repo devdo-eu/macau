@@ -232,7 +232,7 @@ def check_if_packs_can_be_played(packs, possible_plays):
     """
     possible_packs = []
     [possible_packs.append(pack) for pack in packs for card in possible_plays if pack == card[1]]
-    return possible_packs
+    return list(set(possible_packs))
 
 
 def convert_to_card(played):

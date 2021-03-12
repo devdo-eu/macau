@@ -116,11 +116,18 @@ class CPUPlayer(Player):
         """
         self.move_counter = -1
         self.choose_first_move(game_state, possible_plays)
-        if len(self.next_moves[0]) > 1 and self.next_moves[0][1] == 'A':
+        check_card = ('', '')
+        if type(self.next_moves[0]) is tuple:
+            check_card = self.next_moves[0]
+        elif type(self.next_moves[0]) is list:
+            check_card = self.next_moves[0][0]
+
+        if check_card[1] == 'A':
             biggest_color, _ = self.find_biggest('color')
             self.next_moves.append(biggest_color)
-        if len(self.next_moves[0]) > 1 and self.next_moves[0][1] == 'J':
+        elif check_card[1] == 'J':
             self.next_moves.append(self.evaluate_jack_request())
+
         return ''
 
     def choose_first_move(self, game_state, possible_plays):
@@ -133,11 +140,24 @@ class CPUPlayer(Player):
             self.next_moves = ['']
         else:
             if not self.need_to_attack(game_state):
-                packs = check_if_pack_on_hand(self.hand)
-                packs = check_if_packs_can_be_played(packs, possible_plays)
                 self.next_moves = [choice(possible_plays)]
             else:
                 self.next_moves = find_best_attack_card(possible_plays)
+        self.consider_pack_play(possible_plays)
+
+    def consider_pack_play(self, possible_plays):
+        """
+        Helper function used to consider pack as a play
+        :param possible_plays: list of cards possible to be played
+        """
+        packs = check_if_pack_on_hand(self.hand)
+        packs = check_if_packs_can_be_played(packs, possible_plays)
+        if len(packs) > 0 and self.next_moves[0] != '' and self.next_moves[0][1] in packs:
+            hand_copy = copy(self.hand)
+            hand_copy.remove(self.next_moves[0])
+            pack_to_play = [self.next_moves[0]]
+            [pack_to_play.append(card) for card in hand_copy if card[1] == self.next_moves[0][1]]
+            self.next_moves[0] = pack_to_play
 
     def need_to_attack(self, game_state):
         """
@@ -163,8 +183,7 @@ class CPUPlayer(Player):
         """
         biggest_value, appearances_value = self.find_biggest('value')
         biggest_color, appearances_color = self.find_biggest('color')
-        hand_copy = copy(self.hand)
-        hand_copy.remove(self.next_moves[0])
+        hand_copy = self.copy_hand_remove_next_moves()
         if appearances_color > appearances_value:
             biggest_cards = [card for card in hand_copy
                              if card[0] == biggest_color and card[1] not in '2 3 4 J Q K A'.split()]
@@ -175,6 +194,19 @@ class CPUPlayer(Player):
             chosen_card = choice(biggest_cards)
         return chosen_card[1]
 
+    def copy_hand_remove_next_moves(self):
+        """
+        Helper function used to make a copy of hand and remove cards chosen to be played from this copy.
+        :return: list of copied and cleaned hand
+        """
+        hand_copy = copy(self.hand)
+        if type(self.next_moves[0]) is list:
+            for card in self.next_moves[0]:
+                hand_copy.remove(card)
+        else:
+            hand_copy.remove(self.next_moves[0])
+        return hand_copy
+
     def find_biggest(self, what='color'):
         """
         Helper function used to find color of value most frequent in hand
@@ -183,8 +215,7 @@ class CPUPlayer(Player):
         int with how many cards on hand have this trait
         """
         index = bool(what != 'color')
-        hand_copy = copy(self.hand)
-        hand_copy.remove(self.next_moves[0])
+        hand_copy = self.copy_hand_remove_next_moves()
         on_hand = {}
         for card in hand_copy:
             trait = card[index]
@@ -216,9 +247,13 @@ class CPUPlayer(Player):
         self.move_counter += 1
         cpu_move = ''
         if len(self.next_moves) > self.move_counter:
-            if type(self.next_moves[self.move_counter]) is str:
+            if type(self.next_moves[self.move_counter]) is list:
+                for card in self.next_moves[self.move_counter]:
+                    cpu_move += f'{card[0]} {card[1]}, '
+                cpu_move = cpu_move[:-2]
+            elif type(self.next_moves[self.move_counter]) is str:
                 cpu_move = self.next_moves[self.move_counter]
             else:
                 cpu_move = f'{self.next_moves[self.move_counter][0]} {self.next_moves[self.move_counter][1]}'
-        print(f'{self.name} plays: {cpu_move}, on hand left: {len(self.hand) - 1} cards')
+        print(f'{self.name} plays: {cpu_move} | on hand left: {len(self.hand) - 1} cards')
         return cpu_move

@@ -93,6 +93,13 @@ def test_cpu_ace_move(gs_cpu):
     assert ('pikes', 'A') in cpu.next_moves
     assert len(cpu.hand) == 5
 
+    cpu.hand = [('pikes', 'A'), ('pikes', '6'), ('tiles', 'A'), ('tiles', 'A'), ('pikes', '7')]
+    cpu.gui_foo(gs_cpu, ('pikes', '5'), possible_plays)
+    assert len(cpu.next_moves) == 2
+    assert 'pikes' == cpu.next_moves[1]
+    assert ('pikes', 'A') in cpu.next_moves[0]
+    assert len(cpu.hand) == 5
+
 
 def test_cpu_ace_move_last_card(gs_cpu):
     cpu = gs_cpu.players['cpu']
@@ -130,9 +137,13 @@ def test_cpu_jack_move_special_biggest(special, gs_cpu):
     cpu.hand = [('pikes', 'J'), ('pikes', '10'),
                 ('pikes', special), ('tiles', special), ('clovers', special), ('hearts', special)]
     cpu.gui_foo(gs_cpu, ('pikes', '5'), possible_plays)
+
     assert len(cpu.next_moves) == 2
     assert '10' == cpu.next_moves[1]
-    assert ('pikes', 'J') in cpu.next_moves
+    if special != 'J':
+        assert ('pikes', 'J') in cpu.next_moves
+    else:
+        assert ('pikes', 'J') in cpu.next_moves[0]
     assert len(cpu.hand) == 6
 
 
@@ -200,6 +211,23 @@ def test_cpu_input(moves, gs_cpu):
     assert cpu_move == ''
 
 
+def test_cpu_input_with_packs(gs_cpu):
+    cpu = gs_cpu.players['cpu']
+    cpu.next_moves = [[('hearts', '6'), ('tiles', ' 6'), ('pikes', '6')]]
+    assert cpu.move_counter == -1
+
+    cpu_move = cpu.input_foo('Message')
+    assert cpu_move == 'hearts 6, tiles  6, pikes 6'
+    assert cpu.move_counter == 0
+
+    cpu.next_moves = [[('pikes', '6'), ('pikes', '6'), ('pikes', '6'), ('pikes', '6'), ('pikes', '6')]]
+    cpu.move_counter = -1
+
+    cpu_move = cpu.input_foo('Message')
+    assert cpu_move == 'pikes 6, pikes 6, pikes 6, pikes 6, pikes 6'
+    assert cpu.move_counter == 0
+
+
 def test_find_offensive_plays():
     possible_plays = [('hearts', '6'), ('tiles', '7'), ('pikes', '6')]
     offensive_plays = player_lib.find_offensive_plays(possible_plays)
@@ -229,6 +257,35 @@ def test_find_offensive_plays():
     offensive_plays = player_lib.find_offensive_plays(possible_plays)
     assert len(offensive_plays) == 2
     assert ('pikes', 'K') in offensive_plays and ('hearts', 'K') in offensive_plays
+
+
+def test_cpu_consider_pack_play_logic():
+    cpu = CPUPlayer('cpu')
+    possible = [('tiles', '7')]
+    cpu.next_moves = [('tiles', '7')]
+    cpu.hand = [('tiles', '7'), ('hearts', '7'), ('pikes', '7')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == [('tiles', '7'), ('hearts', '7'), ('pikes', '7')]
+
+    cpu.next_moves = [('tiles', '7')]
+    cpu.hand = [('tiles', '7'), ('hearts', '7'), ('pikes', '7'), ('hearts', 'K')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == [('tiles', '7'), ('hearts', '7'), ('pikes', '7')]
+
+    cpu.next_moves = [('tiles', '7')]
+    cpu.hand = [('tiles', '7'), ('hearts', '7'), ('pikes', '7'), ('hearts', 'K'), ('clovers', '7')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == [('tiles', '7'), ('hearts', '7'), ('pikes', '7'), ('clovers', '7')]
+
+    cpu.next_moves = [('tiles', '6')]
+    cpu.hand = [('tiles', '6'), ('hearts', '7'), ('pikes', '7'), ('hearts', 'K'), ('clovers', '7')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == ('tiles', '6')
+
+    cpu.next_moves = [('clovers', '7')]
+    cpu.hand = [('clovers', '7'), ('pikes', '7'), ('pikes', '7'), ('hearts', 'K'), ('pikes', '7')]
+    cpu.consider_pack_play(possible)
+    assert cpu.next_moves[0] == [('clovers', '7'), ('pikes', '7'), ('pikes', '7'), ('pikes', '7')]
 
 
 def test_cpu_need_to_attack_logic():

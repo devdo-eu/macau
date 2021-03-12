@@ -103,11 +103,12 @@ def play_round(game_state):
         last_card = gs.lied_card
         player, gs = play_move(player, gs)
 
-        if last_card != gs.lied_card and gs.requested_value is not None and gs.lied_card[1] == 'J':
-            gs.requested_value_rounds = len(gs.players)
+        if gs.lied_card is not None:
+            if last_card != gs.lied_card and gs.requested_value is not None and gs.lied_card[1] == 'J':
+                gs.requested_value_rounds = len(gs.players)
 
-        if gs.lied_card is not None and gs.lied_card == ('pikes', 'K'):
-            gs = pikes_king_punishment(player, gs)
+            if gs.lied_card == ('pikes', 'K'):
+                gs = pikes_king_punishment(player, gs)
 
     return gs
 
