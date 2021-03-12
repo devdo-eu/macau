@@ -86,17 +86,19 @@ If all players in game will have `CPU` inside their name,
 then only cpu players will play macau.  
 In such a case, the game window will look like:  
 ```
-CPU_A plays: tiles 3, on hand left: 2 cards
-CPU_B plays: hearts 3, on hand left: 2 cards
-CPU_A plays: pikes 3, on hand left: 7 cards
-CPU_A plays: pikes J, on hand left: 6 cards
-CPU_A plays: 10, on hand left: 6 cards
-CPU_B plays: hearts 10, on hand left: 5 cards
-CPU_A plays: tiles 10, on hand left: 5 cards
-CPU_B plays: hearts Q, on hand left: 4 cards
-CPU_A plays: clovers 3, on hand left: 4 cards
-CPU_A plays: pikes Q, on hand left: 3 cards
-CPU_B plays: clovers 7, on hand left: 6 cards
+CPU_A plays: pikes 5 | on hand left: 4 cards
+CPU_B plays: pikes K | on hand left: 2 cards
+CPU_A plays:  | on hand left: 8 cards
+CPU_A plays: tiles Q, clovers Q, pikes Q | on hand left: 9 cards
+CPU_B plays: tiles 3 | on hand left: 2 cards
+CPU_A plays: hearts 3 | on hand left: 6 cards
+CPU_B plays: hearts 2 | on hand left: 1 cards
+CPU_A plays: hearts J, clovers J, tiles J | on hand left: 13 cards
+CPU_A plays: 7 | on hand left: 13 cards
+CPU_A plays: hearts 7 | on hand left: 10 cards
+CPU_A plays: hearts 8 | on hand left: 9 cards
+CPU_A plays: hearts Q | on hand left: 8 cards
+CPU_B plays: tiles 6 | on hand left: 4 cards
 ```
 
 # Rules 
@@ -129,6 +131,7 @@ This project is starting point for more complex development.
   + terminal interface
   + cpu players
   + macau can be played with more than 1 deck and more than 6 players
+  + cpu players can play with packs of card
 
 # License
 
