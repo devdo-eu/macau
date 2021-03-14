@@ -43,7 +43,7 @@ def prepare_game(players_names, how_many_decks=1, how_many_cards=5):
     return deck, table, players
 
 
-def play_move(player, game_state):
+async def play_move(player, game_state):
     """
     Function used to process logic of player move.
     :param player: Player objects
@@ -73,26 +73,27 @@ def play_move(player, game_state):
         return player, gs
 
     message = player.gui_foo(gs, top_card, possible_plays)
-    played = player.input_foo(message).replace('*', '')
+    played = await player.input_foo(message)
+    played = played.replace('*', '')
     if len(played.split(',')) > 1:
         packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
         if not valid:
-            player.print_foo(f'{player.name} makes invalid move.')
+            player.print_foo(f'{played} is invalid. {player.name} makes invalid move.')
             gs = punish_player(player, gs)
             return player, gs
     else:
         played_cards = [rules.convert_to_card(played)]
 
     if played_cards[0] not in possible_plays:
-        player.print_foo(f'{player.name} makes invalid move.')
+        player.print_foo(f'{played} is invalid. {player.name} makes invalid move.')
         gs = punish_player(player, gs)
         return player, gs
 
-    gs = cards_play_evaluate(player, played_cards, gs)
+    gs = await cards_play_evaluate(player, played_cards, gs)
     return player, gs
 
 
-def play_round(game_state):
+async def play_round(game_state):
     """
     Function used to process logic of one round (one move per every player in game).
     :param game_state: GameState object with all information about state of game
@@ -106,7 +107,7 @@ def play_round(game_state):
             gs.requested_value = None
 
         last_card = gs.lied_card
-        player, gs = play_move(player, gs)
+        player, gs = await play_move(player, gs)
 
         if gs.lied_card is not None:
             if last_card != gs.lied_card and gs.requested_value is not None and gs.lied_card[1] == 'J':
@@ -114,11 +115,12 @@ def play_round(game_state):
 
             if gs.lied_card == ('pikes', 'K'):
                 gs = pikes_king_punishment(player, gs)
+        player.print_foo(f"{player.name} has {len(player.hand)} cards on hand.")
 
     return gs
 
 
-def play_game(game_state):
+async def play_game(game_state):
     """
     Function used to play game on terminal locally
     :param game_state: GameState object
@@ -126,10 +128,15 @@ def play_game(game_state):
     """
     winners = []
     while len(winners) == 0:
-        game_state = play_round(game_state)
+        game_state = await play_round(game_state)
         for player in game_state.players.values():
             if len(player.hand) == 0:
                 winners.append(player.name)
+    for player in game_state.players.values():
+        message = 'Game won by '
+        for winner in winners:
+            message += f'{winner}, '
+        player.print_foo(message[:-2])
     return winners
 
 
@@ -174,7 +181,7 @@ def pikes_king_punishment(player, game_state):
     return gs
 
 
-def cards_play_evaluate(player, played_cards, game_state):
+async def cards_play_evaluate(player, played_cards, game_state):
     """
     Function used to evaluate the effect of played cards on the current game state.
     :param player: Player objects
@@ -188,7 +195,7 @@ def cards_play_evaluate(player, played_cards, game_state):
         played_card_active = rules.check_card_played_active(played_card)
         if played_card_active and not ace_jacks_requested:
             gs.cards_to_take, gs.requested_color, gs.requested_value, gs.turns_to_wait = \
-                rules.additional_actions(played_card, gs.cards_to_take, gs.turns_to_wait, player.input_foo)
+                await rules.additional_actions(played_card, gs.cards_to_take, gs.turns_to_wait, player.input_foo)
             ace_jacks_requested = played_card[1] == 'J' or played_card[1] == 'A'
 
         player.hand.remove(played_card)

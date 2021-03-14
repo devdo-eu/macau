@@ -6,9 +6,14 @@ class Player:
         self.name = name
         self.hand = []
         self.turns_to_skip = 0
-        self.input_foo = input
+        self.input_foo = self.__input_foo
         self.print_foo = print
         self.gui_foo = self.__gui_builder
+
+    async def __input_foo(self, message):
+        move = input(message)
+        self.print_foo(f'{self.name} plays: {move}.')
+        return move
 
     def __gui_builder(self, game_state, top_card, possible_plays):
         """
