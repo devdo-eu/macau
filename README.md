@@ -14,7 +14,10 @@ After installation please setup environment with:
 `conda env create -f environment.yml`  
 Next change environment with:  
 `conda activate macau`  
-now you can run the game locally using `python macau.py`.
+now you can run the game locally with  
+a terminal interface using `python macau.py`.
+
+you can also run REST game server using `uvicorn macau_server:app`
 
 There are unit tests for this project.  
 You can run tests using `pytest` in project directory.
@@ -100,6 +103,13 @@ CPU_B plays: pikes 2 | on hand: 9 cards.
 Game won by: ['CPU_A'] !
 ```
 
+# REST API game server
+![img.png](./media/img.png)  
+
+This project can be run as a REST API server.  
+with command `uvicorn macau_server:app` you can run it locally.   
+Then with available commands it is possible to play from a browser.
+
 # Rules 
 
 If you play jacks, then you can request cards with chosen value.  
@@ -131,6 +141,7 @@ This project is starting point for more complex development.
   + cpu players
   + macau can be played with more than 1 deck and more than 6 players
   + cpu players can play with packs of card
+  + REST API server for macau card game
 
 # License
 
