@@ -13,8 +13,8 @@ class GameState:
         self.cards_to_take = 0
         self.turns_to_wait = 0
         self.requested_value_rounds = 0
-        self.requested_color = None
         self.requested_value = None
+        self.requested_color = None
 
 
 def prepare_game(players_names, how_many_decks=1, how_many_cards=5):
