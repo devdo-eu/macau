@@ -92,7 +92,7 @@ def test_get_player_ui():
         assert "Which card(s) from your hand do you want to play?: " in response.json()['output'][0]
 
 
-def test_post_player_move():
+def _test_post_player_move():
     game_json = {'how_many_cards': 6, 'players_names': ["John", "CPU1"]}
     with TestClient(app) as tc:
         response = tc.post("/macau", json=game_json)

@@ -318,6 +318,7 @@ def test_evaluate_turns_to_wait():
     assert turns_to_wait == 2
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize('card, response, returned', [
                              (('hearts', '5'), '', None),
                              (('hearts', 'Q'), '', None),
@@ -339,10 +340,14 @@ def test_evaluate_turns_to_wait():
                              (('hearts', 'J'), 'K', None),
                              (('hearts', 'J'), 'A', None),
                          ])
-def test_evaluate_requested_value(card, response, returned):
-    assert logic.evaluate_requested_value(card, lambda x: response) is returned
+async def test_evaluate_requested_value(card, response, returned):
+
+    async def helper(_):
+        return response
+    assert (await logic.evaluate_requested_value(card, helper)) is returned
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize('card, response, returned', [
                              (('hearts', '5'), '', None),
                              (('hearts', 'Q'), '', None),
@@ -359,8 +364,11 @@ def test_evaluate_requested_value(card, response, returned):
                              (('hearts', 'A'), 'tiles', 'tiles'),
                              (('hearts', 'A'), 'hearts', 'hearts'),
                          ])
-def test_evaluate_requested_color(card, response, returned):
-    assert logic.evaluate_requested_color(card, lambda x: response) is returned
+async def test_evaluate_requested_color(card, response, returned):
+
+    async def helper(_):
+        return response
+    assert (await logic.evaluate_requested_color(card, helper)) is returned
 
 
 @pytest.mark.parametrize('hand, pack', [

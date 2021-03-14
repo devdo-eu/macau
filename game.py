@@ -72,7 +72,7 @@ async def play_move(player, game_state):
         gs = punish_player(player, gs)
         return player, gs
 
-    message = player.gui_foo(gs, top_card, possible_plays)
+    message = await player.gui_foo(gs, top_card, possible_plays)
     played = await player.input_foo(message)
     played = played.replace('*', '')
     if len(played.split(',')) > 1:
