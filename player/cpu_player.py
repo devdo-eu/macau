@@ -146,7 +146,7 @@ class CPUPlayer(Player):
             appearances = on_hand[biggest]
         return biggest, appearances
 
-    def __cpu_input(self, _message):
+    async def __cpu_input(self, _message):
         """
         Function used as a input function for cpu players.
         :param _message: string with information about what needs to be entered
@@ -167,5 +167,5 @@ class CPUPlayer(Player):
             else:
                 cpu_move = f'{self.next_moves[self.move_counter][0]} {self.next_moves[self.move_counter][1]}'
                 cards_left -= 1
-        self.print_foo(f'{self.name} plays: {cpu_move} | on hand: {cards_left} cards.')
+        self.print_foo(f'{self.name} plays: {cpu_move}.')
         return cpu_move

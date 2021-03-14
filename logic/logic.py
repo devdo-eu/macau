@@ -167,7 +167,7 @@ def evaluate_turns_to_wait(laid_card, turns_to_wait=0):
     return turns_to_wait
 
 
-def evaluate_requested_value(laid_card, input_foo=input):
+async def evaluate_requested_value(laid_card, input_foo):
     """
     Function used to evaluate requested value of cards when player play jack special card.
     :param laid_card: tuple with last played card
@@ -177,14 +177,14 @@ def evaluate_requested_value(laid_card, input_foo=input):
     value = laid_card[1]
     requested_value = None
     if value == 'J':
-        requested_value = input_foo('Enter VALUE of requested cards: ')
+        requested_value = await input_foo('Enter VALUE of requested cards: ')
         if requested_value not in '5 6 7 8 9 10'.split():
             requested_value = None
 
     return requested_value
 
 
-def evaluate_requested_color(laid_card, input_foo=input):
+async def evaluate_requested_color(laid_card, input_foo):
     """
     Function used to evaluate requested color of cards when player play ace special card.
     :param laid_card: tuple with last played card
@@ -194,7 +194,7 @@ def evaluate_requested_color(laid_card, input_foo=input):
     value = laid_card[1]
     requested_color = None
     if value == 'A':
-        requested_color = input_foo('Enter COLOR of requested cards: ')
+        requested_color = await input_foo('Enter COLOR of requested cards: ')
         if requested_color not in colors:
             requested_color = None
 
@@ -254,7 +254,7 @@ def convert_to_card(played):
     return None
 
 
-def additional_actions(played_card, cards_to_take, turns_to_wait, input_foo):
+async def additional_actions(played_card, cards_to_take, turns_to_wait, input_foo):
     """
     Function combines all other functions used to take additional action for played card.
     :param played_card: tuple with played card
@@ -264,8 +264,8 @@ def additional_actions(played_card, cards_to_take, turns_to_wait, input_foo):
     :return: integer with cards to take, string with requested color,
      string with requested value, integer value with turns to skip
     """
-    requested_value = evaluate_requested_value(played_card, input_foo)
-    requested_color = evaluate_requested_color(played_card, input_foo)
+    requested_value = await evaluate_requested_value(played_card, input_foo)
+    requested_color = await evaluate_requested_color(played_card, input_foo)
     cards_to_take = evaluate_cards_to_take(played_card, cards_to_take)
     turns_to_wait = evaluate_turns_to_wait(played_card, turns_to_wait)
     return cards_to_take, requested_color, requested_value, turns_to_wait

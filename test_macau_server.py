@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from time import sleep
 
 from macau_server import app
 
@@ -87,3 +88,37 @@ def test_get_player_ui():
         response = tc.get("/macau/0/John")
         assert response.status_code == 200
         assert response.json()['status'] == 'OK'
+        assert "John" in response.json()['output'][0]
+        assert "Which card(s) from your hand do you want to play?: " in response.json()['output'][0]
+
+
+def test_post_player_move():
+    game_json = {'how_many_cards': 6, 'players_names': ["John", "CPU1"]}
+    with TestClient(app) as tc:
+        response = tc.post("/macau", json=game_json)
+        assert response.status_code == 200
+        assert response.json()['game_id'] == 0
+        assert response.json()['status'] == 'OK'
+
+        response = tc.get("/macau/0/John")
+        assert response.status_code == 200
+        assert response.json()['status'] == 'OK'
+        ui = response.json()['output'][0]
+        ui = ui.split('*')
+        move = ''
+        moved = False
+        if len(ui) > 1:
+            move = ui[1]
+            moved = True
+        response = tc.post(f"/macau/0/John?player_move={move}")
+        assert response.status_code == 200
+        assert response.json()['status'] == 'OK'
+        assert response.json()['input'] == move
+        sleep(0.2)
+
+        response = tc.get("/macau/0/John")
+        assert response.status_code == 200
+        assert response.json()['status'] == 'OK'
+        ui = response.json()['output'][-1]
+        if moved:
+            assert move in ui
