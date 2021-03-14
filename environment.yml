@@ -36,6 +36,7 @@ dependencies:
   - pyparsing=2.4.7=pyhd3eb1b0_0
   - pysocks=1.7.1=py38haa95532_0
   - pytest=6.2.2=py38haa95532_2
+  - pytest-asyncio=0.14.0=py38_1
   - pytest-cov=2.11.1=pyhd3eb1b0_0
   - python=3.8.8=hdbf39b2_4
   - python-dotenv=0.15.0=pyhd8ed1ab_0
