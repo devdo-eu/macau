@@ -1,8 +1,9 @@
 import game
 import os
+import asyncio
 
 
-def main():
+async def main():
     print('Welcome to Macau Game!')
     how_many_players = int(input('How many players will play?: '))
     if how_many_players < 2:
@@ -21,9 +22,8 @@ def main():
     game_state = game.GameState()
     game_state.deck, game_state.table, game_state.players = game.prepare_game(names, how_many_deck, how_many_cards)
     os.system('cls||clear')
-    winners = game.play_game(game_state)
-    print(f"Game won by: {winners} !")
+    await game.play_game(game_state)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())

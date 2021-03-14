@@ -17,7 +17,7 @@ def helper_factory(lines, index=0):
     global helper_move
     helper_move[index] = -1
 
-    def helper(_):
+    async def helper(_):
         global helper_move
         helper_move[index] += 1
         commands = lines
@@ -93,6 +93,7 @@ def test_prepare_game_with_more_cards_to_deal_than_in_deck():
     assert len(player.hand) == 52 - len(table)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize('hand, lied_card, check_lied_card, deck_len, hand_len, table_len', [
                             ([('tiles', '8')], ('tiles', '5'), ('tiles', '8'), 52, 0, 1),
                             ([('hearts', '5')], ('tiles', '5'), ('hearts', '5'), 52, 0, 1),
@@ -100,31 +101,32 @@ def test_prepare_game_with_more_cards_to_deal_than_in_deck():
                             ([('hearts', 'Q')], ('tiles', '5'), ('hearts', 'Q'), 52, 0, 1),
                             ([('hearts', '5')], ('tiles', 'Q'), ('hearts', '5'), 52, 0, 1),
                          ])
-def test_play_move_nonactive_card(hand, lied_card, check_lied_card, deck_len, hand_len, table_len, game_state):
+async def test_play_move_nonactive_card(hand, lied_card, check_lied_card, deck_len, hand_len, table_len, game_state):
     gs = game_state
     gs.players['One'].hand = hand
-    gs.players['One'].input_foo = lambda x: f'{card[0]} {card[1]}'
     gs.lied_card = lied_card
     card = gs.players['One'].hand[0]
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'].input_foo = helper_factory([f'{card[0]} {card[1]}'])
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.players['One'].hand) == hand_len
     assert len(gs.table) == table_len
     assert gs.lied_card == check_lied_card
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize('hand, play, check_table_len', [
     ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'tiles 5, clovers 5, hearts 5', 3),
     ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '5'), ('pikes', '8')],
      'tiles 5, clovers 5, pikes 5, hearts 5', 4),
                          ])
-def test_play_move_pack_of_nonactive_cards(hand, play, check_table_len, game_state):
+async def test_play_move_pack_of_nonactive_cards(hand, play, check_table_len, game_state):
     gs = game_state
     gs.players['One'].hand = hand
-    gs.players['One'].input_foo = lambda x: play
+    gs.players['One'].input_foo = helper_factory([play])
     gs.lied_card = ('tiles', '8')
     deck_len = len(gs.deck)
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == check_table_len
     assert len(gs.players['One'].hand) == 1
@@ -135,6 +137,7 @@ def test_play_move_pack_of_nonactive_cards(hand, play, check_table_len, game_sta
     assert gs.lied_card == ('hearts', '5')
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize('hand, play, check_hand_len', [
     ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'pikes 8, clovers 5, hearts 5', 5),
     ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'clovers 5, clovers 5, hearts 5', 5),
@@ -146,26 +149,27 @@ def test_play_move_pack_of_nonactive_cards(hand, play, check_table_len, game_sta
     ([('tiles', '5'), ('clovers', '5'), ('hearts', '5'), ('pikes', '8')], 'pikes 5, clovers 5, hearts 5', 5),
     ([('tiles', '5'), ('hearts', '5'), ('pikes', '8')], 'tiles 5, clovers 5, hearts 5', 4),
                          ])
-def test_play_move_pack_of_nonactive_cards_invalid(hand, play, check_hand_len, game_state):
+async def test_play_move_pack_of_nonactive_cards_invalid(hand, play, check_hand_len, game_state):
     gs = game_state
     gs.players['One'].hand = hand
-    gs.players['One'].input_foo = lambda x: play
+    gs.players['One'].input_foo = helper_factory([play])
     gs.lied_card = ('tiles', '8')
     deck_len = len(gs.deck)
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len - 1
     assert len(gs.table) == 0
     assert len(gs.players['One'].hand) == check_hand_len
     assert gs.lied_card == ('tiles', '8')
 
 
-def test_play_move_card4(game_state):
+@pytest.mark.asyncio
+async def test_play_move_card4(game_state):
     gs = game_state
     gs.players['One'].hand = [('tiles', '8')]
     gs.lied_card = ('tiles', '4')
     gs.turns_to_wait = 1
     saved_gs = deepcopy(gs)
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == 52
     assert len(gs.players['One'].hand) == 1
     assert gs.turns_to_wait == 0
@@ -174,9 +178,9 @@ def test_play_move_card4(game_state):
     assert gs.players['One'].turns_to_skip == 0
 
     card = gs.players['One'].hand[0]
-    gs.players['One'].input_foo = lambda x: f'{card[0]} {card[1]}'
+    gs.players['One'].input_foo = helper_factory([f'{card[0]} {card[1]}'])
 
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
 
     assert len(gs.deck) == 52
     assert len(gs.players['One'].hand) == 0
@@ -187,7 +191,7 @@ def test_play_move_card4(game_state):
 
     gs = deepcopy(saved_gs)
     gs.turns_to_wait = 5
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == 52
     assert len(gs.players['One'].hand) == 1
     assert gs.turns_to_wait == 0
@@ -196,9 +200,9 @@ def test_play_move_card4(game_state):
     assert gs.players['One'].turns_to_skip == 4
 
     card = gs.players['One'].hand[0]
-    gs.players['One'].input_foo = lambda x: f'{card[0]} {card[1]}'
+    gs.players['One'].input_foo = helper_factory([f'{card[0]} {card[1]}'])
     for turns in [3, 2, 1, 0]:
-        gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+        gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
         assert len(gs.deck) == 52
         assert len(gs.players['One'].hand) == 1
         assert gs.turns_to_wait == 0
@@ -206,7 +210,7 @@ def test_play_move_card4(game_state):
         assert ('tiles', '4') in gs.table
         assert gs.players['One'].turns_to_skip == turns
 
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == 52
     assert len(gs.players['One'].hand) == 0
     assert gs.turns_to_wait == 0
@@ -216,23 +220,24 @@ def test_play_move_card4(game_state):
     assert gs.players['One'].turns_to_skip == 0
 
 
-def test_play_move_23cards(game_state):
+@pytest.mark.asyncio
+async def test_play_move_23cards(game_state):
     gs = game_state
     gs.players['One'].hand = [('tiles', '8')]
     gs.lied_card = ('tiles', '3')
     gs.cards_to_take = 3
     saved_gs = deepcopy(gs)
     assert len(gs.deck) == 52
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 4
     assert len(gs.deck) == 49
     assert len(gs.table) == 1
     assert gs.cards_to_take == 0
 
     card = gs.players['One'].hand[0]
-    gs.players['One'].input_foo = lambda x: f'{card[0]} {card[1]}'
+    gs.players['One'].input_foo = helper_factory([f'{card[0]} {card[1]}'])
 
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 3
     assert len(gs.deck) == 49
     assert len(gs.table) == 1
@@ -244,21 +249,22 @@ def test_play_move_23cards(game_state):
     gs.lied_card = ('tiles', '2')
     gs.cards_to_take = 13
     assert len(gs.deck) == 52
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 14
     assert len(gs.deck) == 39
     assert len(gs.table) == 1
     assert gs.cards_to_take == 0
 
 
-def test_play_move_ace_requests(game_state):
+@pytest.mark.asyncio
+async def test_play_move_ace_requests(game_state):
     gs = game_state
     gs.players['One'].hand = [('hearts', '8')]
     gs.lied_card = ('tiles', 'A')
     gs.requested_color = 'pikes'
     saved_gs = deepcopy(gs)
     assert len(gs.deck) == 52
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 2
     assert len(gs.deck) == 51
     assert len(gs.table) == 0
@@ -268,10 +274,10 @@ def test_play_move_ace_requests(game_state):
 
     gs = deepcopy(saved_gs)
     card = gs.players['One'].hand[0]
-    gs.players['One'].input_foo = lambda x: f'{card[0]} {card[1]}'
+    gs.players['One'].input_foo = helper_factory([f'{card[0]} {card[1]}'])
     gs.requested_color = 'hearts'
     assert len(gs.deck) == 52
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 0
     assert len(gs.deck) == 52
     assert len(gs.table) == 1
@@ -279,14 +285,15 @@ def test_play_move_ace_requests(game_state):
     assert gs.lied_card == card
 
 
-def test_play_move_jack_requests(game_state):
+@pytest.mark.asyncio
+async def test_play_move_jack_requests(game_state):
     gs = game_state
     gs.players['One'].hand = [('hearts', '10')]
     gs.lied_card = ('tiles', 'J')
     gs.requested_value = '7'
     saved_gs = deepcopy(gs)
     assert len(gs.deck) == 52
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 2
     assert len(gs.deck) == 51
     assert len(gs.table) == 0
@@ -296,10 +303,10 @@ def test_play_move_jack_requests(game_state):
 
     gs = deepcopy(saved_gs)
     card = gs.players['One'].hand[0]
-    gs.players['One'].input_foo = lambda x: f'{card[0]} {card[1]}'
+    gs.players['One'].input_foo = helper_factory([f'{card[0]} {card[1]}'])
     gs.requested_value = '10'
     assert len(gs.deck) == 52
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 0
     assert len(gs.deck) == 52
     assert len(gs.table) == 1
@@ -308,10 +315,10 @@ def test_play_move_jack_requests(game_state):
 
     gs = deepcopy(saved_gs)
     card = ('tiles', '7')
-    gs.players['One'].input_foo = lambda x: f'{card[0]} {card[1]}'
+    gs.players['One'].input_foo = helper_factory([f'{card[0]} {card[1]}'])
     gs.requested_value = '10'
     assert len(gs.deck) == 52
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.players['One'].hand) == 2
     assert len(gs.deck) == 51
     assert len(gs.table) == 0
@@ -319,28 +326,32 @@ def test_play_move_jack_requests(game_state):
     assert gs.requested_value == '10'
 
 
-def test_play_round_no_move_logic():
+@pytest.mark.asyncio
+async def test_play_round_no_move_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     deck_len = len(gs.deck)
     assert len(gs.players['One'].hand) == 5
     assert len(gs.players['Two'].hand) == 5
+    input_list = ['this makes no sense' for _ in gs.players.values()]
+    input_list += input_list
     for player in gs.players.values():
-        player.input_foo = lambda x: 'this makes no sense'
+        player.input_foo = helper_factory(input_list)
     gs.output_foo = show
-    game.play_round(gs)
+    await game.play_round(gs)
     assert len(gs.players['One'].hand) == 6
     assert len(gs.players['Two'].hand) == 6
     assert len(gs.deck) == deck_len - 2
 
 
-def test_play_move_pack_of_jacks(game_state):
+@pytest.mark.asyncio
+async def test_play_move_pack_of_jacks(game_state):
     gs = game_state
     gs.players['One'].hand = [('tiles', 'J'), ('pikes', 'J'), ('hearts', 'J'), ('clovers', '10')]
     gs.lied_card = ('tiles', '8')
     deck_len = len(gs.deck)
     gs.players['One'].input_foo = helper_factory(['tiles J, pikes J, hearts J', '10'])
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 3
     assert ('pikes', 'J') in gs.table
@@ -351,13 +362,14 @@ def test_play_move_pack_of_jacks(game_state):
     assert gs.requested_value == '10'
 
 
-def test_play_move_pack_of_aces(game_state):
+@pytest.mark.asyncio
+async def test_play_move_pack_of_aces(game_state):
     gs = game_state
     gs.players['One'].hand = [('tiles', 'A'), ('pikes', 'A'), ('hearts', 'A'), ('clovers', '10')]
     gs.lied_card = ('pikes', '6')
     deck_len = len(gs.deck)
     gs.players['One'].input_foo = helper_factory(['pikes A, tiles A, hearts A', 'clovers'])
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 3
     assert ('pikes', 'A') in gs.table
@@ -368,15 +380,16 @@ def test_play_move_pack_of_aces(game_state):
     assert gs.requested_color == 'clovers'
 
 
-def test_play_move_pack_2_and_3(game_state):
+@pytest.mark.asyncio
+async def test_play_move_pack_2_and_3(game_state):
     gs = game_state
     gs.players['One'].hand = [('tiles', '3'), ('pikes', '3'), ('hearts', '3'), ('clovers', '10')]
     gs.lied_card = ('pikes', '6')
     deck_len = len(gs.deck)
-    gs.players['One'].input_foo = lambda x: 'pikes 3, tiles 3, hearts 3'
+    gs.players['One'].input_foo = helper_factory(['pikes 3, tiles 3, hearts 3'])
     saved_gs = deepcopy(gs)
 
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 3
     assert ('pikes', '3') in gs.table
@@ -388,9 +401,9 @@ def test_play_move_pack_2_and_3(game_state):
 
     gs = deepcopy(saved_gs)
     gs.players['One'].hand = [('tiles', '3'), ('clovers', '3'), ('pikes', '3'), ('hearts', '3'), ('clovers', '10')]
-    gs.players['One'].input_foo = lambda x: 'pikes 3, clovers 3, tiles 3, hearts 3'
+    gs.players['One'].input_foo = helper_factory(['pikes 3, clovers 3, tiles 3, hearts 3'])
 
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 4
     assert ('pikes', '3') in gs.table
@@ -403,9 +416,9 @@ def test_play_move_pack_2_and_3(game_state):
 
     gs = deepcopy(saved_gs)
     gs.players['One'].hand = [('tiles', '2'), ('clovers', '2'), ('pikes', '2'), ('hearts', '2'), ('clovers', '5')]
-    gs.players['One'].input_foo = lambda x: 'pikes 2, hearts 2, tiles 2, clovers 2'
+    gs.players['One'].input_foo = helper_factory(['pikes 2, hearts 2, tiles 2, clovers 2'])
 
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 4
     assert ('pikes', '2') in gs.table
@@ -417,14 +430,15 @@ def test_play_move_pack_2_and_3(game_state):
     assert gs.cards_to_take == 8
 
 
-def test_play_move_pack_4(game_state):
+@pytest.mark.asyncio
+async def test_play_move_pack_4(game_state):
     gs = game_state
     gs.players['One'].hand = [('tiles', '4'), ('pikes', '4'), ('hearts', '4'), ('clovers', '4'), ('clovers', '7')]
     gs.lied_card = ('hearts', '6')
-    gs.players['One'].input_foo = lambda x: 'hearts 4, tiles 4, clovers 4, pikes 4'
+    gs.players['One'].input_foo = helper_factory(['hearts 4, tiles 4, clovers 4, pikes 4'])
     deck_len = len(gs.deck)
 
-    gs.players['One'], gs = game.play_move(gs.players['One'], gs)
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 4
     assert ('hearts', '4') in gs.table
@@ -436,7 +450,8 @@ def test_play_move_pack_4(game_state):
     assert gs.turns_to_wait == 4
 
 
-def test_play_round_mundane_moves_logic():
+@pytest.mark.asyncio
+async def test_play_round_mundane_moves_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     deck_len = len(gs.deck)
@@ -447,21 +462,21 @@ def test_play_round_mundane_moves_logic():
     gs.players['Two'].hand = [('tiles', '9'), ('tiles', '8'), ('pikes', '5')]
     gs.players['Two'].print_foo = show
     gs.players['Two'].input_foo = helper_factory(['pikes 5', 'tiles 8', 'tiles 9'], 1)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 2
     assert len(gs.players['Two'].hand) == 2
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 2
     assert ('hearts', '5') in gs.table
     assert gs.lied_card == ('pikes', '5')
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 1
     assert len(gs.players['Two'].hand) == 1
     assert len(gs.deck) == deck_len
     assert len(gs.table) == 4
     assert ('pikes', '8') in gs.table
     assert gs.lied_card == ('tiles', '8')
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 0
     assert len(gs.players['Two'].hand) == 0
     assert len(gs.deck) == deck_len
@@ -470,7 +485,8 @@ def test_play_round_mundane_moves_logic():
     assert gs.lied_card == ('tiles', '9')
 
 
-def test_play_round_take_cards_attack_logic():
+@pytest.mark.asyncio
+async def test_play_round_take_cards_attack_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     deck_len = len(gs.deck)
@@ -479,9 +495,9 @@ def test_play_round_take_cards_attack_logic():
     gs.players['Two'].hand = [('tiles', '6')]
     gs.players['Two'].print_foo = show
     gs.table = [('hearts', '5')]
-    gs.players['One'].input_foo = lambda x: 'hearts K'
+    gs.players['One'].input_foo = helper_factory(['hearts K'])
     saved_gs = deepcopy(gs)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 0
     assert len(gs.players['Two'].hand) == 6
     assert len(gs.deck) == deck_len - 5
@@ -491,20 +507,21 @@ def test_play_round_take_cards_attack_logic():
     gs.players['One'].input_foo = helper_factory(['hearts K', 'tiles 7'])
     gs.players['Two'].hand = [('hearts', '2'), ('hearts', '9')]
     gs.players['Two'].input_foo = helper_factory(['hearts 2', 'hearts 9'], 1)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.cards_to_take == 7
     assert len(gs.players['One'].hand) == 1
     assert len(gs.players['Two'].hand) == 1
     assert len(gs.deck) == deck_len
 
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 8
     assert len(gs.players['Two'].hand) == 0
     assert len(gs.deck) == deck_len - 7
     assert gs.cards_to_take == 0
 
 
-def test_play_round_take_cards_attack_most_cards_on_table():
+@pytest.mark.asyncio
+async def test_play_round_take_cards_attack_most_cards_on_table():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     gs.table = gs.table + gs.deck[:20]
@@ -512,12 +529,12 @@ def test_play_round_take_cards_attack_most_cards_on_table():
     deck_len = len(gs.deck)
     table_len = len(gs.table)
     gs.players['One'].hand.append(('hearts', 'K'))
+    gs.players['One'].input_foo = helper_factory(['', 'hearts K'])
     gs.players['Two'].hand = [('tiles', '6')]
     gs.table.append(('hearts', '5'))
     gs.cards_to_take = 20
     gs.output_foo = show
-    gs.players['One'].input_foo = lambda x: 'hearts K'
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 5
     assert len(gs.players['Two'].hand) == 26
     assert len(gs.deck) == deck_len + table_len - 25
@@ -527,7 +544,8 @@ def test_play_round_take_cards_attack_most_cards_on_table():
     assert gs.cards_to_take == 0
 
 
-def test_play_round_pikes_king_logic():
+@pytest.mark.asyncio
+async def test_play_round_pikes_king_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     deck_len = len(gs.deck)
@@ -539,7 +557,7 @@ def test_play_round_pikes_king_logic():
     gs.players['Two'].input_foo = helper_factory(['hearts K', 'clovers 7'], 1)
     gs.table = [('pikes', '10')]
     saved_gs = deepcopy(gs)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 1
     assert len(gs.players['Two'].hand) == 6
     assert len(gs.deck) == deck_len - 5
@@ -548,7 +566,7 @@ def test_play_round_pikes_king_logic():
     assert ('pikes', 'K') in gs.table
     assert gs.lied_card == ('hearts', 'K')
 
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 6
     assert len(gs.players['Two'].hand) == 7
     assert len(gs.deck) == deck_len - 11
@@ -562,7 +580,7 @@ def test_play_round_pikes_king_logic():
     gs.players['Two'].hand = [('pikes', 'K'), ('clovers', '7')]
     gs.players['Two'].input_foo = helper_factory(['pikes K', 'clovers 7'], 1)
     gs.table = [('hearts', '10')]
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 11
     assert len(gs.players['Two'].hand) == 1
     assert len(gs.deck) == deck_len - 10
@@ -572,7 +590,8 @@ def test_play_round_pikes_king_logic():
     assert ('pikes', 'K') in gs.table
 
 
-def test_play_round_ace_logic():
+@pytest.mark.asyncio
+async def test_play_round_ace_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     deck_len = len(gs.deck)
@@ -584,7 +603,7 @@ def test_play_round_ace_logic():
     gs.players['Two'].input_foo = helper_factory(['clovers 5'], 1)
     gs.table = [('clovers', '7')]
     saved_gs = deepcopy(gs)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_color == 'tiles'
     assert len(gs.deck) == deck_len - 1
     assert len(gs.players['One'].hand) == 1
@@ -592,7 +611,7 @@ def test_play_round_ace_logic():
     assert gs.lied_card == ('clovers', 'A')
     assert len(gs.table) == 1
 
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_color is None
     assert len(gs.deck) == deck_len - 1
     assert len(gs.players['One'].hand) == 0
@@ -605,7 +624,7 @@ def test_play_round_ace_logic():
     gs.players['One'].input_foo = helper_factory(['clovers A', 'tiles'])
     gs.players['Two'].hand = [('pikes', 'A'), ('clovers', '5')]
     gs.players['Two'].input_foo = helper_factory(['pikes A', 'clovers'], 1)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_color == 'clovers'
     assert len(gs.deck) == deck_len
     assert len(gs.players['One'].hand) == 1
@@ -618,7 +637,7 @@ def test_play_round_ace_logic():
     gs.players['One'].input_foo = helper_factory(['clovers A', ''])
     gs.players['Two'].hand = [('pikes', 'A'), ('clovers', 'K')]
     gs.players['Two'].input_foo = helper_factory(['clovers K'], 1)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_color is None
     assert len(gs.deck) == deck_len
     assert len(gs.players['One'].hand) == 1
@@ -629,7 +648,8 @@ def test_play_round_ace_logic():
     assert ('clovers', 'A') in gs.table
 
 
-def test_play_round_jack_logic():
+@pytest.mark.asyncio
+async def test_play_round_jack_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     deck_len = len(gs.deck)
@@ -641,7 +661,7 @@ def test_play_round_jack_logic():
     gs.players['Two'].input_foo = helper_factory(['tiles 6'], 1)
     gs.table = [('clovers', '7')]
     saved_gs = deepcopy(gs)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_value == '5'
     assert gs.requested_value_rounds == 1
     assert len(gs.deck) == deck_len - 1
@@ -649,7 +669,7 @@ def test_play_round_jack_logic():
     assert len(gs.players['Two'].hand) == 3
     assert gs.lied_card == ('clovers', 'J')
     assert len(gs.table) == 1
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_value is None
     assert gs.requested_value_rounds == 0
     assert len(gs.deck) == deck_len - 1
@@ -663,7 +683,7 @@ def test_play_round_jack_logic():
     gs.players['One'].input_foo = helper_factory(['clovers J', '5'])
     gs.players['Two'].hand = [('clovers', '10'), ('tiles', 'J')]
     gs.players['Two'].input_foo = helper_factory(['tiles J', '10'], 1)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_value == '10'
     assert gs.requested_value_rounds == 2
     assert len(gs.deck) == deck_len
@@ -677,7 +697,7 @@ def test_play_round_jack_logic():
     gs.players['One'].input_foo = helper_factory(['clovers J', ''])
     gs.players['Two'].hand = [('clovers', '10'), ('tiles', '8')]
     gs.players['Two'].input_foo = helper_factory(['clovers 10'], 1)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert gs.requested_value is None
     assert gs.requested_value_rounds == 0
     assert len(gs.deck) == deck_len
@@ -688,18 +708,19 @@ def test_play_round_jack_logic():
     assert ('clovers', 'J') in gs.table
 
 
-def test_play_round_skip_turns_logic():
+@pytest.mark.asyncio
+async def test_play_round_skip_turns_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
     deck_len = len(gs.deck)
     gs.players['One'].hand = [('pikes', '4'), ('tiles', '5')]
     gs.players['One'].print_foo = show
-    gs.players['One'].input_foo = lambda x: 'pikes 4'
+    gs.players['One'].input_foo = helper_factory(['pikes 4'])
     gs.players['Two'].hand = [('clovers', 'K'), ('tiles', '6')]
     gs.players['Two'].print_foo = show
     gs.table = [('pikes', '8')]
     saved_gs = deepcopy(gs)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.deck) == deck_len
     assert len(gs.players['One'].hand) == 1
     assert len(gs.players['Two'].hand) == 2
@@ -709,10 +730,10 @@ def test_play_round_skip_turns_logic():
     assert gs.lied_card is None
 
     gs = saved_gs
-    gs.players['One'].input_foo = lambda x: 'pikes 4'
+    gs.players['One'].input_foo = helper_factory(['pikes 4'])
     gs.players['Two'].hand = [('clovers', 'K'), ('clovers', '4'), ('clovers', '7')]
     gs.players['Two'].input_foo = helper_factory(['clovers 4', 'clovers K', 'clovers 7'], 1)
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.deck) == deck_len
     assert len(gs.players['One'].hand) == 1
     assert len(gs.players['Two'].hand) == 2
@@ -721,7 +742,7 @@ def test_play_round_skip_turns_logic():
     assert ('pikes', '4') in gs.table
     assert gs.lied_card == ('clovers', '4')
 
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.deck) == deck_len
     assert len(gs.players['One'].hand) == 1
     assert gs.players['One'].turns_to_skip == 1
@@ -731,7 +752,7 @@ def test_play_round_skip_turns_logic():
     assert ('clovers', '4') in gs.table
     assert gs.lied_card == ('clovers', 'K')
 
-    gs = game.play_round(gs)
+    gs = await game.play_round(gs)
     assert len(gs.deck) == deck_len
     assert len(gs.players['One'].hand) == 1
     assert gs.players['One'].turns_to_skip == 0
@@ -773,7 +794,8 @@ def test_pikes_king_punishment(how_many_players, who_played_pikes_king):
     assert len(gs.players[str(who_will_be_punished)].hand) == 10
 
 
-def test_play_game_logic(game_state):
+@pytest.mark.asyncio
+async def test_play_game_logic(game_state):
     gs = game_state
     gs.players = {'1': Player('1'), '2': Player('2')}
     gs.players['1'].hand = [('hearts', '7'), ('tiles', '5')]
@@ -784,7 +806,7 @@ def test_play_game_logic(game_state):
     gs.players['2'].input_foo = helper_factory(['tiles 7', 'pikes 5'], 1)
     gs.table = [('pikes', '7')]
     saved_gs = deepcopy(gs)
-    winners = game.play_game(gs)
+    winners = await game.play_game(gs)
     assert len(gs.table) == 3
     assert gs.lied_card == ('tiles', '5')
     assert len(winners) == 1
@@ -794,7 +816,7 @@ def test_play_game_logic(game_state):
     gs.players['1'].input_foo = helper_factory(['hearts 7', 'tiles 5'])
     gs.players['2'].hand = [('pikes', '5'), ('tiles', '7')]
     gs.players['2'].input_foo = helper_factory(['tiles 7', 'pikes 5'], 1)
-    winners = game.play_game(gs)
+    winners = await game.play_game(gs)
     assert len(gs.table) == 4
     assert gs.lied_card == ('pikes', '5')
     assert len(winners) == 2
@@ -802,10 +824,11 @@ def test_play_game_logic(game_state):
     assert '2' in winners
 
 
-def test_cpu_self_game():
+@pytest.mark.asyncio
+async def test_cpu_self_game():
     game_state = game.GameState()
     names = [f'CPU{index}' for index in range(1, 18)]
     game_state.deck, game_state.table, game_state.players = game.prepare_game(names, 20, 50)
-    winners = game.play_game(game_state)
+    winners = await game.play_game(game_state)
     assert len(winners) > 0
     assert len(game_state.players[winners[0]].hand) == 0

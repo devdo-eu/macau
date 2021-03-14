@@ -15,7 +15,7 @@ class Player:
         self.print_foo(f'{self.name} plays: {move}.')
         return move
 
-    def __gui_builder(self, game_state, top_card, possible_plays):
+    async def __gui_builder(self, game_state, top_card, possible_plays):
         """
         Function used to build information message for players
         :param game_state: GameState object with all information about state of game
@@ -25,7 +25,7 @@ class Player:
         """
         gs = game_state
         gui = ''
-        self.clear_screen_if_hot_seats(game_state)
+        await self.clear_screen_if_hot_seats(game_state)
         for check in gs.players.values():
             if len(check.hand) == 1:
                 gui += f"\n{check.name} has macau!"
@@ -74,7 +74,7 @@ class Player:
                 cards += '\n'
         return cards
 
-    def clear_screen_if_hot_seats(self, game_state):
+    async def clear_screen_if_hot_seats(self, game_state):
         """
         Helper function used to clear screen if there are at least two human players.
         :param game_state: GameState object with all information about state of game
@@ -85,4 +85,4 @@ class Player:
                 others_are_cpus = False
         if not others_are_cpus and self.print_foo == print:
             os.system('cls||clear')
-            self.input_foo(f'{self.name} Turn Now!')
+            await self.input_foo(f'{self.name} Turn Now!')

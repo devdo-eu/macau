@@ -13,7 +13,7 @@ class CPUPlayer(Player):
         self.gui_foo = self.__cpu_gui
         self.input_foo = self.__cpu_input
 
-    def __cpu_gui(self, game_state, _top_card, possible_plays):
+    async def __cpu_gui(self, game_state, _top_card, possible_plays):
         """
         Function used to get gui information to cpu player.
         It is responsible for building strategy of this player.
