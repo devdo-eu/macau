@@ -6,7 +6,6 @@ from player.player import Player
 import game
 
 app = FastAPI()
-
 games_container = []
 
 
@@ -53,24 +52,17 @@ def create_input_foo(name: str, game_id: int):
     async def waiter():
         global games_container
         gc = games_container[game_id]
-        if gc['round'] == -1:
-            return
-        else:
-            while len(gc['inputs'][name]) <= gc['round']:
-                await asyncio.sleep(0.1)
+        while len(gc['inputs'][name]) <= 0:
+            await asyncio.sleep(0.05)
 
     async def input_foo(message):
         global games_container
         gc = games_container[game_id]
         gc['outputs'][name].append(message)
         await waiter()
-        if gc['round'] == -1:
-            return ''
-        else:
-            game_round = gc['round']
-            move = gc['inputs'][name].pop()
-            gc['state'].players[name].print_foo(f'{name} plays: {move}.')
-            return move
+        move = gc['inputs'][name].pop()
+        gc['state'].players[name].print_foo(f'{name} plays: {move}.')
+        return move
 
     return input_foo
 
@@ -80,7 +72,7 @@ async def start_game(game_params: GameParams):
     game_state = game.GameState()
     gp = game_params
     names = gp.players_names
-    macau = {"state": game_state, "round": 0, "inputs": {}, 'outputs': {}}
+    macau = {"state": game_state, "inputs": {}, 'outputs': {}}
     for name in names:
         if type(name) is not str:
             return JSONResponse(content={'status': 'Wrong names', 'game_id': None}, status_code=400)
@@ -126,21 +118,26 @@ def get_game_log(game_id: int):
 
 @app.get("/macau/{game_id}/{player_name}")
 def get_player_ui(game_id: int, player_name: str):
-    if game_id >= len(games_container):
-        return JSONResponse(content={'status': 'No game', 'output': None}, status_code=404)
-    gs = games_container[game_id]['state']
-    if player_name not in gs.players.keys():
-        return JSONResponse(content={'status': 'No player', 'output': None}, status_code=404)
+    content, status_code = validate_game_player(game_id, player_name)
+    if status_code != 200:
+        return JSONResponse(content=content, status_code=status_code)
     outputs = games_container[game_id]['outputs'][player_name]
     return {"status": "OK", "output": outputs}
 
 
 @app.post("/macau/{game_id}/{player_name}")
 def post_player_move(game_id: int, player_name: str, player_move: str):
-    if game_id >= len(games_container):
-        return JSONResponse(content={'status': 'No game', 'output': None}, status_code=404)
-    gs = games_container[game_id]['state']
-    if player_name not in gs.players.keys():
-        return JSONResponse(content={'status': 'No player', 'output': None}, status_code=404)
+    content, status_code = validate_game_player(game_id, player_name)
+    if status_code != 200:
+        return JSONResponse(content=content, status_code=status_code)
     games_container[game_id]['inputs'][player_name].append(player_move)
     return {'status': 'OK', "input": player_move}
+
+
+def validate_game_player(game_id: int, player_name: str):
+    if game_id >= len(games_container):
+        return {'status': 'No game', 'output': None}, 404
+    gs = games_container[game_id]['state']
+    if player_name not in gs.players.keys():
+        return {'status': 'No player', 'output': None}, 404
+    return {}, 200
