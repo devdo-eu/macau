@@ -126,9 +126,6 @@ def game_loop(game_id, my_name, host, input_foo=input, print_foo=print):
         response = requests.get(f"http://{host}/macau/{game_id}/{my_name}?access_token={token}")
         crash_on_error(response)
         output = response.json()['output']
-        if "Game won by" in output[-1]:
-            print_foo(output[-1])
-            break
         sleep(0.05)
         if output != last_output:
             response = requests.get(f"http://{host}/macau/{game_id}")
@@ -150,6 +147,10 @@ def game_loop(game_id, my_name, host, input_foo=input, print_foo=print):
                     crash_on_error(response)
                     action = True
                     break
+            if "Game won by" in output[-1]:
+                print_foo(output[-1])
+                break
+
             if not action:
                 print_foo("Waiting for other player move...")
             last_output = output
