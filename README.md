@@ -21,7 +21,7 @@ you can also run REST game server using `uvicorn macau_server:app`
 then you can play with REST client using `python macau.cli.py`
 
 There are unit tests for this project.  
-You can run tests using `python pytest ./tests` in project directory.
+You can run tests using `python -m pytest ./tests` in project directory.
 
 # Features  
 
