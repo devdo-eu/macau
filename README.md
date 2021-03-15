@@ -108,7 +108,11 @@ Game won by: ['CPU_A'] !
 
 This project can be run as a REST API server.  
 with command `uvicorn macau_server:app` you can run it locally.   
-Then with available commands it is possible to play from a browser.
+Then with available commands it is possible to play from a browser.  
+
+Another way is to use REST API client.   
+You can run client from directory `./macau/rest_api_client` with:  
+`python macau.cli.py` command.
 
 # Rules 
 
@@ -142,6 +146,7 @@ This project is starting point for more complex development.
   + macau can be played with more than 1 deck and more than 6 players
   + cpu players can play with packs of card
   + REST API server for macau card game
+  + REST API client with terminal ui
 
 # License
 
