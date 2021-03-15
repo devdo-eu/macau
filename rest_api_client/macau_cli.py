@@ -22,6 +22,7 @@ def main(input_foo=input, print_foo=print):
 
     elif create_join_watch == 'w':
         watch_game(host, input_foo, print_foo)
+
     else:
         print_foo(f"Wrong option: {create_join_watch}")
 
