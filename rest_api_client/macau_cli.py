@@ -4,30 +4,39 @@ import os
 
 
 def crash_on_error(response):
+    """
+    Function used to raise exception and end client work.
+    :param response: Response object with answer from rest api game server
+    """
     if response.status_code != 200:
         raise Exception(f"Something goes wrong. Server respond with: {response.status_code}")
 
 
 def main(input_foo=input, print_foo=print):
+    """
+    Function used to control all client setup flow & logic
+    :param input_foo: functor with function used to get input from user
+    :param print_foo: functor with function used to show output to user
+    """
     host = "127.0.0.1:8000"
     print_foo("Welcome to Macau Game!")
     host = find_server(host, input_foo, print_foo)
-
+    process = {'c': create_game, 'j': join_game, 'w': watch_game}
     create_join_watch = input_foo("Do you want to Create game, Join existing one or Watch? (c/j/w): ").lower()
-    if create_join_watch == 'c':
-        create_game(host, input_foo, print_foo)
-
-    elif create_join_watch == 'j':
-        join_game(host, input_foo, print_foo)
-
-    elif create_join_watch == 'w':
-        watch_game(host, input_foo, print_foo)
-
+    if create_join_watch in process:
+        process[create_join_watch](host, input_foo, print_foo)
     else:
         print_foo(f"Wrong option: {create_join_watch}")
 
 
 def find_server(host, input_foo, print_foo):
+    """
+    Function used to check connection with server.
+    :param host: string with address to game server in IP:PORT format
+    :param input_foo: functor with function used to get input from user
+    :param print_foo: functor with function used to show output to user
+    :return: checked and correct string with address to working server
+    """
     while True:
         try:
             response = requests.get(f"http://{host}/")
@@ -41,7 +50,36 @@ def find_server(host, input_foo, print_foo):
     return host
 
 
+def find_game(host, input_foo, print_foo):
+    """
+    Function used to check if game with given game id exists on game server
+    :param host: string with address to game server in IP:PORT format
+    :param input_foo: functor with function used to get input from user
+    :param print_foo: functor with function used to show output to user
+    :return: integer with correct game_id, integer with response status code 200,
+     list of string with not yet logged players
+    """
+    status_code = 404
+    game_id = -1
+    waiting_for = []
+    while status_code != 200:
+        game_id = int(input_foo("Enter ID of the game: "))
+        response = requests.get(f"http://{host}/macau/{game_id}/state")
+        status_code = response.status_code
+        if status_code != 200:
+            print_foo("Game ID not valid.")
+        else:
+            waiting_for = response.json()['state']['waiting_for']
+    return game_id, status_code, waiting_for
+
+
 def watch_game(host, input_foo, print_foo):
+    """
+    Function used to connect to game on server as a spectator.
+    :param host: string with address to game server in IP:PORT format
+    :param input_foo: functor with function used to get input from user
+    :param print_foo: functor with function used to show output to user
+    """
     print_foo("Watching existing game!")
     game_id, status_code, _ = find_game(host, input_foo, print_foo)
     os.system("cls || clear")
@@ -61,6 +99,12 @@ def watch_game(host, input_foo, print_foo):
 
 
 def join_game(host, input_foo, print_foo):
+    """
+    Function used to connect to existing game on server as a guest.
+    :param host: string with address to game server in IP:PORT format
+    :param input_foo: functor with function used to get input from user
+    :param print_foo: functor with function used to show output to user
+    """
     print_foo("Joining existing game!")
     game_id, status_code, waiting_for = find_game(host, input_foo, print_foo)
     print_foo("Game ID correct.")
@@ -72,22 +116,13 @@ def join_game(host, input_foo, print_foo):
     game_loop(game_id, my_name, host, input_foo, print_foo)
 
 
-def find_game(host, input_foo, print_foo):
-    status_code = 404
-    game_id = -1
-    waiting_for = []
-    while status_code != 200:
-        game_id = int(input_foo("Enter ID of the game: "))
-        response = requests.get(f"http://{host}/macau/{game_id}/state")
-        status_code = response.status_code
-        if status_code != 200:
-            print_foo("Game ID not valid.")
-        else:
-            waiting_for = response.json()['state']['waiting_for']
-    return game_id, status_code, waiting_for
-
-
 def create_game(host, input_foo, print_foo):
+    """
+    Function used to create new game on game server and connect to it as a owner.
+    :param host: string with address to game server in IP:PORT format
+    :param input_foo: functor with function used to get input from user
+    :param print_foo: functor with function used to show output to user
+    """
     print_foo("Creating new Macau Game!")
     how_many_players = int(input_foo("Enter number of players: "))
     if how_many_players < 2:
@@ -111,6 +146,14 @@ def create_game(host, input_foo, print_foo):
 
 
 def game_loop(game_id, my_name, host, input_foo=input, print_foo=print):
+    """
+    Function used to control input/output game loop with client-server
+    :param game_id: integer with correct game id of game existing on game server
+    :param my_name: string with name of rest api client user
+    :param host: string with address to game server in IP:PORT format
+    :param input_foo: functor with function used to get input from user
+    :param print_foo: functor with function used to show output to user
+    """
     questions = [
         "Which card(s) from your hand do you want to play?:",
         "Enter VALUE of requested cards:",
