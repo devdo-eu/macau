@@ -152,10 +152,15 @@ def get_game_state(game_id: int):
     if game_id >= len(games_container):
         return JSONResponse(content={'status': 'No game', 'state': None}, status_code=404)
     gs = games_container[game_id]['state']
+    waiting_for = []
+    for gamer in games_container[game_id]['tokens']:
+        if "CPU" not in gamer and games_container[game_id]['tokens'][gamer] == '':
+            waiting_for.append(gamer)
+
     state = {"cards_in_deck": len(gs.deck), "table": gs.table, "lied_card": gs.lied_card,
              "cards_to_take": gs.cards_to_take, "turns_to_wait": gs.turns_to_wait,
              "requested_value_rounds": gs.requested_value_rounds, "requested_value": gs.requested_value,
-             "requested_color": gs.requested_color}
+             "requested_color": gs.requested_color, 'waiting_for': waiting_for}
     return {"status": "OK", "state": state}
 
 
