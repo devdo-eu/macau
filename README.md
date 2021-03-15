@@ -17,10 +17,11 @@ Next change environment with:
 now you can run the game locally with  
 a terminal interface using `python macau.py`.
 
-you can also run REST game server using `uvicorn macau_server:app`
+you can also run REST game server using `uvicorn macau_server:app`  
+then you can play with REST client using `python macau.cli.py`
 
 There are unit tests for this project.  
-You can run tests using `pytest` in project directory.
+You can run tests using `python pytest ./tests` in project directory.
 
 # Features  
 
@@ -109,8 +110,9 @@ Game won by: ['CPU_A'] !
 This project can be run as a REST API server.  
 with command `uvicorn macau_server:app` you can run it locally.   
 Then with available commands it is possible to play from a browser.  
+All documentation is available to read at `http://localhost:8000/docs`
 
-Another way is to use REST API client.   
+Another way to play is to use REST API client.   
 You can run client from directory `./macau/rest_api_client` with:  
 `python macau.cli.py` command.
 
@@ -130,7 +132,7 @@ King of pikes will punish with cards player behind current player
 with no chance for defend.  
 King of hearts will add 5 cards to penalty for next player.  
 
-If no special card is on table, then rule `All on Queen, Queen on all` applies.
+If no special card is on a table, then rule `All on Queen, Queen on all` applies.
 
 When one player will have only one card left on hand,  
 then `Name has Macau!` message will be shown on top of player screen.  
