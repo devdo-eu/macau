@@ -30,7 +30,7 @@ jobs:
     - name: Test with pytest and generate test coverage
       run: |
         conda activate macau
-        pytest -v -s --cov=./ --cov-report=xml
+        python -m pytest ./tests -v -s --cov=./ --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:

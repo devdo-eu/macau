@@ -31,10 +31,7 @@ def find_server(host, input_foo, print_foo):
     while True:
         try:
             response = requests.get(f"http://{host}/")
-            if response.status_code != 200:
-                print_foo(f"Game Server at {host} are not responding.")
-                host = input_foo("Enter host address: ")
-            else:
+            if response.status_code == 200:
                 print_foo("Connection to Game Server checked.")
                 break
         except requests.exceptions.ConnectionError as ex:
@@ -58,7 +55,9 @@ def watch_game(host, input_foo, print_foo):
             for line in to_show:
                 print_foo(line)
             last_show = to_show
-        sleep(0.2)
+        if 'Game won by' in to_show[-1]:
+            break
+        sleep(0.5)
 
 
 def join_game(host, input_foo, print_foo):
@@ -126,7 +125,6 @@ def game_loop(game_id, my_name, host, input_foo=input, print_foo=print):
         response = requests.get(f"http://{host}/macau/{game_id}/{my_name}?access_token={token}")
         crash_on_error(response)
         output = response.json()['output']
-        sleep(0.05)
         if output != last_output:
             response = requests.get(f"http://{host}/macau/{game_id}")
             crash_on_error(response)
@@ -154,6 +152,7 @@ def game_loop(game_id, my_name, host, input_foo=input, print_foo=print):
             if not action:
                 print_foo("Waiting for other player move...")
             last_output = output
+        sleep(0.05)
 
 
 if __name__ == "__main__":
