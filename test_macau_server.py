@@ -39,7 +39,7 @@ def test_next_start_game():
 
 
 def test_get_game_state():
-    game_json = {'how_many_cards': 6, 'players_names': ["John", "CPU1"]}
+    game_json = {'how_many_cards': 6, 'players_names': ["John", "Tony"]}
     with TestClient(app) as tc:
         response = tc.post("/macau", json=game_json)
         assert response.status_code == 200
@@ -74,17 +74,42 @@ def test_get_player_ui():
         assert response.json()['game_id'] == 0
         assert response.json()['status'] == 'OK'
 
-        response = tc.get("/macau/250/Tony")
+        response = tc.get("/macau/250/Tony?access_token=0")
         assert response.status_code == 404
         assert response.json()['status'] == 'No game'
         assert response.json()['output'] is None
 
-        response = tc.get("/macau/0/Tony")
+        response = tc.get("/macau/0/Tony?access_token=0")
         assert response.status_code == 404
         assert response.json()['status'] == 'No player'
         assert response.json()['output'] is None
 
-        response = tc.get("/macau/0/John")
+        response = tc.get("/macau/250/Tony/key")
+        assert response.status_code == 404
+        assert response.json()['status'] == 'No game'
+        assert response.json()['output'] is None
+
+        response = tc.get("/macau/0/Tony/key")
+        assert response.status_code == 404
+        assert response.json()['status'] == 'No player'
+        assert response.json()['output'] is None
+
+        response = tc.get("/macau/0/John?access_token=0")
+        assert response.status_code == 401
+        assert response.json()['status'] == 'Bad token'
+        assert response.json()['output'] is None
+
+        response = tc.get("/macau/0/John/key")
+        assert response.status_code == 200
+        assert response.json()['status'] == 'OK'
+        assert response.json()['access_token'] != ''
+        token = response.json()['access_token']
+
+        response = tc.get("/macau/0/John/key")
+        assert response.status_code == 403
+        assert response.json()['status'] == 'Token already exists'
+
+        response = tc.get(f"/macau/0/John?access_token={token}")
         assert response.status_code == 200
         assert response.json()['status'] == 'OK'
         assert "John" in response.json()['output'][0]
@@ -100,8 +125,20 @@ def test_post_player_move():
         assert response.status_code == 200
         assert response.json()['game_id'] == 0
         assert response.json()['status'] == 'OK'
+        move = "hearts K"
 
-        response = tc.get("/macau/0/John")
+        response = tc.post(f"/macau/0/John?player_move={move}&access_token=0")
+        assert response.status_code == 401
+        assert response.json()['status'] == 'Bad token'
+        assert response.json()['input'] is None
+
+        response = tc.get("/macau/0/John/key")
+        assert response.status_code == 200
+        assert response.json()['status'] == 'OK'
+        assert response.json()['access_token'] != ''
+        token = response.json()['access_token']
+
+        response = tc.get(f"/macau/0/John?access_token={token}")
         assert response.status_code == 200
         assert response.json()['status'] == 'OK'
         ui = response.json()['output'][0]
@@ -111,14 +148,14 @@ def test_post_player_move():
         if len(ui) > 1:
             move = ui[1]
             moved = True
-        response = tc.post(f"/macau/0/John?player_move={move}")
+        response = tc.post(f"/macau/0/John?player_move={move}&access_token={token}")
         sleep(0.05)
         assert response.status_code == 200
         assert response.json()['status'] == 'OK'
         assert response.json()['input'] == move
 
         sleep(0.05)
-        response = tc.get("/macau/0/John")
+        response = tc.get(f"/macau/0/John?access_token={token}")
         assert response.status_code == 200
         assert response.json()['status'] == 'OK'
         ui = response.json()['output']
@@ -135,12 +172,12 @@ def test_post_player_move_negatives():
         assert response.json()['status'] == 'OK'
         move = 'hearts Q'
 
-        response = tc.post(f"/macau/250/John?player_move={move}")
+        response = tc.post(f"/macau/250/John?player_move={move}&access_token=0")
         sleep(0.05)
         assert response.status_code == 404
         assert response.json()['status'] == 'No game'
 
-        response = tc.post(f"/macau/0/Tony?player_move={move}")
+        response = tc.post(f"/macau/0/Tony?player_move={move}&access_token=0")
         sleep(0.05)
         assert response.status_code == 404
         assert response.json()['status'] == 'No player'
@@ -154,7 +191,12 @@ def test_get_game_log():
         assert response.json()['game_id'] == 0
         assert response.json()['status'] == 'OK'
 
-        response = tc.get("/macau/0/John")
+        response = tc.get("/macau/0/John/key")
+        assert response.status_code == 200
+        assert response.json()['access_token'] != ''
+        token = response.json()['access_token']
+
+        response = tc.get(f"/macau/0/John?access_token={token}")
         assert response.status_code == 200
         assert response.json()['status'] == 'OK'
         ui = response.json()['output'][0]
@@ -162,7 +204,7 @@ def test_get_game_log():
         move = ''
         if len(ui) > 1:
             move = ui[1]
-        response = tc.post(f"/macau/0/John?player_move={move}")
+        response = tc.post(f"/macau/0/John?player_move={move}&access_token={token}")
         sleep(0.05)
         assert response.status_code == 200
         assert response.json()['status'] == 'OK'
