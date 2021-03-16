@@ -1,0 +1,268 @@
+import pyglet
+from secrets import choice
+from copy import copy
+import requests
+import asyncio
+from random import randint
+from datetime import datetime
+
+outputs = []
+helper_move = -1
+
+
+class GameState:
+    def __init__(self):
+        self.cards_in_deck = 0
+        self.table = []
+        self.lied_card = None
+        self.hand = {}
+        self.cards_to_take = 0
+        self.turns_to_wait = 0
+        self.requested_value = None
+        self.requested_color = None
+        self.host = 'localhost:8000'
+        self.my_name = 'Test'
+        self.access_token = 'e9cd24bccb5c4cdc91456cc43eeb4f94'
+        # self.access_token = '9e4bc51fe0064235bc49596724e4437f' for game 1
+        # self.access_token = '08e97db3c68b41c18182a4e2eb101e8c' for game 0
+        self.game_id = 3
+        self.to_play = []
+        self.rivals = {}
+
+
+def dumper_factory():
+    global outputs
+    outputs = []
+
+    def dump(message):
+        global outputs
+        outputs.append(message)
+    return dump
+
+
+def helper_factory(lines):
+    global helper_move
+    helper_move = -1
+
+    def helper(_):
+        global helper_move
+        helper_move += 1
+        commands = lines
+        return commands[helper_move]
+
+    return helper
+
+
+def load_all_card_images():
+    colors = 'hearts tiles clovers pikes'.split()
+    values = '2 3 4 5 6 7 8 9 10 J Q K A'.split()
+    names = [f'{color}_{value}.png' for value in values for color in colors]
+    names += ['black_joker.png', 'red_joker.png', 'back.png']
+    images = {}
+    for name in names:
+        image = pyglet.resource.image(name)
+        images[name] = image
+
+    return images
+
+
+def resize_center_card_image(image, screen_width, screen_height, cards_on_hand=25):
+    """Sets an image's anchor point to its center"""
+    ret_image = copy(image)
+    ratio = (screen_height / 6) / image.height
+    ret_image.width = image.width * ratio
+    ret_image.height = image.height * ratio
+    ret_image.anchor_x = ret_image.width / 2
+    ret_image.anchor_y = ret_image.height / 2
+    return ret_image
+
+
+def check_if_inside(x, y, obj):
+    left_border = obj.x - obj.width / 2
+    right_border = obj.x + obj.width / 2
+    upper_border = obj.y + obj.height / 2
+    bottom_border = obj.y - obj.height / 2
+    if left_border < x < right_border and bottom_border < y < upper_border:
+        return True
+    return False
+
+
+def setup_connection(host, game_id, my_name, token=''):
+    if token == '':
+        response = requests.get(f"http://{host}/macau/{game_id}/{my_name}/key")
+        if response.status_code == 200:
+            token = response.json()['access_token']
+
+    print(f'TOKEN: {token}')
+    return token
+
+
+def objects_to_draw(gs):
+    num_cards = len(gs.hand)
+    index = 0
+    objects = []
+    for key in gs.hand.keys():
+        card_name = key.replace(' ', '_') + '.png'
+        card_image = resize_center_card_image(card_images[card_name], screen.width, screen.height, num_cards)
+        pan = index * (card_image.width / (num_cards / 6))
+        card = pyglet.sprite.Sprite(img=card_image, x=hand_0_x + pan, y=hand_0_y)
+        gs.hand[key] = card
+        index += 1
+    for card in gs.hand.values():
+        objects.append(card)
+
+    if gs.cards_in_deck < 400:
+        deck_y = deck_0_y
+        deck_x = deck_0_x
+        for num in range(gs.cards_in_deck):
+            back_image = resize_center_card_image(card_images['back.png'], screen.width, screen.height, num_cards)
+            deck_x += 1
+            deck_y += 1
+            card = pyglet.sprite.Sprite(img=back_image, x=deck_x, y=deck_y)
+            if num % 101 == 100:
+                deck_y = deck_0_y
+                deck_x = deck_0_x + 210 * (num / 100)
+            objects.append(card)
+
+    for card in gs.table:
+        card_name = card[0] + '_' + card[1] + '.png'
+        card_image = resize_center_card_image(card_images[card_name], screen.width, screen.height, num_cards)
+        card = pyglet.sprite.Sprite(img=card_image, x=table_0_x, y=table_0_y)
+        card.rotation = randint(0, 90) - 45
+        objects.append(card)
+
+    index = 0
+    place_0_x = rivals_0_x / (len(gs.rivals) + 1)
+    label_y = 0
+    place_x = place_0_x
+    for name, num_of_cards in gs.rivals.items():
+        for num in range(num_of_cards):
+            back_image = resize_center_card_image(card_images['back.png'], screen.width, screen.height, num_of_cards)
+            pan = num * (back_image.width / (num_of_cards * 6 / 3))
+            card = pyglet.sprite.Sprite(img=back_image, x=place_x + pan, y=rivals_0_y)
+            label_y = rivals_0_y - back_image.height / 1.4
+            objects.append(card)
+        name_label = pyglet.text.Label(text=name, x=place_x, y=label_y,
+                                       bold=True, color=(255, 255, 255, 255), font_size=22)
+        objects.append(name_label)
+        place_x += place_0_x
+        index += 1
+    return objects
+
+
+def update(dt, gs):
+    snap = datetime.now()
+    response = requests.get(f"http://{gs.host}/macau/{gs.game_id}/{gs.my_name}?access_token={gs.access_token}")
+    print(datetime.now() - snap)
+    if response.status_code == 200:
+        output = response.json()['output']
+        print(output[-1])
+        for line in output:
+            if '---Hand---' in line:
+                rivals_line = copy(line)
+                line = line.split('---Hand---')
+                line = line[-1].split('*color value*')
+                line = line[0].split(',')
+                for card in line:
+                    card = card.replace('*', '').replace('\n', '').replace('-', '')
+                    if card[0] == ' ':
+                        card = card[1:]
+                    if card[-1] == ' ':
+                        card = card[:-1]
+                    gs.hand[card] = None
+                line = rivals_line.split('---Players---')
+                line = line[1].split('---Table---')
+                line = line[0].split('\n')[1:-1]
+                for rival in line:
+                    rival = rival.replace('-', '')
+                    rival = rival.split()
+                    gs.rivals[rival[0]] = int(rival[2])
+    gs.rivals.pop(gs.my_name)
+    print(datetime.now() - snap)
+    response = requests.get(f'http://{gs.host}/macau/{gs.game_id}/state')
+    if response.status_code == 200:
+        state = response.json()['state']
+        gs.cards_in_deck = state['cards_in_deck']
+        gs.table = state['table']
+        gs.lied_card = state['lied_card']
+        gs.cards_to_take = state['cards_to_take']
+        gs.turns_to_wait = state['turns_to_wait']
+        gs.requested_value = state['requested_value']
+        gs.requested_color = state['requested_color']
+    print(datetime.now() - snap)
+
+
+if __name__ == '__main__':
+    display = pyglet.canvas.Display()
+    screen = display.get_default_screen()
+    print(f"with: {screen.width}, height: {screen.height}")
+    hand_0_x = screen.width / 15.5
+    hand_0_y = screen.height / 6.2
+    deck_0_x = screen.width / 2 + screen.width / 20
+    deck_0_y = screen.height / 2
+    table_0_x = screen.width / 2 - screen.width / 15
+    table_0_y = screen.height / 2
+    rivals_0_x = screen.width - 100
+    rivals_0_y = screen.height - screen.height / 10
+    game_window = pyglet.window.Window(screen.width, screen.height)
+    gs = GameState()
+    pyglet.resource.path = ['./resources']
+    pyglet.resource.reindex()
+    card_images = load_all_card_images()
+    gs.access_token = setup_connection(gs.host, gs.game_id, gs.my_name, gs.access_token)
+    update(1, gs)
+    draw_objects = objects_to_draw(gs)
+
+    @game_window.event
+    def on_draw():
+        pyglet.gl.glClearColor(65/256.0, 65/256.0, 70/256.0, 1)
+        game_window.clear()
+        for obj in draw_objects:
+            obj.draw()
+
+
+    @game_window.event
+    def on_mouse_motion(x, y, dx, dy):
+        for card in gs.hand.values():
+            if check_if_inside(x, y, card):
+                distance = round(100 * abs(x - card.x) + abs(y - card.y))
+                # print(distance)
+        pass
+
+    @game_window.event
+    def on_mouse_release(x, y, button, modifiers):
+        print(f'x: {x}, y: {y}')
+        if button == pyglet.window.mouse.LEFT:
+            candidates = {}
+            for name, card in gs.hand.items():
+                if check_if_inside(x, y, card):
+                    distance = round(100 * abs(x - card.x + hand_0_x) + abs(y - card.y))
+                    candidates[distance] = {'name': name, 'image': card}
+            if len(candidates) > 0:
+                chosen = candidates[min(candidates.keys())]
+                if chosen['image'].y == hand_0_y:
+                    chosen['image'].y = hand_0_y + chosen['image'].y / 1.5
+                    gs.to_play.append(chosen['name'])
+                else:
+                    chosen['image'].y = hand_0_y
+                    gs.to_play.remove(chosen['name'])
+        if button == pyglet.window.mouse.RIGHT:
+            move = ''
+            for card in gs.to_play:
+                move += f'{card}, '
+            print(move[:-2])
+
+        on_draw()
+
+
+
+
+    # pyglet.clock.schedule_interval(update, 1 / 0.1, cards)
+
+
+
+
+
+
+
+    pyglet.app.run()
