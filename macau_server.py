@@ -239,6 +239,8 @@ def get_player_state(game_id: int, player_name: str, access_token: Optional[str]
     for name, rival in gs.players.items():
         if name != player_name:
             state['rivals'][name] = len(rival.hand)
+
+    state['outputs'] = games_container[game_id]['outputs'][player_name]
     return {"status": "OK", "state": state}
 
 
