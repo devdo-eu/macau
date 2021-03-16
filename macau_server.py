@@ -151,17 +151,21 @@ def get_game_state(game_id: int):
     """
     if game_id >= len(games_container):
         return JSONResponse(content={'status': 'No game', 'state': None}, status_code=404)
+    state = generate_state_json(game_id)
+    return {"status": "OK", "state": state}
+
+
+def generate_state_json(game_id):
     gs = games_container[game_id]['state']
     waiting_for = []
     for gamer in games_container[game_id]['tokens']:
         if "CPU" not in gamer and games_container[game_id]['tokens'][gamer] == '':
             waiting_for.append(gamer)
-
     state = {"cards_in_deck": len(gs.deck), "table": gs.table, "lied_card": gs.lied_card,
              "cards_to_take": gs.cards_to_take, "turns_to_wait": gs.turns_to_wait,
              "requested_value_rounds": gs.requested_value_rounds, "requested_value": gs.requested_value,
              "requested_color": gs.requested_color, 'waiting_for': waiting_for}
-    return {"status": "OK", "state": state}
+    return state
 
 
 @app.get("/macau/{game_id}")
@@ -217,6 +221,25 @@ def get_player_ui(game_id: int, player_name: str, access_token: Optional[str]):
 
     outputs = games_container[game_id]['outputs'][player_name]
     return {"status": "OK", "output": outputs}
+
+
+@app.get("/macau/{game_id}/{player_name}/state")
+def get_player_state(game_id: int, player_name: str, access_token: Optional[str]):
+    content, status_code = validate_game_and_player_data(game_id, player_name)
+    if status_code != 200:
+        return JSONResponse(content=content, status_code=status_code)
+
+    token = games_container[game_id]['tokens'][player_name]
+    if access_token != token or token is None:
+        return JSONResponse(content={"status": "Bad token", "output": None}, status_code=401)
+    state = generate_state_json(game_id)
+    gs = games_container[game_id]['state']
+    state['hand'] = gs.players[player_name].hand
+    state['rivals'] = {}
+    for name, rival in gs.players.items():
+        if name != player_name:
+            state['rivals'][name] = len(rival.hand)
+    return {"status": "OK", "state": state}
 
 
 @app.post("/macau/{game_id}/{player_name}")
