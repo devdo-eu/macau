@@ -22,9 +22,9 @@ class GameState:
         self.requested_value = None
         self.requested_color = None
         self.host = '127.0.0.1:8000'
-        self.my_name = 'Tom'
-        self.access_token = 'fbed46edbe1048039a3a11c1f0d0abea'
-        self.game_id = 24
+        self.my_name = 'Macauer'
+        self.access_token = ''
+        self.game_id = 0
         self.to_play = []
         self.rivals = {}
         self.draw_objects = []
@@ -229,7 +229,7 @@ def objects_to_draw(gs):
 
     if len(gs.outputs) > 0 and 'Game won' in gs.outputs[-1] and gs.my_name not in gs.outputs[-1]:
         color = (200, 60, 30, 255)
-        lost_label = pyglet.text.Label(text=f'You lost game! {gs.outputs[-1]}!', x=gs.screen.width / 20,
+        lost_label = pyglet.text.Label(text=f'You lost the game! {gs.outputs[-1]}!', x=gs.screen.width / 20,
                                        y=gs.screen.height / 2, bold=True, color=color, font_size=50)
         objects.append(lost_label)
         for obj in objects:
@@ -238,7 +238,7 @@ def objects_to_draw(gs):
 
     elif len(gs.outputs) > 0 and 'Game won' in gs.outputs[-1]:
         color = (40, 100, 200, 255)
-        won_label = pyglet.text.Label(text=f'You won game!', x=gs.screen.width / 4, y=gs.screen.height / 2,
+        won_label = pyglet.text.Label(text=f'You won the game!', x=gs.screen.width / 4, y=gs.screen.height / 2,
                                       bold=True, color=color, font_size=70)
         objects.append(won_label)
         for obj in objects:
