@@ -107,6 +107,7 @@ async def play_round(game_state):
             gs.requested_value = None
 
         last_card = gs.lied_card
+        player.print_foo(f'{player.name} move now.')
         player, gs = await play_move(player, gs)
 
         if gs.lied_card is not None:
