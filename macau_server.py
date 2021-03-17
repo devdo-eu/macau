@@ -18,7 +18,7 @@ class GameParams(BaseModel):
 
 def create_print_foo(game_id: int):
     """
-    Method used to inject print function - proper for client-server solution
+    Function used to inject print function - proper for client-server solution
     :param game_id: integer value of game id
     :return: functor of created print function
     """
@@ -34,7 +34,7 @@ def create_print_foo(game_id: int):
 
 def create_input_foo(name: str, game_id: int):
     """
-    Method used to inject input function - proper for client-server solution
+    Function used to inject input function - proper for client-server solution
     :param name: string with name of player
     :param game_id: integer value of game id
     :return: functor of created input function
@@ -61,7 +61,7 @@ def create_input_foo(name: str, game_id: int):
 
 async def create_io_foo(game_id, game_state):
     """
-    Method used to inject proper print and input functions to human players.
+    Function used to inject proper print and input functions to human players.
     :param game_id: integer value of game id
     :param game_state: GameState object with all game data inside
     """
@@ -73,7 +73,7 @@ async def create_io_foo(game_id, game_state):
 
 def validate_game_and_player_data(game_id: int, player_name: str):
     """
-    Method used to ease validation of data given to post_player_move and get_player_ui
+    Function used to ease validation of data given to post_player_move and get_player_ui
     :param game_id: integer value of existing game
     :param player_name: string with name of player
     :return: dict with content to send out with status code, integer with status code
@@ -84,6 +84,24 @@ def validate_game_and_player_data(game_id: int, player_name: str):
     if player_name not in gs.players.keys():
         return {'status': 'No player', 'output': None}, 404
     return {}, 200
+
+
+def generate_state_json(game_id):
+    """
+    Helper function used to generate json structure from GameState object.
+    :param game_id: integer value of existing game
+    :return: dictionary formatted as json
+    """
+    gs = games_container[game_id]['state']
+    waiting_for = []
+    for gamer in games_container[game_id]['tokens']:
+        if "CPU" not in gamer and games_container[game_id]['tokens'][gamer] == '':
+            waiting_for.append(gamer)
+    state = {"cards_in_deck": len(gs.deck), "table": gs.table, "lied_card": gs.lied_card,
+             "cards_to_take": gs.cards_to_take, "turns_to_wait": gs.turns_to_wait,
+             "requested_value_rounds": gs.requested_value_rounds, "requested_value": gs.requested_value,
+             "requested_color": gs.requested_color, 'waiting_for': waiting_for}
+    return state
 
 
 @app.on_event("startup")
@@ -155,19 +173,6 @@ def get_game_state(game_id: int):
     return {"status": "OK", "state": state}
 
 
-def generate_state_json(game_id):
-    gs = games_container[game_id]['state']
-    waiting_for = []
-    for gamer in games_container[game_id]['tokens']:
-        if "CPU" not in gamer and games_container[game_id]['tokens'][gamer] == '':
-            waiting_for.append(gamer)
-    state = {"cards_in_deck": len(gs.deck), "table": gs.table, "lied_card": gs.lied_card,
-             "cards_to_take": gs.cards_to_take, "turns_to_wait": gs.turns_to_wait,
-             "requested_value_rounds": gs.requested_value_rounds, "requested_value": gs.requested_value,
-             "requested_color": gs.requested_color, 'waiting_for': waiting_for}
-    return state
-
-
 @app.get("/macau/{game_id}")
 def get_game_log(game_id: int):
     """
@@ -225,13 +230,21 @@ def get_player_ui(game_id: int, player_name: str, access_token: Optional[str]):
 
 @app.get("/macau/{game_id}/{player_name}/state")
 def get_player_state(game_id: int, player_name: str, access_token: Optional[str]):
+    """
+    Method used to get most of important information about current state of game,
+     with additional private data for player.
+    :param game_id: integer value of existing game
+    :param player_name: string with name of player
+    :param access_token: User private access token
+    :return: json dict with extended game data
+    """
     content, status_code = validate_game_and_player_data(game_id, player_name)
     if status_code != 200:
         return JSONResponse(content=content, status_code=status_code)
 
     token = games_container[game_id]['tokens'][player_name]
     if access_token != token or token is None:
-        return JSONResponse(content={"status": "Bad token", "output": None}, status_code=401)
+        return JSONResponse(content={"status": "Bad token", "state": None}, status_code=401)
     state = generate_state_json(game_id)
     gs = games_container[game_id]['state']
     state['hand'] = gs.players[player_name].hand
