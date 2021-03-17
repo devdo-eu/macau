@@ -115,7 +115,8 @@ def test_get_player_ui():
         assert "John" in response.json()['output'][0]
         chose = "Which card(s) from your hand do you want to play?: "
         no_move = "John has no move."
-        assert no_move in response.json()['output'][0] or chose in response.json()['output'][0]
+        assert 'John move now.' == response.json()['output'][0]
+        assert no_move in response.json()['output'][1] or chose in response.json()['output'][1]
 
 
 def test_post_player_move():
@@ -216,7 +217,8 @@ def test_get_game_log():
         assert response.json()['status'] == 'OK'
         data = response.json()['output']
         assert len(data) > 0
-        assert f"John plays: {move}." == data[0] or "John has no move." == data[0]
+        assert 'John move now.' == data[0]
+        assert f"John plays: {move}." == data[1] or "John has no move." == data[1]
 
         response = tc.get("/macau/250")
         assert response.status_code == 404

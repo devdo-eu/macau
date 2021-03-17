@@ -277,6 +277,7 @@ def data_update(gs):
     if response.status_code == 200:
         state = response.json()['state']
         if gs.last_raw_state == state and len(state['outputs']) > 0:
+            sleep(0.1)
             return
         gs.last_raw_state = state
         gs.rivals = {}

@@ -12,7 +12,7 @@ def serve():
 
 outputs = []
 helper_move = -1
-address = 'localhost:8000'
+address = '127.0.0.1:8000'
 
 
 def dumper_factory():
