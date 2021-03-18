@@ -87,10 +87,7 @@ def on_text_factory(active_edit):
 
 def on_mouse_release_factory(gs, check_if_inside):
     def on_mouse_release(x, y, button, _modifiers):
-        @gs.window.event
-        def on_text(text):
-            empty_on_text_factory()(text)
-
+        active_edit = None
         if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
             candidates = {}
             for obj in gs.draw_objects:
@@ -112,9 +109,14 @@ def on_mouse_release_factory(gs, check_if_inside):
                         active_edit = obj
                 active_edit.text = ''
 
-                @gs.window.event
-                def on_text(text):
-                    on_text_factory(active_edit)(text)
+        functor = empty_on_text_factory()
+        if active_edit is not None:
+            functor = on_text_factory(active_edit)
+
+        @gs.window.event
+        def on_text(text):
+            functor(text)
+
     return on_mouse_release
 
 
