@@ -5,6 +5,7 @@ import requests
 from time import sleep
 from random import randint
 from datetime import datetime
+import gui_rest_client.menu_wnd_functions as menu_wnd
 
 
 class GameState:
@@ -77,14 +78,13 @@ def check_if_inside(x, y, obj):
     return False
 
 
-def setup_connection(host, game_id, my_name, token=''):
-    if token == '':
-        response = requests.get(f"http://{host}/macau/{game_id}/{my_name}/key")
+def get_token(gs):
+    if gs.access_token == '':
+        response = requests.get(f"http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/key")
         if response.status_code == 200:
-            token = response.json()['access_token']
+            gs.access_token = response.json()['access_token']
 
-    print(f'TOKEN: {token}')
-    return token
+    print(f'TOKEN: {gs.access_token}')
 
 
 def objects_to_draw(gs):
@@ -181,9 +181,9 @@ def draw_rivals(gs, objects):
     back_image = resize_center_card_image(gs.card_images['back.png'], gs.screen.height)
     label_y = rivals_0_y - back_image.height / 1.4
     for name, num_of_cards in gs.rivals.items():
-        pan_max = (num_of_cards - 1) * (back_image.width / (num_of_cards * 6 / 3))
+        pan_max = (num_of_cards - 1) * (back_image.width / (1 + (num_of_cards * 6 / 3)))
         for num in range(num_of_cards):
-            pan = num / (num_of_cards - 1) * pan_max
+            pan = pan_max * (num + 1) / num_of_cards
             card = pyglet.sprite.Sprite(img=back_image, x=place_x + pan, y=rivals_0_y)
             objects.append(card)
 
@@ -244,34 +244,43 @@ def generate_request_choose_boxes(gs):
     colors = ['hearts', 'tiles', 'pikes', 'clovers']
     req_color = choice(colors)
     screen = gs.screen
-    color_cards = {}
-    value_cards = {}
+    gs.color_box = {}
+    gs.value_box = {}
     pan = screen.width / 5
     for color in colors:
         image = resize_center_card_image(gs.card_images[f'{color}_A.png'], screen.height, 3)
         card = pyglet.sprite.Sprite(img=image, x=pan, y=screen.height / 1.8)
-        color_cards[color] = card
+        gs.color_box[color] = card
         pan += screen.width / 5
 
     pan = screen.width / 7
     for value in range(5, 11):
         image = resize_center_card_image(gs.card_images[f'{req_color}_{value}.png'], screen.height, 3)
         card = pyglet.sprite.Sprite(img=image, x=pan, y=screen.height / 1.8)
-        value_cards[value] = card
+        gs.value_box[value] = card
         pan += screen.width / 7
 
-    return color_cards, value_cards
 
-
-def data_update(gs):
-    snap = datetime.now()
+def new_game_state(gs):
+    new_state = False
     response = requests.get(f'http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/state?access_token={gs.access_token}')
     if response.status_code == 200:
         state = response.json()['state']
         if gs.last_raw_state == state and len(state['outputs']) > 0:
             sleep(0.1)
-            return
-        gs.last_raw_state = state
+        else:
+            gs.last_raw_state = state
+            new_state = True
+
+    return new_state
+
+
+def data_update(gs):
+    snap = datetime.now()
+    new_state = new_game_state(gs)
+
+    if new_state:
+        state = gs.last_raw_state
         gs.rivals = {}
         gs.hand = state['hand']
         gs.rivals = state['rivals']
@@ -312,7 +321,7 @@ def update(_dt, gs):
         gs.to_play = []
         print(f'Sending was done in: {datetime.now() - snap}')
         data_update(gs)
-        gs.color_box, gs.value_box = generate_request_choose_boxes(gs)
+        generate_request_choose_boxes(gs)
         gs.ready_to_send = False
 
     if not gs.ready_to_send:
@@ -357,9 +366,9 @@ def calculate_zero_coordinates(gs):
 
 def create_game(gs):
     game_window = pyglet.window.Window(gs.screen.width, gs.screen.height)
-    gs.access_token = setup_connection(gs.host, gs.game_id, gs.my_name, gs.access_token)
+    get_token(gs)
     data_update(gs)
-    gs.color_box, gs.value_box = generate_request_choose_boxes(gs)
+    generate_request_choose_boxes(gs)
 
     return game_window, gs
 
@@ -480,100 +489,7 @@ def main():
     menu.append(join_label)
     # tests
     # gs.game_started = True
-
-    @game_window.event
-    def on_key_release(symbol, modifiers):
-        labels = []
-        for obj in menu:
-            if type(obj) is pyglet.shapes.Rectangle:
-                if obj.color != [255, 255, 255]:
-                    return
-
-        for obj in menu:
-            if type(obj) is pyglet.text.Label:
-                labels.append(obj)
-        if symbol == pyglet.window.key.C:
-            print('Creating Game!')
-            num_of_cards = 5
-            names = []
-
-            for index, label in enumerate(labels):
-                if 'Host Address' in label.text:
-                    gs.host = labels[index+1].text
-                elif 'Your Name' in label.text:
-                    gs.my_name = labels[index+1].text
-                elif 'Number of Cards' in label.text:
-                    num_of_cards = int(labels[index+1].text)
-                elif 'Rival' in label.text and labels[index+1].text != '':
-                    names.append(labels[index+1].text)
-
-            names = [gs.my_name] + names
-            json_data = {'how_many_cards': num_of_cards, 'players_names': names}
-            response = requests.post(f"http://{gs.host}/macau", json=json_data)
-            if response.status_code == 200:
-                gs.game_id = response.json()['game_id']
-                gs.game_started = True
-        if symbol == pyglet.window.key.J:
-            print("Joining Game!")
-            for index, label in enumerate(labels):
-                if 'Host Address' in label.text:
-                    gs.host = labels[index+1].text
-                elif 'Your Name' in label.text:
-                    gs.my_name = labels[index+1].text
-                elif 'Game ID' in label.text:
-                    gs.game_id = labels[index+1].text
-                elif 'Your Token' in label.text and labels[index+1].text != '':
-                    gs.access_token = labels[index+1].text
-                gs.game_started = True
-
-    @game_window.event
-    def on_draw():
-        pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
-        game_window.clear()
-        addition = 0.25
-        for obj in menu:
-            if type(obj) is pyglet.sprite.Sprite:
-                obj.rotation += addition
-                addition += 0.25
-            obj.draw()
-
-    @game_window.event
-    def on_mouse_motion(x, y, dx, dy):
-        for obj in menu:
-            if type(obj) is not pyglet.text.Label and check_if_inside(x, y, obj):
-                distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
-                print(distance)
-
-    @game_window.event
-    def on_mouse_release(x, y, button, modifiers):
-        @game_window.event
-        def on_text(text):
-            pass
-
-        if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
-            candidates = {}
-            for obj in menu:
-                if type(obj) is pyglet.shapes.Rectangle:
-                    obj.color = (255, 255, 255)
-                if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
-                    distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
-                    candidates[distance] = obj
-                if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
-                    distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
-                    candidates[distance] = obj
-            if len(candidates) > 0:
-                active_edit = candidates[min(candidates.keys())]
-                active_edit.color = (0, 0, 255)
-                for obj in menu:
-                    if type(obj) is pyglet.text.Label and obj.x == active_edit.x and obj.y == active_edit.y:
-                        active_edit = obj
-                active_edit.text = ''
-
-                @game_window.event
-                def on_text(text):
-                    if active_edit is None:
-                        return
-                    active_edit.text += text
+    menu_wnd.register_menu_events(gs, menu, check_if_inside)
 
     pyglet.clock.schedule_interval(update, 1 / 120, gs)
     pyglet.app.run()
