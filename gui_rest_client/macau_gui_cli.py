@@ -60,7 +60,6 @@ def load_all_card_images():
 
 
 def resize_center_card_image(image, screen_height, ratio=5):
-    """Sets an image's anchor point to its center"""
     ret_image = copy(image)
     ratio = (screen_height / ratio) / image.height
     ret_image.width = image.width * ratio
@@ -416,24 +415,16 @@ def main():
 
 
 def create_menu_labels(gs):
-    game_title = pyglet.text.Label(text='Macau REST API Client', x=3 * gs.screen.width / 20,
-                                   y=18 * gs.screen.height / 20,
-                                   bold=True, color=(255, 255, 255, 255), font_size=70, align='center')
-    gs.draw_objects.append(game_title)
-    settings_label = pyglet.text.Label(text='Create New Game Settings: ', x=gs.screen.width / 36,
-                                       y=18 * gs.screen.height / 36, bold=True, color=(255, 255, 255, 255),
-                                       font_size=20)
-    gs.draw_objects.append(settings_label)
-    create_label = pyglet.text.Label(text='Press c to Create New Game', x=gs.screen.width / 36,
-                                     y=4 * gs.screen.height / 36, bold=True, color=(255, 255, 128, 255), font_size=30)
-    gs.draw_objects.append(create_label)
-    settings_label = pyglet.text.Label(text='Join Game Settings: ', x=21 * gs.screen.width / 36,
-                                       y=18 * gs.screen.height / 36, bold=True, color=(255, 255, 255, 255),
-                                       font_size=20)
-    gs.draw_objects.append(settings_label)
-    join_label = pyglet.text.Label(text='Press j to Join Game', x=21 * gs.screen.width / 36,
-                                   y=4 * gs.screen.height / 36, bold=True, color=(255, 255, 128, 255), font_size=30)
-    gs.draw_objects.append(join_label)
+    data = [
+        ['Macau REST API Client', 3 * gs.screen.width / 20, 18 * gs.screen.height / 20, (255, 255, 255, 255), 70],
+        ['Create New Game Settings: ', gs.screen.width / 36, 18 * gs.screen.height / 36, (255, 255, 255, 255), 20],
+        ['Join Game Settings: ', 21 * gs.screen.width / 36, 18 * gs.screen.height / 36, (255, 255, 255, 255), 20],
+        ['Press c to Create New Game', gs.screen.width / 36, 4 * gs.screen.height / 36, (255, 255, 128, 255), 30],
+        ['Press j to Join Game', 21 * gs.screen.width / 36, 4 * gs.screen.height / 36, (255, 255, 128, 255), 30]
+    ]
+    for info in data:
+        label = pyglet.text.Label(info[0], x=info[1], y=info[2], bold=True, color=info[3], font_size=info[4])
+        gs.draw_objects.append(label)
 
 
 def create_menu_edits(gs):
@@ -463,6 +454,9 @@ def create_edit(gs, label, x0=1, y0=1, edit0=7, placeholder=''):
     edit_pan_x = (edit0 + x0) * gs.screen.width / divider
     host_label = pyglet.text.Label(label, x=label_pan_x, y=pan_y, bold=True, color=(255, 255, 255, 255), font_size=20)
     square = pyglet.shapes.Rectangle(x=edit_pan_x, y=pan_y, width=240 * 7 / edit0, height=22, color=(255, 255, 255))
+    square.anchor_x, square.anchor_y = square.width / 2, square.height / 2
+    square.x += square.anchor_x
+    square.y += square.anchor_y
     host_edit = pyglet.text.Label(placeholder, x=edit_pan_x, y=pan_y, bold=True, color=(0, 0, 0, 255), font_size=20)
     gs.draw_objects += [host_label, square, host_edit]
 
