@@ -36,6 +36,11 @@ class GameState:
         self.color_box = None
         self.card_images = {}
         self.last_raw_state = None
+        self.questions = [
+            "Which card(s) from your hand do you want to play?:",
+            "Enter VALUE of requested cards:",
+            "Enter COLOR of requested cards:"
+        ]
 
 
 def load_all_card_images():
@@ -83,107 +88,90 @@ def setup_connection(host, game_id, my_name, token=''):
 
 
 def objects_to_draw(gs):
-    screen = gs.screen
-    info_0_x, info_0_y = gs.coord['info_0_x'], gs.coord['info_0_y']
-    outputs_0_x, outputs_0_y = gs.coord['outputs_0_x'], gs.coord['outputs_0_y']
     objects = []
     draw_players_hand(gs, objects)
     draw_deck_pile(gs, objects)
     draw_table_pile(gs, objects)
     draw_rivals(gs, objects)
+    draw_game_state(gs, objects)
+    draw_events_data(gs, objects)
+    draw_wait_warnings(gs, objects)
+    gs.draw_objects = objects
 
-    game_id_label = pyglet.text.Label(text=f'Game ID: {gs.game_id}', x=info_0_x, y=info_0_y,
-                                      color=(255, 255, 255, 255), font_size=10)
-    info_0_y -= 20
-    token_label = pyglet.text.Label(text=f'Your Token: {gs.access_token}', x=info_0_x, y=info_0_y,
-                                    color=(255, 255, 255, 255), font_size=10)
-    info_0_y -= 20
-    border_label = pyglet.text.Label(text='-'*55, x=info_0_x, y=info_0_y,
-                                    bold=True, color=(255, 255, 255, 255), font_size=14)
-    info_0_y -= 20
-    cards_to_take_label = pyglet.text.Label(text=f'cards to take: {gs.cards_to_take}', x=info_0_x, y=info_0_y,
-                                            bold=True, color=(255, 255, 255, 255), font_size=14)
-    info_0_y -= 20
-    turns_to_wait_label = pyglet.text.Label(text=f'turns to wait: {gs.turns_to_wait}', x=info_0_x, y=info_0_y,
-                                            bold=True, color=(255, 255, 255, 255), font_size=14)
-    info_0_y -= 20
-    requests_label = pyglet.text.Label(text=f'requests: color: {gs.requested_color}, value: {gs.requested_value}',
-                                       x=info_0_x, y=info_0_y, bold=True, color=(255, 255, 255, 255), font_size=14)
-    objects += [game_id_label, token_label, border_label, cards_to_take_label, turns_to_wait_label, requests_label]
 
-    questions = [
-        "Which card(s) from your hand do you want to play?:",
-        "Enter VALUE of requested cards:",
-        "Enter COLOR of requested cards:"
-    ]
-    my_turn_now = False
-    for question in questions:
-        if len(gs.outputs) > 0 and question in gs.outputs[-1]:
-            my_turn_now = True
-
-    if not my_turn_now:
-        wait_label = pyglet.text.Label(text='Wait for others...', x=gs.screen.width / 4, y=gs.screen.height / 2,
-                                       bold=True, color=(210, 105, 30, 255), font_size=70)
-        objects.append(wait_label)
-
+def draw_events_data(gs, objects):
+    outputs_0_x, outputs_0_y = gs.coord['outputs_0_x'], gs.coord['outputs_0_y']
     if len(gs.outputs) >= 30:
-        gs.outputs = gs.outputs[-30:]
-    for index, line in enumerate(gs.outputs):
+        outputs = copy(gs.outputs[-30:])
+    else:
+        outputs = copy(gs.outputs)
+
+    for line in outputs:
         show_line = True
-        for question in questions:
+        for question in gs.questions:
             if question in line:
                 show_line = False
+                break
+
         if show_line:
             color = (255, 255, 255, 255)
             if gs.my_name in line:
                 color = (210, 105, 30, 255)
-                label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9)
-            else:
-                label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9)
+
+            label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9)
             objects.append(label)
             outputs_0_y -= 12
 
-    info_0_y -= 20
+
+def draw_wait_warnings(gs, objects):
+    my_turn_now = False
+    for question in gs.questions:
+        if len(gs.outputs) > 0 and question in gs.outputs[-1]:
+            my_turn_now = True
+            break
+
+    if not my_turn_now and len(gs.outputs) > 0:
+        pan_y = gs.screen.height / 2
+        index = 0
+        data = [
+            ['Wait for others...', gs.screen.width / 4, (210, 105, 30, 255), 70],
+            [f'You lost the game! {gs.outputs[-1]}!', gs.screen.width / 20, (200, 60, 30, 255), 50],
+            ['You won the game!', gs.screen.width / 4, (40, 100, 200, 255), 70],
+        ]
+        if 'Game won' in gs.outputs[-1] and gs.my_name not in gs.outputs[-1]:
+            index = 1
+        elif 'Game won' in gs.outputs[-1]:
+            index = 2
+        data = data[index]
+        label = pyglet.text.Label(text=data[0], x=data[1], y=pan_y, bold=True, color=data[2], font_size=data[3])
+        objects.append(label)
+
+
+def draw_game_state(gs, objects):
+    info_0_x, info_0_y = gs.coord['info_0_x'], gs.coord['info_0_y']
+    data = [
+        [f'Game ID: {gs.game_id}', 10],
+        [f'Your Token: {gs.access_token}', 10],
+        ['-' * 55, 14],
+        [f'cards to take: {gs.cards_to_take}', 14],
+        [f'turns to wait: {gs.turns_to_wait}', 14],
+        [f'requests: color: {gs.requested_color}, value: {gs.requested_value}', 14]
+    ]
+    for index, info in enumerate(data):
+        info_y = info_0_y - index * 20
+        label = pyglet.text.Label(text=info[0], x=info_0_x, y=info_y, color=(255, 255, 255, 255), font_size=info[1])
+        objects.append(label)
+
+    name = choice(['red_joker.png', 'black_joker.png'])
     if gs.requested_value is not None:
-        card_name = f'hearts_{gs.requested_value}.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.height, 4)
-        card = pyglet.sprite.Sprite(img=card_image,
-                                    x=info_0_x + card_image.width * 1.3, y=info_0_y - card_image.height / 1.9)
-        objects.append(card)
-
+        name = f'hearts_{gs.requested_value}.png'
     elif gs.requested_color is not None:
-        card_name = f'{gs.requested_color}_A.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.height, 4)
-        card = pyglet.sprite.Sprite(img=card_image,
-                                    x=info_0_x + card_image.width * 1.3, y=info_0_y - card_image.height / 1.9)
-        objects.append(card)
+        name = f'{gs.requested_color}_A.png'
 
-    else:
-        joker = choice(['red_joker.png', 'black_joker.png'])
-        card_image = resize_center_card_image(gs.card_images[joker], screen.height, 4)
-        card = pyglet.sprite.Sprite(img=card_image,
-                                    x=info_0_x + card_image.width * 1.3, y=info_0_y - card_image.height / 1.9)
-        objects.append(card)
-
-    if len(gs.outputs) > 0 and 'Game won' in gs.outputs[-1] and gs.my_name not in gs.outputs[-1]:
-        color = (200, 60, 30, 255)
-        lost_label = pyglet.text.Label(text=f'You lost the game! {gs.outputs[-1]}!', x=gs.screen.width / 20,
-                                       y=gs.screen.height / 2, bold=True, color=color, font_size=50)
-        objects.append(lost_label)
-        for obj in objects:
-            if type(obj) == pyglet.text.Label and 'Wait for others' in obj.text:
-                objects.remove(obj)
-
-    elif len(gs.outputs) > 0 and 'Game won' in gs.outputs[-1]:
-        color = (40, 100, 200, 255)
-        won_label = pyglet.text.Label(text=f'You won the game!', x=gs.screen.width / 4, y=gs.screen.height / 2,
-                                      bold=True, color=color, font_size=70)
-        objects.append(won_label)
-        for obj in objects:
-            if type(obj) == pyglet.text.Label and 'Wait for others' in obj.text:
-                objects.remove(obj)
-
-    gs.draw_objects = objects
+    card_image = resize_center_card_image(gs.card_images[name], gs.screen.height, 4)
+    info_y = info_0_y - 20 * len(data) - card_image.height / 1.9
+    card = pyglet.sprite.Sprite(img=card_image, x=info_0_x + card_image.width * 1.3, y=info_y)
+    objects.append(card)
 
 
 def draw_rivals(gs, objects):
@@ -360,8 +348,8 @@ def calculate_zero_coordinates(gs):
     gs.coord['table_0_x'] = screen.width / 2 - screen.width / 12
     gs.coord['table_0_y'] = screen.height / 2 + 30
     gs.coord['rivals_0_x'] = screen.width - 100
-    gs.coord['rivals_0_y'] = screen.height - screen.height / 10
-    gs.coord['info_0_x'] = 5 * screen.width / 7
+    gs.coord['rivals_0_y'] = screen.height - screen.height / 10 - 5
+    gs.coord['info_0_x'] = 7 * screen.width / 9
     gs.coord['info_0_y'] = 3 * screen.height / 8 + 60
     gs.coord['outputs_0_y'] = 8 * screen.height / 11
     gs.coord['outputs_0_x'] = screen.width / 20
