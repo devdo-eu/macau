@@ -308,6 +308,113 @@ def test_draw_deck_pile(entry_setup):
     assert round(draw[299].y) == gs.coord['deck_0_y'] + 99
 
 
+def test_draw_table_pile(entry_setup):
+    gs = copy(entry_setup)
+    gs.lied_card = ['hearts', '5']
+    draw = []
+    gui.draw_table_pile(gs, draw)
+    assert len(draw) == 1
+    assert draw[0].x == gs.coord['table_0_x']
+    assert draw[0].y == gs.coord['table_0_y']
+
+    gs.table = [['clovers', 'Q']]
+    draw = []
+    gui.draw_table_pile(gs, draw)
+    assert len(draw) == len(gs.table) + 1
+    assert gs.coord['table_0_x'] - 20 <= draw[0].x <= gs.coord['table_0_x'] + 20
+    assert gs.coord['table_0_y'] - 20 <= draw[0].y <= gs.coord['table_0_y'] + 20
+    assert draw[-1].x == gs.coord['table_0_x']
+    assert draw[-1].y == gs.coord['table_0_y']
+
+    gs.table = gs.table * 200
+    draw = []
+    gui.draw_table_pile(gs, draw)
+    assert len(draw) == len(gs.table) + 1
+    assert gs.coord['table_0_x'] - 20 <= draw[0].x <= gs.coord['table_0_x'] + 20
+    assert gs.coord['table_0_y'] - 20 <= draw[0].y <= gs.coord['table_0_y'] + 20
+    assert gs.coord['table_0_x'] - 20 <= draw[100].x <= gs.coord['table_0_x'] + 20
+    assert gs.coord['table_0_y'] - 20 <= draw[100].y <= gs.coord['table_0_y'] + 20
+    assert gs.coord['table_0_x'] - 20 <= draw[199].x <= gs.coord['table_0_x'] + 20
+    assert gs.coord['table_0_y'] - 20 <= draw[199].y <= gs.coord['table_0_y'] + 20
+    assert draw[-1].x == gs.coord['table_0_x']
+    assert draw[-1].y == gs.coord['table_0_y']
+
+    gs.lied_card = None
+    draw = []
+    gui.draw_table_pile(gs, draw)
+    assert len(draw) == len(gs.table)
+    assert gs.coord['table_0_x'] - 20 <= draw[0].x <= gs.coord['table_0_x'] + 20
+    assert gs.coord['table_0_y'] - 20 <= draw[0].y <= gs.coord['table_0_y'] + 20
+    assert gs.coord['table_0_x'] - 20 <= draw[100].x <= gs.coord['table_0_x'] + 20
+    assert gs.coord['table_0_y'] - 20 <= draw[100].y <= gs.coord['table_0_y'] + 20
+    assert gs.coord['table_0_x'] - 20 <= draw[-1].x <= gs.coord['table_0_x'] + 20
+    assert gs.coord['table_0_y'] - 20 <= draw[-1].y <= gs.coord['table_0_y'] + 20
+
+
+def test_draw_rivals(entry_setup):
+    gs = copy(entry_setup)
+    gs.rivals = {'Tommy': 7, 'Smith': 7}
+    draw = []
+    gui.draw_rivals(gs, draw)
+    assert len(draw) == 7 + 7 + 2
+    assert round(draw[0].x) == 500
+    assert round(draw[0].y) == 810
+    assert round(draw[6].x) == 555
+    assert round(draw[6].y) == 810
+    assert type(draw[7]) == pyglet.text.Label
+    assert draw[7].text == 'Tommy'
+    assert round(draw[7].x) == 494
+    assert round(draw[7].y) == 681
+    assert type(draw[-1]) == pyglet.text.Label
+    assert round(draw[8].x) == 1000
+    assert round(draw[8].y) == 810
+    assert round(draw[14].x) == 1055
+    assert round(draw[14].y) == 810
+    assert draw[-1].text == 'Smith'
+    assert round(draw[-1].x) == 994
+    assert round(draw[-1].y) == 681
+
+    gs.rivals = {'Tommy': 7, 'Smith': 30}
+    draw = []
+    gui.draw_rivals(gs, draw)
+    assert len(draw) == 7 + 30 + 2
+    assert round(draw[0].x) == 500
+    assert round(draw[6].x) == 555
+    assert type(draw[7]) == pyglet.text.Label
+    assert draw[7].text == 'Tommy'
+    assert round(draw[7].x) == 494
+    assert type(draw[-1]) == pyglet.text.Label
+    assert round(draw[8].x) == 1000
+    assert round(draw[37].x) == 1062
+    assert draw[-1].text == 'Smith'
+    assert round(draw[-1].x) == 994
+
+    gs.rivals = {'A': 7, 'B': 7, 'C': 7, 'D': 7, 'E': 7, 'F': 7}
+    draw = []
+    gui.draw_rivals(gs, draw)
+    assert len(draw) == 7 * len(gs.rivals) + len(gs.rivals)
+    assert round(draw[0].x) == 214
+    assert round(draw[6].x) == 269
+    assert type(draw[7]) == pyglet.text.Label
+    assert draw[7].text == 'A'
+    assert round(draw[7].x) == 234
+    assert type(draw[-1]) == pyglet.text.Label
+    assert round(draw[-8].x) == 1286
+    assert round(draw[-2].x) == 1341
+    assert draw[-1].text == 'F'
+    assert round(draw[-1].x) == 1306
+
+    gs.rivals = {'AAA': 7, 'BBB': 7, 'CCC': 7, 'DDD': 7, 'EEE': 7, 'FFF': 7}
+    draw = []
+    gui.draw_rivals(gs, draw)
+    assert len(draw) == 7 * len(gs.rivals) + len(gs.rivals)
+    assert draw[7].text == 'AAA'
+    assert round(draw[7].x) == 221
+    assert type(draw[-1]) == pyglet.text.Label
+    assert draw[-1].text == 'FFF'
+    assert round(draw[-1].x) == 1293
+
+
 def test_objects_to_draw(entry_setup):
     gs = entry_setup
     gui.calculate_zero_coordinates(gs)
