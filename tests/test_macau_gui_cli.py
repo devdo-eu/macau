@@ -571,6 +571,3 @@ def test_data_update(server, entry_setup):
     last_state = copy(gs.last_raw_state)
     gui.data_update(gs)
     assert last_state == gs.last_raw_state
-
-
-
