@@ -65,7 +65,7 @@ def on_draw_factory(gs):
 def on_mouse_motion_factory(gs, check_if_inside):
     def on_mouse_motion(x, y, _dx, _dy):
         for obj in gs.draw_objects:
-            if type(obj) is not pyglet.text.Label and check_if_inside(x, y, obj):
+            if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
                 distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
                 print(distance)
     return on_mouse_motion

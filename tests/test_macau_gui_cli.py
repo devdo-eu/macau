@@ -74,6 +74,52 @@ def test_load_all_card_images():
         assert '.png' in image
 
 
+def test_create_edit(entry_setup):
+    gs = copy(entry_setup)
+    gs.draw_objects = []
+    assert len(gs.draw_objects) == 0
+    gui.create_edit(gs, 'New test label', placeholder='Data inside')
+    assert len(gs.draw_objects) == 3
+    assert type(gs.draw_objects[0]) == pyglet.text.Label
+    assert gs.draw_objects[0].text == 'New test label'
+    assert type(gs.draw_objects[1]) == pyglet.shapes.Rectangle
+    assert type(gs.draw_objects[2]) == pyglet.text.Label
+    assert gs.draw_objects[2].text == 'Data inside'
+
+
+def test_make_logo(entry_setup):
+    gs = copy(entry_setup)
+    gs.draw_objects = []
+    assert len(gs.draw_objects) == 0
+    gui.make_logo(gs)
+    assert len(gs.draw_objects) == 6
+    assert type(gs.draw_objects[0]) is pyglet.sprite.Sprite
+    assert type(gs.draw_objects[5]) is pyglet.sprite.Sprite
+
+
+def test_create_menu_edits(entry_setup):
+    gs = copy(entry_setup)
+    gs.draw_objects = []
+    assert len(gs.draw_objects) == 0
+    gui.create_menu_edits(gs)
+    assert len(gs.draw_objects) == 3*5 + 3*9
+    count = 0
+    for obj in gs.draw_objects:
+        if type(obj) is pyglet.text.Label and 'Rival' in obj.text:
+            count += 1
+    assert count == 9
+
+
+def test_create_menu_labels(entry_setup):
+    gs = copy(entry_setup)
+    gs.draw_objects = []
+    assert len(gs.draw_objects) == 0
+    gui.create_menu_labels(gs)
+    assert len(gs.draw_objects) == 5
+    for obj in gs.draw_objects:
+        assert type(obj) is pyglet.text.Label
+
+
 def test_resize_center_card_image(entry_setup):
     gs = entry_setup
     test_image = gui.resize_center_card_image(gs.card_images['back.png'], gs.screen.height)
