@@ -229,8 +229,8 @@ def test_calculate_zero_coordinates(entry_setup):
     assert round(gs.coord['table_0_x']) == 667
     assert round(gs.coord['table_0_y']) == 480
     assert round(gs.coord['rivals_0_x']) == 1500
-    assert round(gs.coord['rivals_0_y']) == 810
-    assert round(gs.coord['info_0_x']) == 1143
+    assert round(gs.coord['rivals_0_y']) == 805
+    assert round(gs.coord['info_0_x']) == 1244
     assert round(gs.coord['info_0_y']) == 398
     assert round(gs.coord['outputs_0_x']) == 80
     assert round(gs.coord['outputs_0_y']) == 655
@@ -358,21 +358,21 @@ def test_draw_rivals(entry_setup):
     gui.draw_rivals(gs, draw)
     assert len(draw) == 7 + 7 + 2
     assert round(draw[0].x) == 500
-    assert round(draw[0].y) == 810
+    assert round(draw[0].y) == 805
     assert round(draw[6].x) == 555
-    assert round(draw[6].y) == 810
+    assert round(draw[6].y) == 805
     assert type(draw[7]) == pyglet.text.Label
     assert draw[7].text == 'Tommy'
     assert round(draw[7].x) == 494
-    assert round(draw[7].y) == 681
+    assert round(draw[7].y) == 676
     assert type(draw[-1]) == pyglet.text.Label
     assert round(draw[8].x) == 1000
-    assert round(draw[8].y) == 810
+    assert round(draw[8].y) == 805
     assert round(draw[14].x) == 1055
-    assert round(draw[14].y) == 810
+    assert round(draw[14].y) == 805
     assert draw[-1].text == 'Smith'
     assert round(draw[-1].x) == 994
-    assert round(draw[-1].y) == 681
+    assert round(draw[-1].y) == 676
 
     gs.rivals = {'Tommy': 7, 'Smith': 30}
     draw = []
@@ -415,12 +415,117 @@ def test_draw_rivals(entry_setup):
     assert round(draw[-1].x) == 1293
 
 
+def test_draw_game_state(entry_setup):
+    gs = copy(entry_setup)
+    draw = []
+    gui.draw_game_state(gs, draw)
+    assert len(draw) == 7
+    assert draw[0].text == 'Game ID: 0'
+    assert draw[0].font_size == 10
+    assert draw[1].text == 'Your Token: '
+    assert draw[1].font_size == 10
+    assert draw[2].text == '-' * 55
+    assert draw[2].font_size == 14
+
+    assert draw[3].text == 'cards to take: 0'
+    assert draw[3].font_size == 14
+    assert draw[4].text == 'turns to wait: 0'
+    assert draw[4].font_size == 14
+    assert draw[5].text == 'requests: color: None, value: None'
+    assert draw[5].font_size == 14
+    assert type(draw[6]) == pyglet.sprite.Sprite
+    assert round(draw[6].x) == 1453
+    assert round(draw[6].y) == 159
+
+
+def test_draw_events_data(entry_setup):
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    gs.outputs = ['John move now.', 'example info', 'example info']
+    draw = []
+    gui.draw_events_data(gs, draw)
+    assert len(draw) == 3
+    assert type(draw[0]) == pyglet.text.Label
+    assert draw[0].color != (255, 255, 255, 255)
+    assert draw[0].x == gs.coord['outputs_0_x']
+    assert draw[0].y == gs.coord['outputs_0_y']
+
+    assert draw[1].color == (255, 255, 255, 255)
+    assert draw[1].x == gs.coord['outputs_0_x']
+    assert draw[1].y == gs.coord['outputs_0_y'] - 12
+
+    assert draw[2].color == (255, 255, 255, 255)
+    assert draw[2].x == gs.coord['outputs_0_x']
+    assert draw[2].y == gs.coord['outputs_0_y'] - 12 * 2
+
+    gs.outputs *= 11
+    draw = []
+    gui.draw_events_data(gs, draw)
+    assert len(draw) == 30
+    assert len(gs.outputs) == 33
+    assert draw[29].color == (255, 255, 255, 255)
+    assert draw[29].y == gs.coord['outputs_0_y'] - 12 * 29
+
+    count = 0
+    for label in draw:
+        if label.color != (255, 255, 255, 255):
+            print(label.text)
+            count += 1
+
+    assert count == 10
+
+    gs.outputs = ['John move now.', gs.questions[0], gs.questions[1], gs.questions[2]]
+    draw = []
+    gui.draw_events_data(gs, draw)
+    assert len(draw) == 1
+    assert draw[0].text == 'John move now.'
+
+
+def test_draw_wait_warnings(entry_setup):
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    gs.outputs = ['Tommy move now.']
+    draw = []
+    gui.draw_wait_warnings(gs, draw)
+    assert len(draw) == 1
+    assert draw[0].text == 'Wait for others...'
+
+    gs.outputs = [gs.questions[0]]
+    draw = []
+    gui.draw_wait_warnings(gs, draw)
+    assert len(draw) == 0
+
+    gs.outputs = ['Game won by Tommy']
+    draw = []
+    gui.draw_wait_warnings(gs, draw)
+    assert len(draw) == 1
+    assert draw[0].text == 'You lost the game! Game won by Tommy!'
+
+    gs.outputs = ['Game won by John']
+    draw = []
+    gui.draw_wait_warnings(gs, draw)
+    assert len(draw) == 1
+    assert draw[0].text == 'You won the game!'
+
+
 def test_objects_to_draw(entry_setup):
-    gs = entry_setup
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    gs.outputs = ['John move now.', gs.questions[0]]
     gui.calculate_zero_coordinates(gs)
     gui.objects_to_draw(gs)
     assert round(gs.coord['info_0_y']) == 398
     assert len(gs.draw_objects) == 8
+    assert gs.draw_objects[-1].text == 'John move now.'
+
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    gs.outputs = ['Tommy move now.']
+    gui.calculate_zero_coordinates(gs)
+    gui.objects_to_draw(gs)
+    assert round(gs.coord['info_0_y']) == 398
+    assert len(gs.draw_objects) == 9
+    assert gs.draw_objects[-1].text == 'Wait for others...'
 
 
 # def test_data_update(server, entry_setup):
