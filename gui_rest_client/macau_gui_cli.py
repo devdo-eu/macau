@@ -433,6 +433,7 @@ def create_menu_edits(gs):
     create_edit(gs, 'Number of Cards:', 1, 3, 7, '5')
     create_edit(gs, 'Game ID:', 21, 3, 7, '0')
     create_edit(gs, 'Your Token:', 21, 4, 7, '')
+    gs.draw_objects[-1].font_size = 10
     rival_name = 'CPU1'
     for index in range(1, 10):
         create_edit(gs, f'Name of {index} Rival:', 1, 4 + index, 7, rival_name)
