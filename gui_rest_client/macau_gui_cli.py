@@ -6,6 +6,7 @@ from time import sleep
 from random import randint
 from datetime import datetime
 import gui_rest_client.menu_wnd_functions as menu_wnd
+import gui_rest_client.game_wnd_functions as game_wnd
 
 
 class GameState:
@@ -23,7 +24,7 @@ class GameState:
         self.requested_value = None
         self.requested_color = None
         self.host = '127.0.0.1:8000'
-        self.my_name = 'Macauer'
+        self.my_name = 'Macau'
         self.access_token = ''
         self.game_id = 0
         self.to_play = []
@@ -298,37 +299,41 @@ def data_update(gs):
 
 def update(_dt, gs):
     if gs.game_started:
-        game_window, gs = create_game(gs)
-        gs.window.close()
-        gs.window = game_window
-        register_game_events(game_window, gs)
-        pyglet.clock.schedule_interval(update, 1 / 10, gs)
-        gs.game_started = False
+        create_game(gs)
+        return
 
     for obj in gs.draw_objects:
         if type(obj) == pyglet.text.Label and 'Wait for other' in obj.text:
             data_update(gs)
 
     if gs.ready_to_send:
-        snap = datetime.now()
-        for move in gs.my_move:
-            response = requests.post(
-                f"http://{gs.host}/macau/{gs.game_id}/{gs.my_name}?player_move={move}&access_token={gs.access_token}")
-            if response.status_code == 200:
-                print(f"{move} was send")
-                sleep(0.1)
-                gs.my_move.remove(move)
-        gs.to_play = []
-        print(f'Sending was done in: {datetime.now() - snap}')
-        data_update(gs)
-        generate_request_choose_boxes(gs)
-        gs.ready_to_send = False
+        send_player_move(gs)
 
     if not gs.ready_to_send:
-        if len(gs.my_move) == 1 and 'J' not in gs.my_move[0] and 'A' not in gs.my_move[0]:
-            gs.ready_to_send = True
-        elif len(gs.my_move) == 2:
-            gs.ready_to_send = True
+        switch_send_flag(gs)
+
+
+def send_player_move(gs):
+    snap = datetime.now()
+    for move in gs.my_move:
+        response = requests.post(
+            f"http://{gs.host}/macau/{gs.game_id}/{gs.my_name}?player_move={move}&access_token={gs.access_token}")
+        if response.status_code == 200:
+            print(f"{move} was send")
+            sleep(0.1)
+            gs.my_move.remove(move)
+    gs.to_play = []
+    print(f'Sending was done in: {datetime.now() - snap}')
+    data_update(gs)
+    generate_request_choose_boxes(gs)
+    gs.ready_to_send = False
+
+
+def switch_send_flag(gs):
+    if len(gs.my_move) == 1 and 'J' not in gs.my_move[0] and 'A' not in gs.my_move[0]:
+        gs.ready_to_send = True
+    elif len(gs.my_move) == 2:
+        gs.ready_to_send = True
 
 
 def choose_request(gs, x, y, request_box):
@@ -365,83 +370,16 @@ def calculate_zero_coordinates(gs):
 
 
 def create_game(gs):
-    game_window = pyglet.window.Window(gs.screen.width, gs.screen.height)
+    temp_wnd = gs.window
+    gs.window = pyglet.window.Window(gs.screen.width, gs.screen.height)
     get_token(gs)
     data_update(gs)
     generate_request_choose_boxes(gs)
-
-    return game_window, gs
-
-
-def register_game_events(game_window, gs):
-    @game_window.event
-    def on_draw():
-        pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
-        game_window.clear()
-        for obj in gs.draw_objects:
-            obj.draw()
-
-    @game_window.event
-    def on_mouse_motion(x, y, dx, dy):
-        for card in gs.draw_hand:
-            if check_if_inside(x, y, card):
-                distance = round(100 * abs(x - card.x) + abs(y - card.y))
-                # print(distance)
-        pass
-
-    @game_window.event
-    def on_mouse_release(x, y, button, modifiers):
-        hand_0_x = gs.coord['hand_0_x']
-        hand_0_y = gs.coord['hand_0_y']
-        print(f'x: {x}, y: {y}')
-        if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
-            candidates = {}
-            for index, card in enumerate(gs.draw_hand):
-                if check_if_inside(x, y, card):
-                    distance = round(100 * abs(x - card.x + hand_0_x) + abs(y - card.y))
-                    name = gs.hand[index]
-                    name = f'{name[0]} {name[1]}'
-                    candidates[distance] = {'name': name, 'image': card}
-            if len(candidates) > 0:
-                chosen = candidates[min(candidates.keys())]
-                if chosen['image'].y == hand_0_y:
-                    chosen['image'].y = hand_0_y + chosen['image'].y / 1.5
-                    gs.to_play.append(chosen['name'])
-                else:
-                    chosen['image'].y = hand_0_y
-                    gs.to_play.remove(chosen['name'])
-
-        if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 1 and 'J' in gs.my_move[0]:
-            choose_request(gs, x, y, gs.value_box)
-
-        if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 1 and 'A' in gs.my_move[0]:
-            choose_request(gs, x, y, gs.color_box)
-
-        if button == pyglet.window.mouse.RIGHT:
-            move = ''
-            for card in gs.to_play:
-                move += f'{card}, '
-            gs.my_move.append(move[:-2])
-            print(gs.my_move)
-            if 'J' in move:
-                gs.draw_objects += list(gs.value_box.values())
-                gs.to_play = []
-            elif 'A' in move:
-                gs.draw_objects += list(gs.color_box.values())
-                gs.to_play = []
-            else:
-                color = (210, 105, 30, 255)
-                if len(gs.my_move[0]) > 4:
-                    card = gs.my_move[0].replace(',', '').split()
-                    for index in range(1, len(card), 2):
-                        gs.hand.remove([card[index - 1], card[index]])
-                        if gs.lied_card is not None:
-                            gs.table.append(gs.lied_card)
-                        gs.lied_card = [card[index - 1], card[index]]
-                objects_to_draw(gs)
-                wait_label = pyglet.text.Label(text='Wait for others...', x=gs.screen.width / 4, y=gs.screen.height / 2,
-                                               bold=True, color=color, font_size=70)
-                gs.draw_objects.append(wait_label)
+    game_wnd.register_game_events(gs, check_if_inside, choose_request, objects_to_draw)
+    pyglet.clock.schedule_interval(update, 1 / 10, gs)
+    gs.game_started = False
+    if temp_wnd is not None:
+        temp_wnd.close()
 
 
 def main():
@@ -469,7 +407,7 @@ def main():
     create_edit(gs, menu, 'Host Address:', 1, -5, 5, gs.host)
     create_edit(gs, menu, 'Your Name:', 1, -4, 5, gs.my_name)
     create_edit(gs, menu, 'Number of Cards:', 1, 3, 7, '5')
-    rival_name = 'CPU_MAAsakratoro'
+    rival_name = 'CPU1'
     for index in range(1, 10):
         create_edit(gs, menu, f'Name of {index} Rival:', 1, 4+index, 7, rival_name)
         rival_name = ''
@@ -497,19 +435,13 @@ def main():
 
 def create_edit(gs, menu, label, x0=1, y0=1, edit0=7, placeholder=''):
     divider = 36
-    top_y = 20
-    host_label = pyglet.text.Label(text=label, x=x0*gs.screen.width / divider,
-                                   y=(top_y-y0) * gs.screen.height / divider - 25,
-                                   bold=True, color=(255, 255, 255, 255), font_size=20)
-    menu.append(host_label)
-    square = pyglet.shapes.Rectangle(x=(edit0+x0) * gs.screen.width / divider,
-                                     y=(top_y-y0) * gs.screen.height / divider - 25,
-                                     width=240 * 7 / edit0, height=22, color=(255, 255, 255))
-    menu.append(square)
-    host_edit = pyglet.text.Label(text=placeholder, x=(edit0+x0) * gs.screen.width / divider,
-                                  y=(top_y-y0) * gs.screen.height / divider - 25, bold=True, color=(0, 0, 0, 255),
-                                  font_size=20)
-    menu.append(host_edit)
+    pan_y = (20-y0) * gs.screen.height / divider - 25
+    label_pan_x = x0 * gs.screen.width / divider
+    edit_pan_x = (edit0 + x0) * gs.screen.width / divider
+    host_label = pyglet.text.Label(label, x=label_pan_x, y=pan_y, bold=True, color=(255, 255, 255, 255), font_size=20)
+    square = pyglet.shapes.Rectangle(x=edit_pan_x, y=pan_y, width=240 * 7 / edit0, height=22, color=(255, 255, 255))
+    host_edit = pyglet.text.Label(placeholder, x=edit_pan_x, y=pan_y, bold=True, color=(0, 0, 0, 255), font_size=20)
+    menu += [host_label, square, host_edit]
 
 
 if __name__ == '__main__':
