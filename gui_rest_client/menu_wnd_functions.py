@@ -105,8 +105,10 @@ def on_mouse_release_factory(gs, check_if_inside):
             if len(candidates) > 0:
                 active_edit = candidates[min(candidates.keys())]
                 active_edit.color = (0, 0, 255)
+                zero_x = active_edit.x - active_edit.anchor_x
+                zero_y = active_edit.y - active_edit.anchor_y
                 for obj in gs.draw_objects:
-                    if type(obj) is pyglet.text.Label and obj.x == active_edit.x and obj.y == active_edit.y:
+                    if type(obj) is pyglet.text.Label and obj.x == zero_x and obj.y == zero_y:
                         active_edit = obj
                 active_edit.text = ''
 

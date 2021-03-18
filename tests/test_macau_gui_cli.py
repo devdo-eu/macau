@@ -493,6 +493,17 @@ def test_draw_game_state(entry_setup):
     assert round(draw[6].x) == 1453
     assert round(draw[6].y) == 159
 
+    draw = []
+    gs.requested_value = 6
+    gui.draw_game_state(gs, draw)
+    assert len(draw) == 7
+
+    draw = []
+    gs.requested_value = None
+    gs.requested_color = 'hearts'
+    gui.draw_game_state(gs, draw)
+    assert len(draw) == 7
+
 
 def test_draw_events_data(entry_setup):
     gs = copy(entry_setup)
@@ -617,3 +628,55 @@ def test_data_update(server, entry_setup):
     last_state = copy(gs.last_raw_state)
     gui.data_update(gs)
     assert last_state == gs.last_raw_state
+
+
+def test_switch_send_flag(entry_setup):
+    gs = copy(entry_setup)
+    gs.ready_to_send = False
+    gs.my_move = ['hearts 5']
+    gui.switch_send_flag(gs)
+    assert gs.ready_to_send
+
+    gs.ready_to_send = False
+    gs.my_move = ['hearts J']
+    gui.switch_send_flag(gs)
+    assert not gs.ready_to_send
+
+    gs.ready_to_send = False
+    gs.my_move = ['hearts J', '10']
+    gui.switch_send_flag(gs)
+    assert gs.ready_to_send
+
+    gs.ready_to_send = False
+    gs.my_move = ['pikes A']
+    gui.switch_send_flag(gs)
+    assert not gs.ready_to_send
+
+    gs.ready_to_send = False
+    gs.my_move = ['pikes A', 'clovers']
+    gui.switch_send_flag(gs)
+    assert gs.ready_to_send
+
+
+def test_send_player_move(server, entry_setup):
+    assert server is None
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
+    response = requests.post(f"http://{gs.host}/macau", json=json_data)
+    assert response.status_code == 200
+    gs.game_id = response.json()['game_id']
+    gui.get_token(gs)
+    assert gs.access_token != ''
+    gs.my_move = ['pikes 10']
+    gs.ready_to_send = True
+    gui.send_player_move(gs)
+    assert len(gs.my_move) == 0
+    assert not gs.ready_to_send
+
+    assert len(gs.last_raw_state) > 0
+    assert len(gs.rivals) == 1
+    assert len(gs.hand) == 7 or len(gs.hand) == 8
+    assert gs.cards_in_deck > 0
+    assert len(gs.table) > 0
+    assert len(gs.outputs) > 0
