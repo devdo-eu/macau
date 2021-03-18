@@ -84,46 +84,13 @@ def setup_connection(host, game_id, my_name, token=''):
 
 def objects_to_draw(gs):
     screen = gs.screen
-    table_0_x, table_0_y = gs.coord['table_0_x'], gs.coord['table_0_y']
-    rivals_0_x, rivals_0_y = gs.coord['rivals_0_x'], gs.coord['rivals_0_y']
     info_0_x, info_0_y = gs.coord['info_0_x'], gs.coord['info_0_y']
     outputs_0_x, outputs_0_y = gs.coord['outputs_0_x'], gs.coord['outputs_0_y']
     objects = []
     draw_players_hand(gs, objects)
     draw_deck_pile(gs, objects)
-
-    for card in gs.table:
-        offset = 40
-        card_name = card[0] + '_' + card[1] + '.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.height)
-        pan_x = randint(0, offset) - offset / 2
-        pan_y = randint(0, offset) - offset / 2
-        card = pyglet.sprite.Sprite(img=card_image, x=table_0_x + pan_x, y=table_0_y + pan_y)
-        card.rotation = randint(0, 120) - 60
-        objects.append(card)
-
-    if gs.lied_card is not None:
-        card_name = gs.lied_card[0] + '_' + gs.lied_card[1] + '.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.height)
-        card = pyglet.sprite.Sprite(img=card_image, x=table_0_x, y=table_0_y)
-        objects.append(card)
-
-    index = 0
-    place_0_x = rivals_0_x / (len(gs.rivals) + 1)
-    label_y = 0
-    place_x = place_0_x
-    for name, num_of_cards in gs.rivals.items():
-        for num in range(num_of_cards):
-            back_image = resize_center_card_image(gs.card_images['back.png'], screen.height)
-            pan = num * (back_image.width / (num_of_cards * 6 / 3))
-            card = pyglet.sprite.Sprite(img=back_image, x=place_x + pan, y=rivals_0_y)
-            label_y = rivals_0_y - back_image.height / 1.4
-            objects.append(card)
-        name_label = pyglet.text.Label(text=name, x=place_x - 25, y=label_y,
-                                       bold=True, color=(255, 255, 255, 255), font_size=22)
-        objects.append(name_label)
-        place_x += place_0_x
-        index += 1
+    draw_table_pile(gs, objects)
+    draw_rivals(gs, objects)
 
     game_id_label = pyglet.text.Label(text=f'Game ID: {gs.game_id}', x=info_0_x, y=info_0_y,
                                       color=(255, 255, 255, 255), font_size=10)
@@ -217,6 +184,44 @@ def objects_to_draw(gs):
                 objects.remove(obj)
 
     gs.draw_objects = objects
+
+
+def draw_rivals(gs, objects):
+    rivals_0_x, rivals_0_y = gs.coord['rivals_0_x'], gs.coord['rivals_0_y']
+    place_0_x = rivals_0_x / (len(gs.rivals) + 1)
+    place_x = place_0_x
+    back_image = resize_center_card_image(gs.card_images['back.png'], gs.screen.height)
+    label_y = rivals_0_y - back_image.height / 1.4
+    for name, num_of_cards in gs.rivals.items():
+        pan_max = (num_of_cards - 1) * (back_image.width / (num_of_cards * 6 / 3))
+        for num in range(num_of_cards):
+            pan = num / (num_of_cards - 1) * pan_max
+            card = pyglet.sprite.Sprite(img=back_image, x=place_x + pan, y=rivals_0_y)
+            objects.append(card)
+
+        pan = place_x - (13 * (len(name) - 1) / 2 - back_image.width / 6.4)
+        name_label = pyglet.text.Label(text=name, x=pan, y=label_y, bold=True, color=(255, 255, 255, 255), font_size=15)
+        objects.append(name_label)
+        place_x += place_0_x
+
+
+def draw_table_pile(gs, objects):
+    table_0_x, table_0_y = gs.coord['table_0_x'], gs.coord['table_0_y']
+    offset = 40
+    for card in gs.table:
+        card_name = card[0] + '_' + card[1] + '.png'
+        card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.height)
+        pan_x = randint(0, offset) - offset / 2
+        pan_y = randint(0, offset) - offset / 2
+        card = pyglet.sprite.Sprite(img=card_image, x=table_0_x + pan_x, y=table_0_y + pan_y)
+        card.rotation = randint(0, 120) - 60
+        objects.append(card)
+
+    if gs.lied_card is not None:
+        card_name = gs.lied_card[0] + '_' + gs.lied_card[1] + '.png'
+        card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.height)
+        card = pyglet.sprite.Sprite(img=card_image, x=table_0_x, y=table_0_y)
+        objects.append(card)
 
 
 def draw_deck_pile(gs, objects):
@@ -467,7 +472,7 @@ def main():
     create_edit(gs, menu, 'Host Address:', 1, -5, 5, gs.host)
     create_edit(gs, menu, 'Your Name:', 1, -4, 5, gs.my_name)
     create_edit(gs, menu, 'Number of Cards:', 1, 3, 7, '5')
-    rival_name = 'CPU1'
+    rival_name = 'CPU_MAAsakratoro'
     for index in range(1, 10):
         create_edit(gs, menu, f'Name of {index} Rival:', 1, 4+index, 7, rival_name)
         rival_name = ''
