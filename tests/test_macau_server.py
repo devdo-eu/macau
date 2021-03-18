@@ -139,7 +139,7 @@ def test_get_player_state():
         state = response.json()['state']
         assert len(state['hand']) == 6 or len(state['hand']) == 7
         assert len(state['rivals']) == 1
-        assert state['rivals']['CPU1'] == 6
+        assert state['rivals']['CPU1'] == 6 or state['rivals']['CPU1'] == 5
         assert state['outputs'][0] == 'John move now.'
 
         response = tc.get("/macau/0/John/state?access_token=invalid")

@@ -51,7 +51,7 @@ def load_all_card_images():
     return images
 
 
-def resize_center_card_image(image, screen_width, screen_height, ratio=5):
+def resize_center_card_image(image, screen_height, ratio=5):
     """Sets an image's anchor point to its center"""
     ret_image = copy(image)
     ratio = (screen_height / ratio) / image.height
@@ -67,7 +67,7 @@ def check_if_inside(x, y, obj):
     right_border = obj.x + obj.width / 2
     upper_border = obj.y + obj.height / 2
     bottom_border = obj.y - obj.height / 2
-    if left_border < x < right_border and bottom_border < y < upper_border:
+    if left_border <= x <= right_border and bottom_border <= y <= upper_border:
         return True
     return False
 
@@ -84,42 +84,18 @@ def setup_connection(host, game_id, my_name, token=''):
 
 def objects_to_draw(gs):
     screen = gs.screen
-    hand_0_x, hand_0_y = gs.coord['hand_0_x'], gs.coord['hand_0_y']
-    deck_0_x, deck_0_y = gs.coord['deck_0_x'], gs. coord['deck_0_y']
     table_0_x, table_0_y = gs.coord['table_0_x'], gs.coord['table_0_y']
     rivals_0_x, rivals_0_y = gs.coord['rivals_0_x'], gs.coord['rivals_0_y']
-    num_cards = len(gs.hand)
-    index = 0
+    info_0_x, info_0_y = gs.coord['info_0_x'], gs.coord['info_0_y']
+    outputs_0_x, outputs_0_y = gs.coord['outputs_0_x'], gs.coord['outputs_0_y']
     objects = []
-    gs.draw_hand = []
-    for card in gs.hand:
-        card_name = f'{card[0]}_{card[1]}.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.width, screen.height)
-        pan = index * (card_image.width / (num_cards / 6))
-        card = pyglet.sprite.Sprite(img=card_image, x=hand_0_x + pan, y=hand_0_y)
-        gs.draw_hand.append(card)
-        index += 1
-    for card in gs.draw_hand:
-        objects.append(card)
-
-    if gs.cards_in_deck > 300:
-        gs.cards_in_deck = 300
-    deck_y = deck_0_y
-    deck_x = deck_0_x
-    for num in range(gs.cards_in_deck):
-        back_image = resize_center_card_image(gs.card_images['back.png'], screen.width, screen.height)
-        deck_x += 1
-        deck_y += 1
-        card = pyglet.sprite.Sprite(img=back_image, x=deck_x, y=deck_y)
-        if num % 101 == 100:
-            deck_y = deck_0_y
-            deck_x = deck_0_x + 230 * (num / 100)
-        objects.append(card)
+    draw_players_hand(gs, objects)
+    draw_deck_pile(gs, objects)
 
     for card in gs.table:
         offset = 40
         card_name = card[0] + '_' + card[1] + '.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.width, screen.height)
+        card_image = resize_center_card_image(gs.card_images[card_name], screen.height)
         pan_x = randint(0, offset) - offset / 2
         pan_y = randint(0, offset) - offset / 2
         card = pyglet.sprite.Sprite(img=card_image, x=table_0_x + pan_x, y=table_0_y + pan_y)
@@ -128,7 +104,7 @@ def objects_to_draw(gs):
 
     if gs.lied_card is not None:
         card_name = gs.lied_card[0] + '_' + gs.lied_card[1] + '.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.width, screen.height)
+        card_image = resize_center_card_image(gs.card_images[card_name], screen.height)
         card = pyglet.sprite.Sprite(img=card_image, x=table_0_x, y=table_0_y)
         objects.append(card)
 
@@ -138,7 +114,7 @@ def objects_to_draw(gs):
     place_x = place_0_x
     for name, num_of_cards in gs.rivals.items():
         for num in range(num_of_cards):
-            back_image = resize_center_card_image(gs.card_images['back.png'], screen.width, screen.height)
+            back_image = resize_center_card_image(gs.card_images['back.png'], screen.height)
             pan = num * (back_image.width / (num_of_cards * 6 / 3))
             card = pyglet.sprite.Sprite(img=back_image, x=place_x + pan, y=rivals_0_y)
             label_y = rivals_0_y - back_image.height / 1.4
@@ -149,29 +125,24 @@ def objects_to_draw(gs):
         place_x += place_0_x
         index += 1
 
-    info_y = 3 * screen.height / 8 + 60
-    info_x = 5 * screen.width / 7
-    game_id_label = pyglet.text.Label(text=f'Game ID: {gs.game_id}', x=info_x, y=info_y,
+    game_id_label = pyglet.text.Label(text=f'Game ID: {gs.game_id}', x=info_0_x, y=info_0_y,
                                       color=(255, 255, 255, 255), font_size=10)
-    info_y -= 20
-    token_label = pyglet.text.Label(text=f'Your Token: {gs.access_token}', x=info_x, y=info_y,
+    info_0_y -= 20
+    token_label = pyglet.text.Label(text=f'Your Token: {gs.access_token}', x=info_0_x, y=info_0_y,
                                     color=(255, 255, 255, 255), font_size=10)
-    info_y -= 20
-    border_label = pyglet.text.Label(text='-'*55, x=info_x, y=info_y,
+    info_0_y -= 20
+    border_label = pyglet.text.Label(text='-'*55, x=info_0_x, y=info_0_y,
                                     bold=True, color=(255, 255, 255, 255), font_size=14)
-    info_y -= 20
-    cards_to_take_label = pyglet.text.Label(text=f'cards to take: {gs.cards_to_take}', x=info_x, y=info_y,
+    info_0_y -= 20
+    cards_to_take_label = pyglet.text.Label(text=f'cards to take: {gs.cards_to_take}', x=info_0_x, y=info_0_y,
                                             bold=True, color=(255, 255, 255, 255), font_size=14)
-    info_y -= 20
-    turns_to_wait_label = pyglet.text.Label(text=f'turns to wait: {gs.turns_to_wait}', x=info_x, y=info_y,
+    info_0_y -= 20
+    turns_to_wait_label = pyglet.text.Label(text=f'turns to wait: {gs.turns_to_wait}', x=info_0_x, y=info_0_y,
                                             bold=True, color=(255, 255, 255, 255), font_size=14)
-    info_y -= 20
+    info_0_y -= 20
     requests_label = pyglet.text.Label(text=f'requests: color: {gs.requested_color}, value: {gs.requested_value}',
-                                       x=info_x, y=info_y, bold=True, color=(255, 255, 255, 255), font_size=14)
+                                       x=info_0_x, y=info_0_y, bold=True, color=(255, 255, 255, 255), font_size=14)
     objects += [game_id_label, token_label, border_label, cards_to_take_label, turns_to_wait_label, requests_label]
-
-    outputs_y = 8 * screen.height / 11
-    outputs_x = screen.width / 20
 
     questions = [
         "Which card(s) from your hand do you want to play?:",
@@ -199,32 +170,32 @@ def objects_to_draw(gs):
             color = (255, 255, 255, 255)
             if gs.my_name in line:
                 color = (210, 105, 30, 255)
-                label = pyglet.text.Label(text=line, x=outputs_x, y=outputs_y, color=color, font_size=9)
+                label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9)
             else:
-                label = pyglet.text.Label(text=line, x=outputs_x, y=outputs_y, color=color, font_size=9)
+                label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9)
             objects.append(label)
-            outputs_y -= 12
+            outputs_0_y -= 12
 
-    info_y -= 20
+    info_0_y -= 20
     if gs.requested_value is not None:
         card_name = f'hearts_{gs.requested_value}.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.width, screen.height, 4)
+        card_image = resize_center_card_image(gs.card_images[card_name], screen.height, 4)
         card = pyglet.sprite.Sprite(img=card_image,
-                                    x=info_x + card_image.width * 1.3, y=info_y - card_image.height / 1.9)
+                                    x=info_0_x + card_image.width * 1.3, y=info_0_y - card_image.height / 1.9)
         objects.append(card)
 
     elif gs.requested_color is not None:
         card_name = f'{gs.requested_color}_A.png'
-        card_image = resize_center_card_image(gs.card_images[card_name], screen.width, screen.height, 4)
+        card_image = resize_center_card_image(gs.card_images[card_name], screen.height, 4)
         card = pyglet.sprite.Sprite(img=card_image,
-                                    x=info_x + card_image.width * 1.3, y=info_y - card_image.height / 1.9)
+                                    x=info_0_x + card_image.width * 1.3, y=info_0_y - card_image.height / 1.9)
         objects.append(card)
 
     else:
         joker = choice(['red_joker.png', 'black_joker.png'])
-        card_image = resize_center_card_image(gs.card_images[joker], screen.width, screen.height, 4)
+        card_image = resize_center_card_image(gs.card_images[joker], screen.height, 4)
         card = pyglet.sprite.Sprite(img=card_image,
-                                    x=info_x + card_image.width * 1.3, y=info_y - card_image.height / 1.9)
+                                    x=info_0_x + card_image.width * 1.3, y=info_0_y - card_image.height / 1.9)
         objects.append(card)
 
     if len(gs.outputs) > 0 and 'Game won' in gs.outputs[-1] and gs.my_name not in gs.outputs[-1]:
@@ -248,6 +219,34 @@ def objects_to_draw(gs):
     gs.draw_objects = objects
 
 
+def draw_deck_pile(gs, objects):
+    if gs.cards_in_deck > 300:
+        gs.cards_in_deck = 300
+    deck_x = gs.coord['deck_0_x']
+    deck_y = gs.coord['deck_0_y']
+    back_image = resize_center_card_image(gs.card_images['back.png'], gs.screen.height)
+    for num in range(gs.cards_in_deck):
+        pan = num % 100
+        card = pyglet.sprite.Sprite(img=back_image, x=deck_x + pan, y=deck_y + pan)
+        if pan == 99:
+            deck_y = gs.coord['deck_0_y']
+            deck_x = gs.coord['deck_0_x'] + 230 * round(num / 99)
+        objects.append(card)
+
+
+def draw_players_hand(gs, objects):
+    num_cards = len(gs.hand)
+    hand_0_x, hand_0_y = gs.coord['hand_0_x'], gs.coord['hand_0_y']
+    gs.draw_hand = []
+    for index, card in enumerate(gs.hand):
+        card_name = f'{card[0]}_{card[1]}.png'
+        card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.height)
+        pan = index * (card_image.width / (num_cards / 6))
+        card = pyglet.sprite.Sprite(img=card_image, x=hand_0_x + pan, y=hand_0_y)
+        gs.draw_hand.append(card)
+        objects.append(card)
+
+
 def generate_request_choose_boxes(gs):
     colors = ['hearts', 'tiles', 'pikes', 'clovers']
     req_color = choice(colors)
@@ -256,14 +255,14 @@ def generate_request_choose_boxes(gs):
     value_cards = {}
     pan = screen.width / 5
     for color in colors:
-        image = resize_center_card_image(gs.card_images[f'{color}_A.png'], screen.width, screen.height, 3)
+        image = resize_center_card_image(gs.card_images[f'{color}_A.png'], screen.height, 3)
         card = pyglet.sprite.Sprite(img=image, x=pan, y=screen.height / 1.8)
         color_cards[color] = card
         pan += screen.width / 5
 
     pan = screen.width / 7
     for value in range(5, 11):
-        image = resize_center_card_image(gs.card_images[f'{req_color}_{value}.png'], screen.width, screen.height, 3)
+        image = resize_center_card_image(gs.card_images[f'{req_color}_{value}.png'], screen.height, 3)
         card = pyglet.sprite.Sprite(img=image, x=pan, y=screen.height / 1.8)
         value_cards[value] = card
         pan += screen.width / 7
@@ -357,6 +356,10 @@ def calculate_zero_coordinates(gs):
     gs.coord['table_0_y'] = screen.height / 2 + 30
     gs.coord['rivals_0_x'] = screen.width - 100
     gs.coord['rivals_0_y'] = screen.height - screen.height / 10
+    gs.coord['info_0_x'] = 5 * screen.width / 7
+    gs.coord['info_0_y'] = 3 * screen.height / 8 + 60
+    gs.coord['outputs_0_y'] = 8 * screen.height / 11
+    gs.coord['outputs_0_x'] = screen.width / 20
 
 
 def create_game(gs):
@@ -455,7 +458,7 @@ def main():
     menu.append(game_title)
     for _ in range(6):
         card_name = choice(list(gs.card_images.keys()))
-        card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.width, gs.screen.height, 4)
+        card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.height, 4)
         card = pyglet.sprite.Sprite(img=card_image, x=gs.screen.width/2 - 30, y=14*gs.screen.height/20)
         menu.append(card)
     settings_label = pyglet.text.Label(text='Create New Game Settings: ', x=gs.screen.width/36,
