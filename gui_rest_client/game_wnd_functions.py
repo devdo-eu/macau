@@ -24,6 +24,12 @@ def on_mouse_release_factory(gs, check_if_inside, choose_request, objects_to_dra
         hand_0_x = gs.coord['hand_0_x']
         hand_0_y = gs.coord['hand_0_y']
         print(f'x: {x}, y: {y}')
+
+        for obj in gs.draw_objects:
+            if type(obj) == pyglet.text.Label and ' the game!' in obj.text:
+                gs.game_finished = True
+                return
+
         if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
             candidates = {}
             for index, card in enumerate(gs.draw_hand):

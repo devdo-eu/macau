@@ -13,6 +13,7 @@ class GameState:
     def __init__(self):
         self.window = None
         self.game_started = False
+        self.game_finished = False
         self.my_move = []
         self.cards_in_deck = 0
         self.table = []
@@ -302,6 +303,10 @@ def update(_dt, gs):
         create_game(gs)
         return
 
+    elif gs.game_finished:
+        create_menu(gs)
+        return
+
     for obj in gs.draw_objects:
         if type(obj) == pyglet.text.Label and 'Wait for other' in obj.text:
             data_update(gs)
@@ -382,6 +387,22 @@ def create_game(gs):
         temp_wnd.close()
 
 
+def create_menu(gs):
+    temp_wnd = gs.window
+    gs.window = pyglet.window.Window(gs.screen.width, gs.screen.height)
+    gs.draw_objects = []
+    make_logo(gs)
+    create_menu_edits(gs)
+    create_menu_labels(gs)
+    gs.access_token = ''
+    gs.last_raw_state = None
+    menu_wnd.register_menu_events(gs, check_if_inside)
+    pyglet.clock.schedule_interval(update, 1 / 120, gs)
+    gs.game_finished = False
+    if temp_wnd is not None:
+        temp_wnd.close()
+
+
 def main():
     display = pyglet.canvas.Display()
     gs = GameState()
@@ -390,46 +411,49 @@ def main():
     gs.card_images = load_all_card_images()
     gs.screen = display.get_default_screen()
     calculate_zero_coordinates(gs)
-    game_window = pyglet.window.Window(gs.screen.width, gs.screen.height)
-    gs.window = game_window
-    game_title = pyglet.text.Label(text='Macau REST API Client', x=3*gs.screen.width/20, y=18*gs.screen.height/20,
+    create_menu(gs)
+    pyglet.app.run()
+
+
+def create_menu_labels(gs):
+    game_title = pyglet.text.Label(text='Macau REST API Client', x=3 * gs.screen.width / 20,
+                                   y=18 * gs.screen.height / 20,
                                    bold=True, color=(255, 255, 255, 255), font_size=70, align='center')
     gs.draw_objects.append(game_title)
-    for _ in range(6):
-        card_name = choice(list(gs.card_images.keys()))
-        card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.height, 4)
-        card = pyglet.sprite.Sprite(img=card_image, x=gs.screen.width/2 - 30, y=14*gs.screen.height/20)
-        gs.draw_objects.append(card)
-    settings_label = pyglet.text.Label(text='Create New Game Settings: ', x=gs.screen.width/36,
-                                       y=18*gs.screen.height/36, bold=True, color=(255, 255, 255, 255), font_size=20)
-    gs.draw_objects.append(settings_label)
-    create_edit(gs, 'Host Address:', 1, -5, 5, gs.host)
-    create_edit(gs, 'Your Name:', 1, -4, 5, gs.my_name)
-    create_edit(gs, 'Number of Cards:', 1, 3, 7, '5')
-    rival_name = 'CPU1'
-    for index in range(1, 10):
-        create_edit(gs, f'Name of {index} Rival:', 1, 4+index, 7, rival_name)
-        rival_name = ''
-
-    create_label = pyglet.text.Label(text='Press c to Create New Game', x=gs.screen.width / 36,
-                                     y=4 * gs.screen.height / 36, bold=True, color=(255, 255, 128, 255), font_size=30)
-    gs.draw_objects.append(create_label)
-
-    settings_label = pyglet.text.Label(text='Join Game Settings: ', x=21*gs.screen.width / 36,
+    settings_label = pyglet.text.Label(text='Create New Game Settings: ', x=gs.screen.width / 36,
                                        y=18 * gs.screen.height / 36, bold=True, color=(255, 255, 255, 255),
                                        font_size=20)
     gs.draw_objects.append(settings_label)
-    create_edit(gs, 'Game ID:', 21, 3, 7, '0')
-    create_edit(gs, 'Your Token:', 21, 4, 7, '')
+    create_label = pyglet.text.Label(text='Press c to Create New Game', x=gs.screen.width / 36,
+                                     y=4 * gs.screen.height / 36, bold=True, color=(255, 255, 128, 255), font_size=30)
+    gs.draw_objects.append(create_label)
+    settings_label = pyglet.text.Label(text='Join Game Settings: ', x=21 * gs.screen.width / 36,
+                                       y=18 * gs.screen.height / 36, bold=True, color=(255, 255, 255, 255),
+                                       font_size=20)
+    gs.draw_objects.append(settings_label)
     join_label = pyglet.text.Label(text='Press j to Join Game', x=21 * gs.screen.width / 36,
                                    y=4 * gs.screen.height / 36, bold=True, color=(255, 255, 128, 255), font_size=30)
     gs.draw_objects.append(join_label)
-    # tests
-    # gs.game_started = True
-    menu_wnd.register_menu_events(gs, check_if_inside)
 
-    pyglet.clock.schedule_interval(update, 1 / 120, gs)
-    pyglet.app.run()
+
+def create_menu_edits(gs):
+    create_edit(gs, 'Host Address:', 1, -5, 5, gs.host)
+    create_edit(gs, 'Your Name:', 1, -4, 5, gs.my_name)
+    create_edit(gs, 'Number of Cards:', 1, 3, 7, '5')
+    create_edit(gs, 'Game ID:', 21, 3, 7, '0')
+    create_edit(gs, 'Your Token:', 21, 4, 7, '')
+    rival_name = 'CPU1'
+    for index in range(1, 10):
+        create_edit(gs, f'Name of {index} Rival:', 1, 4 + index, 7, rival_name)
+        rival_name = ''
+
+
+def make_logo(gs):
+    for _ in range(6):
+        card_name = choice(list(gs.card_images.keys()))
+        card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.height, 4)
+        card = pyglet.sprite.Sprite(img=card_image, x=gs.screen.width / 2 - 30, y=14 * gs.screen.height / 20)
+        gs.draw_objects.append(card)
 
 
 def create_edit(gs, label, x0=1, y0=1, edit0=7, placeholder=''):
