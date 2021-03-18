@@ -36,7 +36,7 @@ def entry_setup():
     pyglet.resource.path = [build_resources_path()]
     pyglet.resource.reindex()
     gs.card_images = gui.load_all_card_images()
-    gs.color_box, gs.value_box = gui.generate_request_choose_boxes(gs)
+    gui.generate_request_choose_boxes(gs)
     return gs
 
 
@@ -353,22 +353,32 @@ def test_draw_table_pile(entry_setup):
 
 def test_draw_rivals(entry_setup):
     gs = copy(entry_setup)
+    gs.rivals = {'Tommy': 0, 'Smith': 0}
+    draw = []
+    gui.draw_rivals(gs, draw)
+    assert len(draw) == 2
+
+    gs.rivals = {'Tommy': 1, 'Smith': 1}
+    draw = []
+    gui.draw_rivals(gs, draw)
+    assert len(draw) == 2 + 2
+
     gs.rivals = {'Tommy': 7, 'Smith': 7}
     draw = []
     gui.draw_rivals(gs, draw)
     assert len(draw) == 7 + 7 + 2
-    assert round(draw[0].x) == 500
+    assert round(draw[0].x) == 507
     assert round(draw[0].y) == 805
-    assert round(draw[6].x) == 555
+    assert round(draw[6].x) == 551
     assert round(draw[6].y) == 805
     assert type(draw[7]) == pyglet.text.Label
     assert draw[7].text == 'Tommy'
     assert round(draw[7].x) == 494
     assert round(draw[7].y) == 676
     assert type(draw[-1]) == pyglet.text.Label
-    assert round(draw[8].x) == 1000
+    assert round(draw[8].x) == 1007
     assert round(draw[8].y) == 805
-    assert round(draw[14].x) == 1055
+    assert round(draw[14].x) == 1051
     assert round(draw[14].y) == 805
     assert draw[-1].text == 'Smith'
     assert round(draw[-1].x) == 994
@@ -378,14 +388,14 @@ def test_draw_rivals(entry_setup):
     draw = []
     gui.draw_rivals(gs, draw)
     assert len(draw) == 7 + 30 + 2
-    assert round(draw[0].x) == 500
-    assert round(draw[6].x) == 555
+    assert round(draw[0].x) == 507
+    assert round(draw[6].x) == 551
     assert type(draw[7]) == pyglet.text.Label
     assert draw[7].text == 'Tommy'
     assert round(draw[7].x) == 494
     assert type(draw[-1]) == pyglet.text.Label
-    assert round(draw[8].x) == 1000
-    assert round(draw[37].x) == 1062
+    assert round(draw[8].x) == 1002
+    assert round(draw[37].x) == 1061
     assert draw[-1].text == 'Smith'
     assert round(draw[-1].x) == 994
 
@@ -393,14 +403,14 @@ def test_draw_rivals(entry_setup):
     draw = []
     gui.draw_rivals(gs, draw)
     assert len(draw) == 7 * len(gs.rivals) + len(gs.rivals)
-    assert round(draw[0].x) == 214
-    assert round(draw[6].x) == 269
+    assert round(draw[0].x) == 222
+    assert round(draw[6].x) == 266
     assert type(draw[7]) == pyglet.text.Label
     assert draw[7].text == 'A'
     assert round(draw[7].x) == 234
     assert type(draw[-1]) == pyglet.text.Label
-    assert round(draw[-8].x) == 1286
-    assert round(draw[-2].x) == 1341
+    assert round(draw[-8].x) == 1293
+    assert round(draw[-2].x) == 1337
     assert draw[-1].text == 'F'
     assert round(draw[-1].x) == 1306
 
@@ -469,7 +479,6 @@ def test_draw_events_data(entry_setup):
     count = 0
     for label in draw:
         if label.color != (255, 255, 255, 255):
-            print(label.text)
             count += 1
 
     assert count == 10
@@ -528,15 +537,40 @@ def test_objects_to_draw(entry_setup):
     assert gs.draw_objects[-1].text == 'Wait for others...'
 
 
-# def test_data_update(server, entry_setup):
-#     assert server is None
-#     gs = entry_setup
-#     gui.calculate_zero_coordinates(gs)
-#     json_data = {'how_many_cards': 7, 'players_names': ['John', 'Test']}
-#     response = requests.post(f"http://{gs.host}/macau", json=json_data)
-#     assert response.status_code == 200
+def test_get_token(server, entry_setup):
+    assert server is None
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
+    response = requests.post(f"http://{gs.host}/macau", json=json_data)
+    assert response.status_code == 200
+    gs.game_id = response.json()['game_id']
+    gui.get_token(gs)
+    assert gs.access_token != ''
 
-    # gui.data_update(gs)
+
+def test_data_update(server, entry_setup):
+    assert server is None
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
+    response = requests.post(f"http://{gs.host}/macau", json=json_data)
+    assert response.status_code == 200
+    gs.game_id = response.json()['game_id']
+    gui.get_token(gs)
+    assert gs.access_token != ''
+
+    gui.data_update(gs)
+    assert len(gs.last_raw_state) > 0
+    assert len(gs.rivals) == 1
+    assert len(gs.hand) == 7 or len(gs.hand) == 8
+    assert gs.cards_in_deck > 0
+    assert len(gs.table) > 0
+    assert len(gs.outputs) > 0
+
+    last_state = copy(gs.last_raw_state)
+    gui.data_update(gs)
+    assert last_state == gs.last_raw_state
 
 
 
