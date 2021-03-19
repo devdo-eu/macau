@@ -24,7 +24,7 @@ address = '127.0.0.1:8000'
 def server():
     proc = Process(target=serve, args=(), daemon=True)
     proc.start()
-    sleep(0.1)
+    sleep(0.5)
     yield
     proc.kill()
 

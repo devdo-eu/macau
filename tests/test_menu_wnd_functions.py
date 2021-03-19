@@ -19,7 +19,7 @@ def serve():
 def server():
     proc = Process(target=serve, args=(), daemon=True)
     proc.start()
-    sleep(0.1)
+    sleep(0.5)
     yield
     proc.kill()
 
@@ -66,6 +66,7 @@ def build_resources_path():
         if part == 'macau':
             break
     resource_path += 'gui_rest_client/resources/'
+    print(resource_path)
     return resource_path
 
 
