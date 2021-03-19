@@ -67,6 +67,8 @@ def build_resources_path():
             break
     resource_path += 'gui_rest_client/resources/'
     print(resource_path)
+    os.system(f'cd {resource_path}')
+    os.system(f'dir')
     return resource_path
 
 
