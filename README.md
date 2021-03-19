@@ -24,8 +24,8 @@ now you can run the game locally with
 a terminal interface using `python macau.py`.
 
 you can also run REST game server using `uvicorn macau_server:app`  
-then you can play with REST client using `python ./rest_api_client/macau.cli.py`  
-or choose to use REST GUI client using `python ./gui_rest_client/macau_gui_cli`
+then you can play with REST client using `python macau_tui_client.py`  
+or choose to use REST GUI client using `python macau_gui_client.py`
 
 There are unit tests for this project.  
 You can run tests using `python -m pytest ./tests` in project directory.
@@ -131,8 +131,8 @@ All documentation is available to read at `http://localhost:8000/docs`
 
 ## REST API Terminal Game Client
 Another way to play is to use REST API Terminal Game Client.   
-You can run client from directory `./macau/rest_api_client` with:  
-`python macau.cli.py` command.
+You can run the terminal client from with command:  
+`python macau_tui_client.py`
 
 Then you will see inside terminal window:
 ```
@@ -195,8 +195,8 @@ To run server just type in another terminal window: `uvicorn macau_server:app`
 ![movie](./media/rkpEivXkpD.gif)  
 
 Yet another way to play is to use REST API GUI Game Client.   
-You can run client from directory `./macau/gui/rest_client` with:  
-`python macau_gui_cli.py` command.
+You can run the graphical client with command:  
+`python macau_gui_client.py`
 
 After you run application, you can create new game or join existing game.  
 To create new game you need to fill edit boxes on the left side of window.  
