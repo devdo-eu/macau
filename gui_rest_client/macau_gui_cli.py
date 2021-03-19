@@ -84,6 +84,9 @@ def get_token(gs):
         response = requests.get(f"http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/key")
         if response.status_code == 200:
             gs.access_token = response.json()['access_token']
+        else:
+            gs.game_finished = True
+            sleep(0.1)
 
     print(f'TOKEN: {gs.access_token}')
 
@@ -272,6 +275,9 @@ def new_game_state(gs):
         else:
             gs.last_raw_state = state
             new_state = True
+    else:
+        gs.game_finished = True
+        sleep(0.1)
 
     return new_state
 

@@ -3,7 +3,7 @@ import requests
 
 
 def on_key_release_factory(gs):
-    def on_key_release(symbol, modifiers):
+    def on_key_release(symbol, _modifiers):
         labels = []
         for obj in gs.draw_objects:
             if type(obj) is pyglet.shapes.Rectangle:
@@ -13,40 +13,48 @@ def on_key_release_factory(gs):
         for obj in gs.draw_objects:
             if type(obj) is pyglet.text.Label:
                 labels.append(obj)
+
         if symbol == pyglet.window.key.C:
             print('Creating Game!')
-            num_of_cards = 5
-            names = []
-
-            for index, label in enumerate(labels):
-                if 'Host Address' in label.text:
-                    gs.host = labels[index + 1].text
-                elif 'Your Name' in label.text:
-                    gs.my_name = labels[index + 1].text
-                elif 'Number of Cards' in label.text:
-                    num_of_cards = int(labels[index + 1].text)
-                elif 'Rival' in label.text and labels[index + 1].text != '':
-                    names.append(labels[index + 1].text)
-
-            names = [gs.my_name] + names
-            json_data = {'how_many_cards': num_of_cards, 'players_names': names}
-            response = requests.post(f"http://{gs.host}/macau", json=json_data)
-            if response.status_code == 200:
-                gs.game_id = response.json()['game_id']
-                gs.game_started = True
-        if symbol == pyglet.window.key.J:
+            create_and_enter_new_game(gs, labels)
+        elif symbol == pyglet.window.key.J:
             print("Joining Game!")
-            for index, label in enumerate(labels):
-                if 'Host Address' in label.text:
-                    gs.host = labels[index + 1].text
-                elif 'Your Name' in label.text:
-                    gs.my_name = labels[index + 1].text
-                elif 'Game ID' in label.text:
-                    gs.game_id = labels[index + 1].text
-                elif 'Your Token' in label.text and labels[index + 1].text != '':
-                    gs.access_token = labels[index + 1].text
-                gs.game_started = True
+            join_existing_game(gs, labels)
+
     return on_key_release
+
+
+def join_existing_game(gs, labels):
+    for index, label in enumerate(labels):
+        if 'Host Address' in label.text:
+            gs.host = labels[index + 1].text
+        elif 'Your Name' in label.text:
+            gs.my_name = labels[index + 1].text
+        elif 'Game ID' in label.text:
+            gs.game_id = labels[index + 1].text
+        elif 'Your Token' in label.text and labels[index + 1].text != '':
+            gs.access_token = labels[index + 1].text
+    gs.game_started = True
+
+
+def create_and_enter_new_game(gs, labels):
+    num_of_cards = 5
+    names = []
+    for index, label in enumerate(labels):
+        if 'Host Address' in label.text:
+            gs.host = labels[index + 1].text
+        elif 'Your Name' in label.text:
+            gs.my_name = labels[index + 1].text
+        elif 'Number of Cards' in label.text:
+            num_of_cards = int(labels[index + 1].text)
+        elif 'Rival' in label.text and labels[index + 1].text != '':
+            names.append(labels[index + 1].text)
+    names = [gs.my_name] + names
+    json_data = {'how_many_cards': num_of_cards, 'players_names': names}
+    response = requests.post(f"http://{gs.host}/macau", json=json_data)
+    if response.status_code == 200:
+        gs.game_id = response.json()['game_id']
+        gs.game_started = True
 
 
 def on_draw_factory(gs):
@@ -72,16 +80,15 @@ def on_mouse_motion_factory(gs, check_if_inside):
 
 
 def empty_on_text_factory():
-    def on_text(text):
+    def on_text(_text):
         pass
     return on_text
 
 
 def on_text_factory(active_edit):
     def on_text(text):
-        if active_edit is None:
-            return
-        active_edit.text += text
+        if active_edit is not None:
+            active_edit.text += text
     return on_text
 
 
@@ -89,16 +96,7 @@ def on_mouse_release_factory(gs, check_if_inside):
     def on_mouse_release(x, y, button, _modifiers):
         active_edit = None
         if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
-            candidates = {}
-            for obj in gs.draw_objects:
-                if type(obj) is pyglet.shapes.Rectangle:
-                    obj.color = (255, 255, 255)
-                if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
-                    distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
-                    candidates[distance] = obj
-                if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
-                    distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
-                    candidates[distance] = obj
+            candidates = find_pointed_edits(gs, x, y, check_if_inside)
             if len(candidates) > 0:
                 active_edit = candidates[min(candidates.keys())]
                 active_edit.color = (0, 0, 255)
@@ -118,6 +116,17 @@ def on_mouse_release_factory(gs, check_if_inside):
             functor(text)
 
     return on_mouse_release
+
+
+def find_pointed_edits(gs, x, y, check_if_inside):
+    candidates = {}
+    for obj in gs.draw_objects:
+        if type(obj) is pyglet.shapes.Rectangle:
+            obj.color = (255, 255, 255)
+        if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
+            distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
+            candidates[distance] = obj
+    return candidates
 
 
 def register_menu_events(gs, check_if_inside):
