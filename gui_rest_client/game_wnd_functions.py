@@ -2,25 +2,25 @@ import pyglet
 
 
 def on_draw_factory(gs):
-    def on_draw():
+    def functor():
         pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
         gs.window.clear()
         for obj in gs.draw_objects:
             obj.draw()
-    return on_draw
+    return functor
 
 
 def on_mouse_motion_factory(gs, check_if_inside):
-    def on_mouse_motion(x, y, _dx, _dy):
+    def functor(x, y, _dx, _dy):
         for card in gs.draw_hand:
             if check_if_inside(x, y, card):
                 distance = round(100 * abs(x - card.x) + abs(y - card.y))
                 print(distance)
-    return on_mouse_motion
+    return functor
 
 
 def on_mouse_release_factory(gs, check_if_inside, choose_request, objects_to_draw):
-    def on_mouse_release(x, y, button, _modifiers):
+    def functor(x, y, button, _modifiers):
         print(f'x: {x}, y: {y}')
 
         for obj in gs.draw_objects:
@@ -40,7 +40,7 @@ def on_mouse_release_factory(gs, check_if_inside, choose_request, objects_to_dra
         if button == pyglet.window.mouse.RIGHT:
             prepare_move_to_send(gs, objects_to_draw)
 
-    return on_mouse_release
+    return functor
 
 
 def stage_card_to_play(gs, x, y, check_if_inside):
