@@ -16,11 +16,15 @@ dependencies:
   - coverage=5.5=py38h2bbff1b_2
   - cryptography=3.4.6=py38h71e12ea_0
   - fastapi=0.63.0=pyhd8ed1ab_0
+  - ffmpeg=4.2.2=he774522_0
   - flake8=3.8.4=py_0
+  - freetype=2.10.4=hd328e21_0
+  - future=0.18.2=py38_1
   - h11=0.9.0=py_0
   - idna=2.10=pyhd3eb1b0_0
   - importlib-metadata=2.0.0=py_1
   - iniconfig=1.1.1=pyhd3eb1b0_0
+  - libpng=1.6.37=h2a8f88b_0
   - mccabe=0.6.1=py38_1
   - more-itertools=8.7.0=pyhd3eb1b0_0
   - openssl=1.1.1j=h2bbff1b_0
@@ -32,6 +36,7 @@ dependencies:
   - pycparser=2.20=py_2
   - pydantic=1.7.3=py38h2bbff1b_0
   - pyflakes=2.2.0=pyhd3eb1b0_0
+  - pyglet=1.5.15=py38haa244fe_0
   - pyopenssl=20.0.1=pyhd3eb1b0_1
   - pyparsing=2.4.7=pyhd3eb1b0_0
   - pysocks=1.7.1=py38haa95532_0
