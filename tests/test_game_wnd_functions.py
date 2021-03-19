@@ -3,7 +3,6 @@ from gui_rest_client.macau_gui_cli import check_if_inside
 from gui_rest_client.macau_gui_cli import GameState
 import pytest
 import pyglet
-import os
 
 
 class ScreenMock:
@@ -52,17 +51,6 @@ def setup():
     gs.screen = ScreenMock()
     gs.window = WindowMock()
     return gs
-
-
-def build_resources_path():
-    path = os.getcwd()
-    resource_path = ''
-    for part in path.split('\\'):
-        resource_path += part + '/'
-        if part == 'macau':
-            break
-    resource_path += 'gui_rest_client/resources/'
-    return resource_path
 
 
 def test_on_draw_factory(setup):

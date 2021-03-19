@@ -1,4 +1,5 @@
 from gui_rest_client import macau_gui_cli as gui
+from gui_rest_client.macau_gui_cli import build_resources_path
 from gui_rest_client.macau_gui_cli import GameState
 from macau_server import app
 import pytest
@@ -8,7 +9,6 @@ from time import sleep
 from copy import copy
 import requests
 import pyglet
-import os
 
 
 def serve():
@@ -52,21 +52,6 @@ class ObjectMock:
         self.y = y
         self.width = width
         self.height = height
-
-
-def build_resources_path():
-    path = os.getcwd()
-    resource_path = path
-    resource_path = resource_path.replace('\\', '/')
-    separated = path.split('\\')
-    separated.reverse()
-    for part in separated:
-        if part == 'macau':
-            break
-        else:
-            resource_path = resource_path[:-(len(part)+1)]
-    resource_path += '/gui_rest_client/resources/'
-    return resource_path
 
 
 def test_load_all_card_images():

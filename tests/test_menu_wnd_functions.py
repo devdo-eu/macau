@@ -1,6 +1,5 @@
 import gui_rest_client.menu_wnd_functions as menu_wnd
-from gui_rest_client.macau_gui_cli import check_if_inside
-from gui_rest_client.macau_gui_cli import GameState
+from gui_rest_client.macau_gui_cli import GameState, build_resources_path, check_if_inside
 import pytest
 import pyglet
 import uvicorn
@@ -8,7 +7,6 @@ from macau_server import app
 from multiprocessing import Process
 from time import sleep
 import requests
-import os
 
 
 def serve():
@@ -56,21 +54,6 @@ def setup():
     gs.screen = ScreenMock()
     gs.window = WindowMock()
     return gs
-
-
-def build_resources_path():
-    path = os.getcwd()
-    resource_path = path
-    resource_path = resource_path.replace('\\', '/')
-    separated = path.split('\\')
-    separated.reverse()
-    for part in separated:
-        if part == 'macau':
-            break
-        else:
-            resource_path = resource_path[:-(len(part)+1)]
-    resource_path += '/gui_rest_client/resources/'
-    return resource_path
 
 
 def helper_edit_create(x, y, text, data):

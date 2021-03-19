@@ -3,6 +3,7 @@ from secrets import choice
 from copy import copy
 import requests
 from time import sleep
+import os
 from random import randint
 from datetime import datetime
 import gui_rest_client.menu_wnd_functions as menu_wnd
@@ -408,10 +409,25 @@ def create_menu(gs):
         temp_wnd.close()
 
 
+def build_resources_path():
+    path = os.getcwd()
+    resource_path = path
+    resource_path = resource_path.replace('\\', '/')
+    separated = path.split('\\')
+    separated.reverse()
+    for part in separated:
+        if part == 'macau':
+            break
+        else:
+            resource_path = resource_path[:-(len(part)+1)]
+    resource_path += '/gui_rest_client/resources/'
+    return resource_path
+
+
 def main():
     display = pyglet.canvas.Display()
     gs = GameState()
-    pyglet.resource.path = ['./resources']
+    pyglet.resource.path = [build_resources_path()]
     pyglet.resource.reindex()
     gs.card_images = load_all_card_images()
     gs.screen = display.get_default_screen()
