@@ -3,7 +3,7 @@ import requests
 
 
 def on_key_release_factory(gs):
-    def on_key_release(symbol, _modifiers):
+    def functor(symbol, _modifiers):
         labels = []
         for obj in gs.draw_objects:
             if type(obj) is pyglet.shapes.Rectangle:
@@ -21,7 +21,7 @@ def on_key_release_factory(gs):
             print("Joining Game!")
             join_existing_game(gs, labels)
 
-    return on_key_release
+    return functor
 
 
 def join_existing_game(gs, labels):
@@ -58,7 +58,7 @@ def create_and_enter_new_game(gs, labels):
 
 
 def on_draw_factory(gs):
-    def on_draw():
+    def functor():
         pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
         gs.window.clear()
         addition = 0.25
@@ -67,33 +67,33 @@ def on_draw_factory(gs):
                 obj.rotation += addition
                 addition += 0.25
             obj.draw()
-    return on_draw
+    return functor
 
 
 def on_mouse_motion_factory(gs, check_if_inside):
-    def on_mouse_motion(x, y, _dx, _dy):
+    def functor(x, y, _dx, _dy):
         for obj in gs.draw_objects:
             if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
                 distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
                 print(distance)
-    return on_mouse_motion
+    return functor
 
 
 def empty_on_text_factory():
-    def on_text(_text):
+    def functor(_text):
         pass
-    return on_text
+    return functor
 
 
 def on_text_factory(active_edit):
-    def on_text(text):
+    def functor(text):
         if active_edit is not None:
             active_edit.text += text
-    return on_text
+    return functor
 
 
 def on_mouse_release_factory(gs, check_if_inside):
-    def on_mouse_release(x, y, button, _modifiers):
+    def functor(x, y, button, _modifiers):
         active_edit = None
         if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
             candidates = find_pointed_edits(gs, x, y, check_if_inside)
@@ -105,17 +105,18 @@ def on_mouse_release_factory(gs, check_if_inside):
                 for obj in gs.draw_objects:
                     if type(obj) is pyglet.text.Label and obj.x == zero_x and obj.y == zero_y:
                         active_edit = obj
+                        break
                 active_edit.text = ''
 
-        functor = empty_on_text_factory()
+        function = empty_on_text_factory()
         if active_edit is not None:
-            functor = on_text_factory(active_edit)
+            function = on_text_factory(active_edit)
 
         @gs.window.event
         def on_text(text):
-            functor(text)
+            function(text)
 
-    return on_mouse_release
+    return functor
 
 
 def find_pointed_edits(gs, x, y, check_if_inside):
