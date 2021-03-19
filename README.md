@@ -8,7 +8,13 @@
 ![last-commit](https://img.shields.io/github/last-commit/devdo-eu/macau?style=plastic)
 ![code-size](https://img.shields.io/github/languages/code-size/devdo-eu/macau?style=plastic)
 
-This is the Macau project.   
+
+The Macau project.  
+
+This is standard [Macau](https://en.wikipedia.org/wiki/Macau_(card_game)) game implementation.  
+![movie](./media/example_game.jpg)
+  
+# Installation   
 Install the [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 After installation please setup environment with:  
 `conda env create -f environment.yml`  
@@ -18,16 +24,20 @@ now you can run the game locally with
 a terminal interface using `python macau.py`.
 
 you can also run REST game server using `uvicorn macau_server:app`  
-then you can play with REST client using `python macau.cli.py`
+then you can play with REST client using `python ./rest_api_client/macau.cli.py`  
+or choose to use REST GUI client using `python ./gui_rest_client/macau_gui_cli`
 
 There are unit tests for this project.  
 You can run tests using `python -m pytest ./tests` in project directory.
 
+
 # Features  
+There is many possible ways to play macau with this project.   
+Details below:  
+## Terminal Game Application  
 
 ![movie](./media/JeIjc1OvHi.gif)  
 
-This is standard [Macau](https://en.wikipedia.org/wiki/Macau_(card_game)) game.
 After start of `macau.py` script you will see:  
 ```
 Welcome to Macau Game!
@@ -90,31 +100,113 @@ If all players in game will have `CPU` inside their name,
 then only cpu players will play macau.  
 In such a case, the game window will look like:  
 ```
-CPU_A plays: hearts A, clovers A, tiles A | on hand: 2 cards.
-CPU_A plays: clovers | on hand: 2 cards.
-CPU_B plays: clovers 6 | on hand: 4 cards.
-CPU_A plays: clovers K | on hand: 1 cards.
-CPU_B has no move.
-CPU_B will have to take a card.
-1 cards dealt to CPU_B. | on hand: 5 cards.
-CPU_A plays: pikes K | on hand: 0 cards.
-CPU_B will have to take 5 cards.
-5 cards dealt to CPU_B. | on hand: 10 cards.
-CPU_B plays: pikes 2 | on hand: 9 cards.
-Game won by: ['CPU_A'] !
+CPU_A move now.
+CPU_A plays: tiles A.
+CPU_A plays: clovers.
+CPU_A has 5 cards on hand.
+CPU_B move now.
+CPU_B plays: clovers J.
+CPU_B plays: 9.
+CPU_B has 1 cards on hand.
+CPU_A move now.
+CPU_A has no move.
+CPU_A will have to take a card.
+1 cards dealt to CPU_A. | on hand: 6 cards.
+CPU_A has 6 cards on hand.
+CPU_B move now.
+CPU_B plays: tiles 9.
+CPU_B has 0 cards on hand.
+Game won by CPU_B
 ```
 
-# REST API game server
-![img.png](./media/img.png)  
+## REST API Game Server  
+![img.png](./media/img.png)   
 
 This project can be run as a REST API server.  
 with command `uvicorn macau_server:app` you can run it locally.   
 Then with available commands it is possible to play from a browser.  
+It is possible - but effortful, because you will need to use swagger.  
 All documentation is available to read at `http://localhost:8000/docs`
 
-Another way to play is to use REST API client.   
+
+## REST API Terminal Game Client
+Another way to play is to use REST API Terminal Game Client.   
 You can run client from directory `./macau/rest_api_client` with:  
 `python macau.cli.py` command.
+
+Then you will see inside terminal window:
+```
+Welcome to Macau Game!
+Connection to Game Server checked.
+Do you want to Create game, Join existing one or Watch? (c/j/w): 
+```
+
+From this place you can:
+  * create new macau game with `c`
+  * join existing game with `j`
+  * watch existing game as a spectator with `w`
+
+for example if you choose `c`, then you will see inside terminal:
+```
+Welcome to Macau Game!
+Connection to Game Server checked.
+Do you want to Create game, Join existing one or Watch? (c/j/w): c
+Creating new Macau Game!
+Enter number of players: 3
+How many cards on start?: 7
+Enter your name: Macauer
+Enter name for player#2: CPU1
+Enter name for player#3: MasterCPU
+Game created. Game ID: 0
+Confirm ID by pressing Enter...
+```  
+Confirm is used to show Game ID. Share Game ID with other human players.  
+After confirm. you will see:
+```
+Macauer move now.
+
+Macauer
+-------------------------Punishments-------------------------
+Cards: 0
+Skip turns: 0
+--------------------------Requests---------------------------
+Color: None
+Value: None
+--------------------------Players----------------------------
+Macauer has: 7 cards on hand.
+CPU1 has: 7 cards on hand.
+MasterCPU has: 7 cards on hand.
+---------------------------Table-----------------------------
+Cards in deck: 29
+Cards on table: 2
+On top: tiles K
+---------------------------Hand------------------------------
+hearts 2, hearts 5, hearts 6, hearts 7, *tiles 9*,
+*tiles 10*, hearts 10
+-------------------------------------------------------------
+*color value* -> means that this card can be played
+Which card(s) from your hand do you want to play?:
+```
+
+Be sure to run API Game Server first!  
+To run server just type in another terminal window: `uvicorn macau_server:app`  
+
+## REST API GUI Game Client  
+![movie](./media/rkpEivXkpD.gif)  
+
+Yet another way to play is to use REST API GUI Game Client.   
+You can run client from directory `./macau/gui/rest_client` with:  
+`python macau_gui_cli.py` command.
+
+After you run application, you can create new game or join existing game.  
+To create new game you need to fill edit boxes on the left side of window.  
+
+To join game the first time you need to enter correct host,  
+your name in game and game id on right side of window.
+
+After you create or join game you will see game window like this:  
+![img.png](./media/example_game.jpg)  
+
 
 # Rules 
 
@@ -149,6 +241,7 @@ This project is starting point for more complex development.
   + cpu players can play with packs of card
   + REST API server for macau card game
   + REST API client with terminal ui
+  + REST API client with graphical ui
 
 # License
 
