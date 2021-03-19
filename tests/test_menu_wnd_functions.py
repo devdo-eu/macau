@@ -60,15 +60,16 @@ def setup():
 
 def build_resources_path():
     path = os.getcwd()
-    resource_path = ''
-    for part in path.split('\\'):
-        resource_path += part + '/'
+    resource_path = path
+    resource_path = resource_path.replace('\\', '/')
+    separated = path.split('\\')
+    separated.reverse()
+    for part in separated:
         if part == 'macau':
             break
-    resource_path += 'gui_rest_client/resources/'
-    print(resource_path)
-    os.system(f'cd {resource_path}')
-    os.system(f'dir')
+        else:
+            resource_path = resource_path[:-(len(part)+1)]
+    resource_path += '/gui_rest_client/resources/'
     return resource_path
 
 
