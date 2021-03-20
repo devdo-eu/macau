@@ -12,7 +12,8 @@ import gui_rest_client.game_wnd_functions as game_wnd
 
 class GameState:
     def __init__(self):
-        self.window = None
+        self.menu_window = None
+        self.game_window = None
         self.active_edit = None
         self.game_started = False
         self.game_finished = False
@@ -382,21 +383,17 @@ def calculate_zero_coordinates(gs):
 
 
 def create_game(gs):
-    temp_wnd = gs.window
-    gs.window = pyglet.window.Window(gs.screen.width, gs.screen.height)
+    menu_wnd.switch_windows(gs)
     get_token(gs)
     data_update(gs)
     generate_request_choose_boxes(gs)
     game_wnd.register_game_events(gs, check_if_inside, choose_request, objects_to_draw)
     pyglet.clock.schedule_interval(update, 1 / 10, gs)
     gs.game_started = False
-    if temp_wnd is not None:
-        temp_wnd.close()
 
 
 def create_menu(gs):
-    temp_wnd = gs.window
-    gs.window = pyglet.window.Window(gs.screen.width, gs.screen.height)
+    menu_wnd.switch_windows(gs)
     gs.draw_objects = []
     make_logo(gs)
     create_menu_edits(gs)
@@ -406,8 +403,6 @@ def create_menu(gs):
     menu_wnd.register_menu_events(gs, check_if_inside)
     pyglet.clock.schedule_interval(update, 1 / 120, gs)
     gs.game_finished = False
-    if temp_wnd is not None:
-        temp_wnd.close()
 
 
 def build_resources_path():
@@ -432,7 +427,10 @@ def main():
     pyglet.resource.reindex()
     gs.card_images = load_all_card_images()
     gs.screen = display.get_default_screen()
+    gs.menu_window = pyglet.window.Window(gs.screen.width, gs.screen.height)
+    gs.game_window = pyglet.window.Window(gs.screen.width, gs.screen.height)
     calculate_zero_coordinates(gs)
+    gs.menu_window.set_visible(False)
     create_menu(gs)
     pyglet.app.run()
 

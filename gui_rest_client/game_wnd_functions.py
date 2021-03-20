@@ -4,7 +4,7 @@ import pyglet
 def on_draw_factory(gs):
     def functor():
         pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
-        gs.window.clear()
+        gs.game_window.clear()
         for obj in gs.draw_objects:
             obj.draw()
     return functor
@@ -90,14 +90,14 @@ def prepare_move_to_send(gs, objects_to_draw):
 
 
 def register_game_events(gs, check_if_inside, choose_request, objects_to_draw):
-    @gs.window.event
+    @gs.game_window.event
     def on_draw():
         on_draw_factory(gs)()
 
-    @gs.window.event
+    @gs.game_window.event
     def on_mouse_motion(x, y, dx, dy):
         on_mouse_motion_factory(gs, check_if_inside)(x, y, dx, dy)
 
-    @gs.window.event
+    @gs.game_window.event
     def on_mouse_release(x, y, button, modifiers):
         on_mouse_release_factory(gs, check_if_inside, choose_request, objects_to_draw)(x, y, button, modifiers)

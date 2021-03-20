@@ -66,7 +66,7 @@ def create_and_enter_new_game(gs, labels):
 def on_draw_factory(gs):
     def functor():
         pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
-        gs.window.clear()
+        gs.menu_window.clear()
         addition = 0.25
         for obj in gs.draw_objects:
             if type(obj) is pyglet.sprite.Sprite:
@@ -115,7 +115,7 @@ def on_mouse_release_factory(gs, check_if_inside):
         if gs.active_edit is not None:
             function = on_text_factory(gs.active_edit)
 
-        @gs.window.event
+        @gs.menu_window.event
         def on_text(text):
             function(text)
 
@@ -134,18 +134,44 @@ def find_pointed_edits(gs, x, y, check_if_inside):
 
 
 def register_menu_events(gs, check_if_inside):
-    @gs.window.event
+    @gs.menu_window.event
     def on_key_release(symbol, modifiers):
         on_key_release_factory(gs)(symbol, modifiers)
 
-    @gs.window.event
+    @gs.menu_window.event
     def on_draw():
         on_draw_factory(gs)()
 
-    @gs.window.event
+    @gs.menu_window.event
     def on_mouse_motion(x, y, dx, dy):
         on_mouse_motion_factory(gs, check_if_inside)(x, y, dx, dy)
 
-    @gs.window.event
+    @gs.menu_window.event
     def on_mouse_release(x, y, button, modifiers):
         on_mouse_release_factory(gs, check_if_inside)(x, y, button, modifiers)
+
+
+def switch_windows(gs):
+    if gs.menu_window.visible:
+        window = gs.menu_window
+        gs.menu_window.set_visible(False)
+    else:
+        window = gs.game_window
+        gs.menu_window.set_visible()
+    gs.game_window.set_visible(not gs.menu_window.visible)
+
+    @window.event
+    def on_key_release(_symbol, _modifiers):
+        pass
+
+    @window.event
+    def on_draw():
+        pass
+
+    @window.event
+    def on_mouse_motion(_x, _y, _dx, _dy):
+        pass
+
+    @window.event
+    def on_mouse_release(_x, _y, _button, _modifiers):
+        pass
