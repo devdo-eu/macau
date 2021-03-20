@@ -13,6 +13,7 @@ import gui_rest_client.game_wnd_functions as game_wnd
 class GameState:
     def __init__(self):
         self.window = None
+        self.active_edit = None
         self.game_started = False
         self.game_finished = False
         self.my_move = []
@@ -480,7 +481,8 @@ def create_edit(gs, label, x0=1, y0=1, edit0=7, placeholder=''):
     square.anchor_x, square.anchor_y = square.width / 2, square.height / 2
     square.x += square.anchor_x
     square.y += square.anchor_y
-    host_edit = pyglet.text.Label(placeholder, x=edit_pan_x, y=pan_y, bold=True, color=(0, 0, 0, 255), font_size=20)
+    host_edit = pyglet.text.Label(placeholder, x=edit_pan_x + 5, y=pan_y + 1, bold=True,
+                                  color=(0, 0, 0, 255), font_size=20)
     gs.draw_objects += [host_label, square, host_edit]
 
 
