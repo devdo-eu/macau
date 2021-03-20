@@ -166,9 +166,9 @@ def pikes_king_punishment(player, game_state):
     :return: Updated game_state object
     """
     gs = game_state
-    players_list = list(gs.players)
-    players_list += players_list
-    for index in range(1, len(players_list) - 1):
+    non_skip_players = [name for name, player in gs.players.items() if player.turns_to_skip == 0]
+    players_list = non_skip_players + non_skip_players
+    for index in range(len(players_list) - 1):
         if players_list[index + 1] == player.name:
             rival = gs.players[players_list[index]]
             rival.print_foo(f'{rival.name} will have to take {gs.cards_to_take} cards.')
