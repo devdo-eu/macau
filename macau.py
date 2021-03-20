@@ -1,4 +1,4 @@
-import game
+import logic.game as game
 import os
 import asyncio
 

@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 import asyncio
 from player.player import Player
-import game
+import logic.game as game
 import uuid
 
 app = FastAPI()

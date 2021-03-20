@@ -1,4 +1,4 @@
-import game
+import logic.game as game
 import pytest
 from copy import deepcopy
 from logic.logic import values, colors
