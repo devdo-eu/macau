@@ -142,6 +142,8 @@ def draw_events_data(gs, objects):
             color = (255, 255, 255, 255)
             if gs.my_name in line:
                 color = (210, 105, 30, 255)
+            elif 'macau' in line:
+                color = (245, 45, 10, 255)
 
             label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9)
             objects.append(label)

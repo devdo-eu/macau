@@ -502,7 +502,7 @@ def test_draw_events_data(entry_setup):
     gui.draw_events_data(gs, draw)
     assert len(draw) == 3
     assert type(draw[0]) == pyglet.text.Label
-    assert draw[0].color != (255, 255, 255, 255)
+    assert draw[0].color == (210, 105, 30, 255)
     assert draw[0].x == gs.coord['outputs_0_x']
     assert draw[0].y == gs.coord['outputs_0_y']
 
@@ -534,6 +534,18 @@ def test_draw_events_data(entry_setup):
     gui.draw_events_data(gs, draw)
     assert len(draw) == 1
     assert draw[0].text == 'John move now.'
+
+
+def test_draw_events_data_macau(entry_setup):
+    gs = copy(entry_setup)
+    gs.my_name = 'John'
+    gs.outputs = ['John move now.', 'John have macau!', 'Tommy have macau!']
+    draw = []
+    gui.draw_events_data(gs, draw)
+    assert len(draw) == 3
+    assert draw[0].color == (210, 105, 30, 255)
+    assert draw[1].color == (210, 105, 30, 255)
+    assert draw[2].color == (245, 45, 10, 255)
 
 
 def test_draw_wait_warnings(entry_setup):
