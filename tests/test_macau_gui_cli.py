@@ -126,14 +126,14 @@ def test_resize_center_card_image(entry_setup):
     assert round(test_image.height) == 225
 
 
-def test_check_if_inside():
+def test_check_if_inside(entry_setup):
     test_obj = ObjectMock(26, 151, 50, 300)
-    assert gui.check_if_inside(1, 1, test_obj)
-    assert gui.check_if_inside(5, 60, test_obj)
-    assert gui.check_if_inside(25, 150, test_obj)
-    assert gui.check_if_inside(51, 301, test_obj)
-    assert not gui.check_if_inside(52, 302, test_obj)
-    assert not gui.check_if_inside(0, 0, test_obj)
+    assert entry_setup.check_if_inside(1, 1, test_obj)
+    assert entry_setup.check_if_inside(5, 60, test_obj)
+    assert entry_setup.check_if_inside(25, 150, test_obj)
+    assert entry_setup.check_if_inside(51, 301, test_obj)
+    assert not entry_setup.check_if_inside(52, 302, test_obj)
+    assert not entry_setup.check_if_inside(0, 0, test_obj)
 
 
 def test_generate_request_choose_boxes(entry_setup):
@@ -173,45 +173,45 @@ def test_color_boxes(entry_setup, box_color, loc_x):
 def test_choose_request_color(entry_setup):
     gs = entry_setup
     hearts, tiles, pikes, clovers = 330, 660, 990, 1320
-    gui.choose_request(gs, hearts, 600, gs.color_box)
+    gs.choose_request(hearts, 600)
     assert round(gs.color_box['hearts'].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 'hearts'
 
-    gui.choose_request(gs, tiles, 600, gs.color_box)
+    gs.choose_request(tiles, 600)
     assert round(gs.color_box['hearts'].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 'hearts'
     assert round(gs.color_box['tiles'].y) == 500
 
-    gui.choose_request(gs, hearts, 700, gs.color_box)
+    gs.choose_request(hearts, 700)
     assert round(gs.color_box['hearts'].y) == 500
     assert len(gs.to_play) == 0
 
-    gui.choose_request(gs, tiles, 600, gs.color_box)
+    gs.choose_request(tiles, 600)
     assert round(gs.color_box['tiles'].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 'tiles'
 
-    gui.choose_request(gs, tiles, 700, gs.color_box)
+    gs.choose_request(tiles, 700)
     assert round(gs.color_box['tiles'].y) == 500
     assert len(gs.to_play) == 0
 
-    gui.choose_request(gs, pikes, 600, gs.color_box)
+    gs.choose_request(pikes, 600)
     assert round(gs.color_box['pikes'].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 'pikes'
 
-    gui.choose_request(gs, pikes, 700, gs.color_box)
+    gs.choose_request(pikes, 700)
     assert round(gs.color_box['pikes'].y) == 500
     assert len(gs.to_play) == 0
 
-    gui.choose_request(gs, clovers, 600, gs.color_box)
+    gs.choose_request(clovers, 600)
     assert round(gs.color_box['clovers'].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 'clovers'
 
-    gui.choose_request(gs, clovers, 700, gs.color_box)
+    gs.choose_request(clovers, 700)
     assert round(gs.color_box['clovers'].y) == 500
     assert len(gs.to_play) == 0
 
@@ -219,36 +219,36 @@ def test_choose_request_color(entry_setup):
 def test_choose_request_value(entry_setup):
     gs = entry_setup
     card_5, card_7, card_10 = 260, 720, 1400
-    gui.choose_request(gs, card_5, 600, gs.value_box)
+    gs.choose_request(card_5, 600, 'values')
     assert round(gs.value_box[5].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 5
 
-    gui.choose_request(gs, card_7, 600, gs.value_box)
+    gs.choose_request(card_7, 600, 'values')
     assert round(gs.value_box[5].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 5
     assert round(gs.value_box[7].y) == 500
 
-    gui.choose_request(gs, card_5, 700, gs.value_box)
+    gs.choose_request(card_5, 700, 'values')
     assert round(gs.value_box[5].y) == 500
     assert len(gs.to_play) == 0
 
-    gui.choose_request(gs, card_7, 600, gs.value_box)
+    gs.choose_request(card_7, 600, 'values')
     assert round(gs.value_box[7].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 7
 
-    gui.choose_request(gs, card_7, 700, gs.value_box)
+    gs.choose_request(card_7, 700, 'values')
     assert round(gs.value_box[7].y) == 500
     assert len(gs.to_play) == 0
 
-    gui.choose_request(gs, card_10, 600, gs.value_box)
+    gs.choose_request(card_10, 600, 'values')
     assert round(gs.value_box[10].y) == 667
     assert len(gs.to_play) == 1
     assert gs.to_play[0] == 10
 
-    gui.choose_request(gs, card_10, 700, gs.value_box)
+    gs.choose_request(card_10, 700, 'values')
     assert round(gs.value_box[10].y) == 500
     assert len(gs.to_play) == 0
 
@@ -568,7 +568,7 @@ def test_objects_to_draw(entry_setup):
     gs.my_name = 'John'
     gs.outputs = ['John move now.', gs.questions[0]]
     gui.calculate_zero_coordinates(gs)
-    gui.objects_to_draw(gs)
+    gs.objects_to_draw()
     assert round(gs.coord['info_0_y']) == 398
     assert len(gs.draw_objects) == 8
     assert gs.draw_objects[-1].text == 'John move now.'
@@ -577,7 +577,7 @@ def test_objects_to_draw(entry_setup):
     gs.my_name = 'John'
     gs.outputs = ['Tommy move now.']
     gui.calculate_zero_coordinates(gs)
-    gui.objects_to_draw(gs)
+    gs.objects_to_draw()
     assert round(gs.coord['info_0_y']) == 398
     assert len(gs.draw_objects) == 9
     assert gs.draw_objects[-1].text == 'Wait for others...'
@@ -657,7 +657,7 @@ def test_send_player_move(server, entry_setup):
     gs.game_id = response.json()['game_id']
     gui.get_token(gs)
     assert gs.access_token != ''
-    gs.my_move = ['pikes 10']
+    gs.my_move = ['invalid']
     gs.ready_to_send = True
     gui.send_player_move(gs)
     assert len(gs.my_move) == 0
