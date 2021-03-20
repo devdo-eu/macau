@@ -794,6 +794,40 @@ def test_pikes_king_punishment(how_many_players, who_played_pikes_king):
     assert len(gs.players[str(who_will_be_punished)].hand) == 10
 
 
+def test_pikes_king_punishment_with_skip_turn():
+    gs = game.GameState()
+    players_name_list = [str(number) for number in range(1, 5)]
+    gs.deck, gs.table, gs.players = game.prepare_game(players_name_list)
+    gs.deck = gs.table + gs.deck
+    gs.table = []
+    gs.lied_card = ('pikes', 'K')
+    deck_len = len(gs.deck)
+    gs.cards_to_take = 5
+    player = gs.players['3']
+    skipper = gs.players['2']
+    skipper.turns_to_skip = 3
+    gs = game.pikes_king_punishment(player, gs)
+    assert gs.cards_to_take == 0
+    assert gs.lied_card is None
+    assert len(gs.table) == 1
+    assert ('pikes', 'K') in gs.table
+    assert len(gs.deck) == deck_len - 5
+    assert len(gs.players['1'].hand) == 10
+
+    gs.cards_to_take = 5
+    gs.lied_card = ('pikes', 'K')
+    deck_len = len(gs.deck)
+    gs.players['1'].turns_to_skip = 1
+    gs.players['4'].turns_to_skip = 1
+    gs = game.pikes_king_punishment(player, gs)
+    assert gs.cards_to_take == 0
+    assert gs.lied_card is None
+    assert len(gs.table) == 2
+    assert ('pikes', 'K') == gs.table[-1]
+    assert len(gs.deck) == deck_len - 5
+    assert len(gs.players['3'].hand) == 10
+
+
 @pytest.mark.asyncio
 async def test_play_game_logic(game_state):
     gs = game_state
