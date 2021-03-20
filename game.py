@@ -237,4 +237,24 @@ def convert_input_to_cards(player, played, possible_plays):
         if cards_value != card[1]:
             valid = False
 
+    valid = check_validity_of_kings(played_cards) and valid
+
     return packs, played_cards, valid
+
+
+def check_validity_of_kings(played_cards):
+    """
+    Helper function used to check validity of played packs of kings.
+    :param played_cards: list of tuples with played by player cards
+    :return: True if play is valid, False otherwise
+    """
+    valid = True
+    first_card = played_cards[0]
+    active_colors, normal_colors = ['hearts', 'pikes'], ['tiles', 'clovers']
+    kings_colors = {'tiles': normal_colors, 'clovers': normal_colors, 'hearts': active_colors, 'pikes': active_colors}
+    card_color = first_card[0]
+    if first_card[1] == 'K':
+        for card in played_cards:
+            if card[0] not in kings_colors[card_color]:
+                valid = False
+    return valid
