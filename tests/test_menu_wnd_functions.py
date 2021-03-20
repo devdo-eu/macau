@@ -31,6 +31,7 @@ class ScreenMock:
 class WindowMock:
     def __init__(self):
         self.event_func = []
+        self.visible = True
 
     def event(self, func):
         self.event_func.append(func)
@@ -38,6 +39,9 @@ class WindowMock:
 
     def clear(self):
         pass
+
+    def set_visible(self, visible=True):
+        self.visible = visible
 
 
 class DrawableMock:
@@ -52,7 +56,8 @@ class DrawableMock:
 def setup():
     gs = GameState()
     gs.screen = ScreenMock()
-    gs.window = WindowMock()
+    gs.menu_window = WindowMock()
+    gs.game_window = WindowMock()
     return gs
 
 
@@ -166,7 +171,7 @@ def test_on_key_release_factory(setup, server):
 
 def test_register_menu_event(setup):
     menu_wnd.register_menu_events(setup, check_if_inside)
-    assert len(setup.window.event_func) == 4
+    assert len(setup.menu_window.event_func) == 4
 
 
 def test_on_draw_factory(setup):
@@ -220,3 +225,16 @@ def test_on_text_factory():
     on_text = menu_wnd.on_text_factory(None)
     on_text('Try to add another sentence....')
     assert test_label.text == 'This text gonna be changed. New Text for Example.'
+
+
+def test_switch_windows(setup):
+    setup.menu_window.set_visible(False)
+    menu_wnd.switch_windows(setup)
+    assert setup.menu_window.visible
+    assert not setup.game_window.visible
+    assert len(setup.game_window.event_func) == 4
+
+    menu_wnd.switch_windows(setup)
+    assert not setup.menu_window.visible
+    assert setup.game_window.visible
+    assert len(setup.menu_window.event_func) == 4
