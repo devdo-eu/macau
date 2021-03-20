@@ -4,24 +4,30 @@ import requests
 
 def on_key_release_factory(gs):
     def functor(symbol, _modifiers):
-        labels = []
-        for obj in gs.draw_objects:
-            if type(obj) is pyglet.shapes.Rectangle:
-                if obj.color != [255, 255, 255]:
-                    return
+        if symbol == pyglet.window.key.BACKSPACE and type(gs.active_edit) is pyglet.text.Label:
+            gs.active_edit.text = gs.active_edit.text[:-1]
 
         for obj in gs.draw_objects:
-            if type(obj) is pyglet.text.Label:
-                labels.append(obj)
+            if type(obj) is pyglet.shapes.Rectangle and obj.color != [255, 255, 255]:
+                return
 
-        if symbol == pyglet.window.key.C:
-            print('Creating Game!')
-            create_and_enter_new_game(gs, labels)
-        elif symbol == pyglet.window.key.J:
-            print("Joining Game!")
-            join_existing_game(gs, labels)
+        switch_to_game(gs, symbol)
 
     return functor
+
+
+def switch_to_game(gs, symbol):
+    labels = []
+    for obj in gs.draw_objects:
+        if type(obj) is pyglet.text.Label:
+            labels.append(obj)
+
+    if symbol == pyglet.window.key.C:
+        print('Creating Game!')
+        create_and_enter_new_game(gs, labels)
+    elif symbol == pyglet.window.key.J:
+        print("Joining Game!")
+        join_existing_game(gs, labels)
 
 
 def join_existing_game(gs, labels):
@@ -94,23 +100,20 @@ def on_text_factory(active_edit):
 
 def on_mouse_release_factory(gs, check_if_inside):
     def functor(x, y, button, _modifiers):
-        active_edit = None
+        gs.active_edit = None
         if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
             candidates = find_pointed_edits(gs, x, y, check_if_inside)
             if len(candidates) > 0:
-                active_edit = candidates[min(candidates.keys())]
-                active_edit.color = (0, 0, 255)
-                zero_x = active_edit.x - active_edit.anchor_x
-                zero_y = active_edit.y - active_edit.anchor_y
+                gs.active_edit = candidates[min(candidates.keys())]
+                gs.active_edit.color = (0, 0, 255)
                 for obj in gs.draw_objects:
-                    if type(obj) is pyglet.text.Label and obj.x == zero_x and obj.y == zero_y:
-                        active_edit = obj
+                    if type(obj) is pyglet.text.Label and check_if_inside(obj.x, obj.y, gs.active_edit):
+                        gs.active_edit = obj
                         break
-                active_edit.text = ''
 
         function = empty_on_text_factory()
-        if active_edit is not None:
-            function = on_text_factory(active_edit)
+        if gs.active_edit is not None:
+            function = on_text_factory(gs.active_edit)
 
         @gs.window.event
         def on_text(text):
