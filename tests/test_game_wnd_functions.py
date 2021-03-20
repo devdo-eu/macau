@@ -49,7 +49,7 @@ def choose_request_mock(_gs, _x, _y, _request_box):
 def setup():
     gs = GameState()
     gs.screen = ScreenMock()
-    gs.window = WindowMock()
+    gs.game_window = WindowMock()
     return gs
 
 
@@ -77,7 +77,7 @@ def test_on_mouse_motion_factory(setup):
 
 def test_register_game_events(setup):
     game_wnd.register_game_events(setup, check_if_inside, choose_request_mock, check_if_inside)
-    assert len(setup.window.event_func) == 3
+    assert len(setup.game_window.event_func) == 3
 
 
 def test_on_mouse_release_factory(setup):
