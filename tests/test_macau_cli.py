@@ -47,6 +47,10 @@ def server():
     proc.kill()
 
 
+def test_start_server(server):
+    assert server is None
+
+
 def test_find_server(server):
     assert server is None
     host = client.find_server(address, input, print)
