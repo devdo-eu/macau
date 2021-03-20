@@ -10,16 +10,16 @@ def on_draw_factory(gs):
     return functor
 
 
-def on_mouse_motion_factory(gs, check_if_inside):
+def on_mouse_motion_factory(gs):
     def functor(x, y, _dx, _dy):
         for card in gs.draw_hand:
-            if check_if_inside(x, y, card):
+            if gs.check_if_inside(x, y, card):
                 distance = round(100 * abs(x - card.x) + abs(y - card.y))
                 print(distance)
     return functor
 
 
-def on_mouse_release_factory(gs, check_if_inside, choose_request, objects_to_draw):
+def on_mouse_release_factory(gs):
     def functor(x, y, button, _modifiers):
         print(f'x: {x}, y: {y}')
 
@@ -29,25 +29,25 @@ def on_mouse_release_factory(gs, check_if_inside, choose_request, objects_to_dra
                 return
 
         if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
-            stage_card_to_play(gs, x, y, check_if_inside)
+            stage_card_to_play(gs, x, y)
 
         elif button == pyglet.window.mouse.LEFT and len(gs.my_move) == 1 and 'J' in gs.my_move[0]:
-            choose_request(gs, x, y, gs.value_box)
+            gs.choose_request(x, y, 'values')
 
         elif button == pyglet.window.mouse.LEFT and len(gs.my_move) == 1 and 'A' in gs.my_move[0]:
-            choose_request(gs, x, y, gs.color_box)
+            gs.choose_request(x, y, 'colors')
 
         if button == pyglet.window.mouse.RIGHT:
-            prepare_move_to_send(gs, objects_to_draw)
+            prepare_move_to_send(gs)
 
     return functor
 
 
-def stage_card_to_play(gs, x, y, check_if_inside):
+def stage_card_to_play(gs, x, y):
     hand_0_x, hand_0_y = gs.coord['hand_0_x'], gs.coord['hand_0_y']
     candidates = {}
     for index, card in enumerate(gs.draw_hand):
-        if check_if_inside(x, y, card):
+        if gs.check_if_inside(x, y, card):
             distance = round(100 * abs(x - card.x + hand_0_x) + abs(y - card.y))
             name = gs.hand[index]
             name = f'{name[0]} {name[1]}'
@@ -62,7 +62,7 @@ def stage_card_to_play(gs, x, y, check_if_inside):
             gs.to_play.remove(chosen['name'])
 
 
-def prepare_move_to_send(gs, objects_to_draw):
+def prepare_move_to_send(gs):
     move = ''
     for card in gs.to_play:
         move += f'{card}, '
@@ -83,21 +83,21 @@ def prepare_move_to_send(gs, objects_to_draw):
                 if gs.lied_card is not None:
                     gs.table.append(gs.lied_card)
                 gs.lied_card = [card[index - 1], card[index]]
-        objects_to_draw(gs)
+        gs.objects_to_draw()
         wait_label = pyglet.text.Label(text='Wait for others...', x=gs.screen.width / 4, y=gs.screen.height / 2,
                                        bold=True, color=color, font_size=70)
         gs.draw_objects.append(wait_label)
 
 
-def register_game_events(gs, check_if_inside, choose_request, objects_to_draw):
+def register_game_events(gs):
     @gs.game_window.event
     def on_draw():
         on_draw_factory(gs)()
 
     @gs.game_window.event
     def on_mouse_motion(x, y, dx, dy):
-        on_mouse_motion_factory(gs, check_if_inside)(x, y, dx, dy)
+        on_mouse_motion_factory(gs)(x, y, dx, dy)
 
     @gs.game_window.event
     def on_mouse_release(x, y, button, modifiers):
-        on_mouse_release_factory(gs, check_if_inside, choose_request, objects_to_draw)(x, y, button, modifiers)
+        on_mouse_release_factory(gs)(x, y, button, modifiers)

@@ -48,6 +48,46 @@ class GameState:
             "Enter COLOR of requested cards:"
         ]
 
+    @staticmethod
+    def check_if_inside(x, y, obj):
+        left_border = obj.x - obj.width / 2
+        right_border = obj.x + obj.width / 2
+        upper_border = obj.y + obj.height / 2
+        bottom_border = obj.y - obj.height / 2
+        if left_border <= x <= right_border and bottom_border <= y <= upper_border:
+            return True
+        return False
+
+    def choose_request(self, x, y, request='colors'):
+        candidates = {}
+        height = self.screen.height / 1.8
+        request_box = self.color_box
+        if request == 'values':
+            request_box = self.value_box
+        for name, card in request_box.items():
+            if self.check_if_inside(x, y, card):
+                distance = round(100 * abs(x - card.x) + abs(y - card.y))
+                candidates[distance] = {'name': name, 'image': card}
+        if len(candidates) > 0:
+            chosen = candidates[min(candidates.keys())]
+            if chosen['image'].y == height and len(self.to_play) == 0:
+                chosen['image'].y = height + chosen['image'].y / 3
+                self.to_play.append(chosen['name'])
+            elif chosen['image'].y != height:
+                chosen['image'].y = height
+                self.to_play.remove(chosen['name'])
+
+    def objects_to_draw(self):
+        objects = []
+        draw_players_hand(self, objects)
+        draw_deck_pile(self, objects)
+        draw_table_pile(self, objects)
+        draw_rivals(self, objects)
+        draw_game_state(self, objects)
+        draw_events_data(self, objects)
+        draw_wait_warnings(self, objects)
+        self.draw_objects = objects
+
 
 def load_all_card_images():
     colors = 'hearts tiles clovers pikes'.split()
@@ -72,16 +112,6 @@ def resize_center_card_image(image, screen_height, ratio=5):
     return ret_image
 
 
-def check_if_inside(x, y, obj):
-    left_border = obj.x - obj.width / 2
-    right_border = obj.x + obj.width / 2
-    upper_border = obj.y + obj.height / 2
-    bottom_border = obj.y - obj.height / 2
-    if left_border <= x <= right_border and bottom_border <= y <= upper_border:
-        return True
-    return False
-
-
 def get_token(gs):
     if gs.access_token == '':
         response = requests.get(f"http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/key")
@@ -92,18 +122,6 @@ def get_token(gs):
             sleep(0.1)
 
     print(f'TOKEN: {gs.access_token}')
-
-
-def objects_to_draw(gs):
-    objects = []
-    draw_players_hand(gs, objects)
-    draw_deck_pile(gs, objects)
-    draw_table_pile(gs, objects)
-    draw_rivals(gs, objects)
-    draw_game_state(gs, objects)
-    draw_events_data(gs, objects)
-    draw_wait_warnings(gs, objects)
-    gs.draw_objects = objects
 
 
 def draw_events_data(gs, objects):
@@ -302,7 +320,7 @@ def data_update(gs):
         gs.requested_value = state['requested_value']
         gs.requested_color = state['requested_color']
         gs.outputs = state['outputs']
-    objects_to_draw(gs)
+    gs.objects_to_draw()
     print(f'After all: {datetime.now() - snap}')
 
 
@@ -349,23 +367,6 @@ def switch_send_flag(gs):
         gs.ready_to_send = True
 
 
-def choose_request(gs, x, y, request_box):
-    candidates = {}
-    height = gs.screen.height / 1.8
-    for name, card in request_box.items():
-        if check_if_inside(x, y, card):
-            distance = round(100 * abs(x - card.x) + abs(y - card.y))
-            candidates[distance] = {'name': name, 'image': card}
-    if len(candidates) > 0:
-        chosen = candidates[min(candidates.keys())]
-        if chosen['image'].y == height and len(gs.to_play) == 0:
-            chosen['image'].y = height + chosen['image'].y / 3
-            gs.to_play.append(chosen['name'])
-        elif chosen['image'].y != height:
-            chosen['image'].y = height
-            gs.to_play.remove(chosen['name'])
-
-
 def calculate_zero_coordinates(gs):
     screen = gs.screen
     gs.coord['hand_0_x'] = screen.width / 15.5
@@ -387,7 +388,7 @@ def create_game(gs):
     get_token(gs)
     data_update(gs)
     generate_request_choose_boxes(gs)
-    game_wnd.register_game_events(gs, check_if_inside, choose_request, objects_to_draw)
+    game_wnd.register_game_events(gs)
     pyglet.clock.schedule_interval(update, 1 / 10, gs)
     gs.game_started = False
 
@@ -400,7 +401,7 @@ def create_menu(gs):
     create_menu_labels(gs)
     gs.access_token = ''
     gs.last_raw_state = None
-    menu_wnd.register_menu_events(gs, check_if_inside)
+    menu_wnd.register_menu_events(gs)
     pyglet.clock.schedule_interval(update, 1 / 120, gs)
     gs.game_finished = False
 

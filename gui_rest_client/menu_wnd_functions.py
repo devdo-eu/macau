@@ -76,10 +76,10 @@ def on_draw_factory(gs):
     return functor
 
 
-def on_mouse_motion_factory(gs, check_if_inside):
+def on_mouse_motion_factory(gs):
     def functor(x, y, _dx, _dy):
         for obj in gs.draw_objects:
-            if type(obj) is pyglet.shapes.Rectangle and check_if_inside(x, y, obj):
+            if type(obj) is pyglet.shapes.Rectangle and gs.check_if_inside(x, y, obj):
                 distance = round(100 * abs(x - obj.x) + abs(y - obj.y))
                 print(distance)
     return functor
@@ -98,16 +98,16 @@ def on_text_factory(active_edit):
     return functor
 
 
-def on_mouse_release_factory(gs, check_if_inside):
+def on_mouse_release_factory(gs):
     def functor(x, y, button, _modifiers):
         gs.active_edit = None
         if button == pyglet.window.mouse.LEFT and len(gs.my_move) == 0:
-            candidates = find_pointed_edits(gs, x, y, check_if_inside)
+            candidates = find_pointed_edits(gs, x, y, gs.check_if_inside)
             if len(candidates) > 0:
                 gs.active_edit = candidates[min(candidates.keys())]
                 gs.active_edit.color = (0, 0, 255)
                 for obj in gs.draw_objects:
-                    if type(obj) is pyglet.text.Label and check_if_inside(obj.x, obj.y, gs.active_edit):
+                    if type(obj) is pyglet.text.Label and gs.check_if_inside(obj.x, obj.y, gs.active_edit):
                         gs.active_edit = obj
                         break
 
@@ -133,7 +133,7 @@ def find_pointed_edits(gs, x, y, check_if_inside):
     return candidates
 
 
-def register_menu_events(gs, check_if_inside):
+def register_menu_events(gs):
     @gs.menu_window.event
     def on_key_release(symbol, modifiers):
         on_key_release_factory(gs)(symbol, modifiers)
@@ -144,11 +144,11 @@ def register_menu_events(gs, check_if_inside):
 
     @gs.menu_window.event
     def on_mouse_motion(x, y, dx, dy):
-        on_mouse_motion_factory(gs, check_if_inside)(x, y, dx, dy)
+        on_mouse_motion_factory(gs)(x, y, dx, dy)
 
     @gs.menu_window.event
     def on_mouse_release(x, y, button, modifiers):
-        on_mouse_release_factory(gs, check_if_inside)(x, y, button, modifiers)
+        on_mouse_release_factory(gs)(x, y, button, modifiers)
 
 
 def switch_windows(gs):

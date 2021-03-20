@@ -1,6 +1,6 @@
 import gui_rest_client.game_wnd_functions as game_wnd
-from gui_rest_client.macau_gui_cli import check_if_inside
-from gui_rest_client.macau_gui_cli import GameState
+from gui_rest_client.macau_gui_cli import GameState, load_all_card_images
+from gui_rest_client.macau_gui_cli import build_resources_path, calculate_zero_coordinates
 import pytest
 import pyglet
 
@@ -67,7 +67,7 @@ def test_on_draw_factory(setup):
 
 def test_on_mouse_motion_factory(setup):
     setup.draw_hand = [DrawableMock(0, 0, 100, 100), DrawableMock(50, 50, 100, 100)]
-    on_mouse_motion = game_wnd.on_mouse_motion_factory(setup, check_if_inside)
+    on_mouse_motion = game_wnd.on_mouse_motion_factory(setup)
     on_mouse_motion(300, 300, 10, 10)
     on_mouse_motion(150, 150, 10, 10)
     on_mouse_motion(100, 100, 10, 10)
@@ -76,19 +76,21 @@ def test_on_mouse_motion_factory(setup):
 
 
 def test_register_game_events(setup):
-    game_wnd.register_game_events(setup, check_if_inside, choose_request_mock, check_if_inside)
+    game_wnd.register_game_events(setup)
     assert len(setup.game_window.event_func) == 3
 
 
 def test_on_mouse_release_factory(setup):
+    pyglet.resource.path = [build_resources_path()]
+    pyglet.resource.reindex()
+    setup.card_images = load_all_card_images()
+    calculate_zero_coordinates(setup)
     setup.coord['hand_0_x'], setup.coord['hand_0_y'] = 0, 50
     hand_y = setup.coord['hand_0_y']
-    setup.draw_hand = [DrawableMock(0, 0, 100, 100), DrawableMock(50, 0, 100, 100),
-                       DrawableMock(100, 0, 100, 100)]
+    setup.draw_hand = [DrawableMock(0, 0, 100, 100), DrawableMock(50, 0, 100, 100), DrawableMock(100, 0, 100, 100)]
     setup.hand = [['hearts', '6'], ['pikes', '10'], ['clovers', 'J']]
     setup.draw_objects = [pyglet.text.Label('You won the game!')]
-    on_mouse_release = game_wnd.on_mouse_release_factory(setup, check_if_inside,
-                                                         choose_request_mock, objects_to_draw_mock)
+    on_mouse_release = game_wnd.on_mouse_release_factory(setup)
 
     assert not setup.game_finished
     on_mouse_release(300, 300, pyglet.window.mouse.LEFT, None)
@@ -120,10 +122,9 @@ def test_on_mouse_release_factory(setup):
     assert len(setup.to_play) == 1
 
     setup.my_move = []
+    setup.to_play = []
     setup.hand = [['hearts', '6'], ['pikes', '10'], ['clovers', 'J']]
-    on_mouse_release(25, hand_y+25, pyglet.window.mouse.LEFT, None)
-    assert len(setup.to_play) == 0
-
+    setup.draw_hand = [DrawableMock(0, 0, 100, 100), DrawableMock(50, 0, 100, 100), DrawableMock(100, 0, 100, 100)]
     on_mouse_release(75, hand_y, pyglet.window.mouse.LEFT, None)
     assert len(setup.to_play) == 1
     assert setup.to_play[0] == 'pikes 10'
@@ -142,13 +143,16 @@ def test_on_mouse_release_factory(setup):
 
 
 def test_on_mouse_release_factory_with_jacks(setup):
+    pyglet.resource.path = [build_resources_path()]
+    pyglet.resource.reindex()
+    setup.card_images = load_all_card_images()
+    calculate_zero_coordinates(setup)
     setup.coord['hand_0_x'], setup.coord['hand_0_y'] = 0, 50
     hand_y = setup.coord['hand_0_y']
     setup.draw_hand = [DrawableMock(0, 0, 100, 100)]
     setup.hand = [['clovers', 'J']]
-    setup.value_box = {'10': DrawableMock(200, 200, 100, 100)}
-    on_mouse_release = game_wnd.on_mouse_release_factory(setup, check_if_inside,
-                                                         choose_request_mock, objects_to_draw_mock)
+    setup.value_box = {'10': DrawableMock(200, 450, 100, 100)}
+    on_mouse_release = game_wnd.on_mouse_release_factory(setup)
     on_mouse_release(25, hand_y, pyglet.window.mouse.LEFT, None)
     assert len(setup.to_play) == 1
     assert setup.to_play[0] == 'clovers J'
@@ -160,18 +164,26 @@ def test_on_mouse_release_factory_with_jacks(setup):
     assert len(setup.to_play) == 0
     assert setup.my_move == ['clovers J']
 
-    on_mouse_release(225, 225, pyglet.window.mouse.LEFT, None)
+    on_mouse_release(275, 500, pyglet.window.mouse.LEFT, None)
+    assert len(setup.to_play) == 1
+    assert setup.to_play[0] == '10'
+
+    on_mouse_release(200, 200, pyglet.window.mouse.RIGHT, None)
+    assert len(setup.my_move) == 2
     assert setup.my_move == ['clovers J', '10']
 
 
 def test_on_mouse_release_factory_with_aces(setup):
+    pyglet.resource.path = [build_resources_path()]
+    pyglet.resource.reindex()
+    setup.card_images = load_all_card_images()
+    calculate_zero_coordinates(setup)
     setup.coord['hand_0_x'], setup.coord['hand_0_y'] = 0, 50
     hand_y = setup.coord['hand_0_y']
     setup.draw_hand = [DrawableMock(0, 0, 100, 100)]
     setup.hand = [['tiles', 'A']]
-    setup.color_box = {'hearts': DrawableMock(200, 200, 100, 100)}
-    on_mouse_release = game_wnd.on_mouse_release_factory(setup, check_if_inside,
-                                                         choose_request_mock, objects_to_draw_mock)
+    setup.color_box = {'hearts': DrawableMock(200, 450, 100, 100)}
+    on_mouse_release = game_wnd.on_mouse_release_factory(setup)
     on_mouse_release(25, hand_y, pyglet.window.mouse.LEFT, None)
     assert len(setup.to_play) == 1
     assert setup.to_play[0] == 'tiles A'
@@ -183,5 +195,10 @@ def test_on_mouse_release_factory_with_aces(setup):
     assert len(setup.to_play) == 0
     assert setup.my_move == ['tiles A']
 
-    on_mouse_release(225, 225, pyglet.window.mouse.LEFT, None)
+    on_mouse_release(275, 500, pyglet.window.mouse.LEFT, None)
+    assert len(setup.to_play) == 1
+    assert setup.to_play[0] == 'hearts'
+
+    on_mouse_release(200, 200, pyglet.window.mouse.RIGHT, None)
+    assert len(setup.my_move) == 2
     assert setup.my_move == ['tiles A', 'hearts']

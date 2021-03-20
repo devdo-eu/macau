@@ -1,5 +1,5 @@
 import gui_rest_client.menu_wnd_functions as menu_wnd
-from gui_rest_client.macau_gui_cli import GameState, build_resources_path, check_if_inside
+from gui_rest_client.macau_gui_cli import GameState, build_resources_path
 import pytest
 import pyglet
 import uvicorn
@@ -98,7 +98,7 @@ def helper_edit_deselect_all(objects):
 def test_on_mouse_release_factory(setup):
     setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:8000')
     setup.draw_objects += helper_edit_create(0, 300, 'Your Name', 'John')
-    on_mouse_release = menu_wnd.on_mouse_release_factory(setup, check_if_inside)
+    on_mouse_release = menu_wnd.on_mouse_release_factory(setup)
     on_mouse_release(500, 500, pyglet.window.mouse.LEFT, None)
     on_mouse_release(50, 250, pyglet.window.mouse.LEFT, None)
     on_mouse_release(25, 50, pyglet.window.mouse.LEFT, None)
@@ -106,6 +106,12 @@ def test_on_mouse_release_factory(setup):
 
 def test_on_key_release_factory(setup, server):
     assert server is None
+    not_created_id = 0
+    while True:
+        response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
+        if response.status_code == 404:
+            break
+        not_created_id += 1
     setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:8000')
     setup.draw_objects += helper_edit_create(0, 0, 'Your Name', 'John')
     setup.draw_objects += helper_edit_create(0, 0, 'Number of Cards', '7')
@@ -115,15 +121,15 @@ def test_on_key_release_factory(setup, server):
     helper_edit_select(setup.draw_objects)
     on_key_release = menu_wnd.on_key_release_factory(setup)
     on_key_release(pyglet.window.key.C, None)
-    response = requests.get('http://127.0.0.1:8000/macau/0/state')
+    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
     assert response.status_code == 404
     on_key_release(pyglet.window.key.J, None)
-    response = requests.get('http://127.0.0.1:8000/macau/0/state')
+    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
     assert response.status_code == 404
 
     helper_edit_deselect_all(setup.draw_objects)
     on_key_release(pyglet.window.key.C, None)
-    response = requests.get('http://127.0.0.1:8000/macau/0/state')
+    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
     assert response.status_code == 200
     assert response.json()['status'] == 'OK'
     state = response.json()['state']
@@ -131,21 +137,21 @@ def test_on_key_release_factory(setup, server):
     assert 'John' in state['waiting_for']
     assert 'Edward' in state['waiting_for']
     assert state['cards_in_deck'] <= 52 - 7 - 7 - 1
-    assert setup.game_id == 0
+    assert setup.game_id == not_created_id
     assert setup.game_started
 
     setup.game_started = False
     helper_edit_edit(setup.draw_objects, 'Your Name', 'Tommy')
     helper_edit_edit(setup.draw_objects, 'Rival A', 'Smith')
     on_key_release(pyglet.window.key.C, None)
-    response = requests.get('http://127.0.0.1:8000/macau/1/state')
+    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id + 1}/state')
     assert response.status_code == 200
     assert response.json()['status'] == 'OK'
     state = response.json()['state']
     assert len(state['waiting_for']) == 2
     assert 'Tommy' in state['waiting_for']
     assert 'Smith' in state['waiting_for']
-    assert setup.game_id == 1
+    assert setup.game_id == not_created_id + 1
     assert setup.game_started
 
     setup.game_started = False
@@ -170,7 +176,7 @@ def test_on_key_release_factory(setup, server):
 
 
 def test_register_menu_event(setup):
-    menu_wnd.register_menu_events(setup, check_if_inside)
+    menu_wnd.register_menu_events(setup)
     assert len(setup.menu_window.event_func) == 4
 
 
@@ -202,7 +208,7 @@ def test_on_draw_factory(setup):
 def test_on_mouse_motion_factory(setup):
     setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:8000')
     setup.draw_objects += helper_edit_create(0, 300, 'Your Name', 'John')
-    on_mouse_motion = menu_wnd.on_mouse_motion_factory(setup, check_if_inside)
+    on_mouse_motion = menu_wnd.on_mouse_motion_factory(setup)
     on_mouse_motion(500, 500, 10, 10)
     on_mouse_motion(200, 300, 10, 10)
     on_mouse_motion(50, 300, 10, 10)
