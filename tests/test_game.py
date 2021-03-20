@@ -451,6 +451,58 @@ async def test_play_move_pack_4(game_state):
 
 
 @pytest.mark.asyncio
+async def test_play_move_pack_mundane_kings(game_state):
+    gs = game_state
+    gs.players['One'].hand = [('tiles', 'K'), ('tiles', 'K'), ('clovers', 'K')]
+    gs.lied_card = ('tiles', '10')
+    gs.players['One'].input_foo = helper_factory(['tiles K, tiles K, clovers K'])
+    deck_len = len(gs.deck)
+
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
+    assert len(gs.deck) == deck_len
+    assert len(gs.table) == 3
+    assert ('tiles', '10') in gs.table
+    assert ('tiles', 'K') in gs.table
+    assert ('tiles', 'K') in gs.table
+    assert len(gs.players['One'].hand) == 0
+    assert gs.lied_card == ('clovers', 'K')
+
+
+@pytest.mark.asyncio
+async def test_play_move_pack_active_kings(game_state):
+    gs = game_state
+    gs.players['One'].hand = [('hearts', 'K'), ('pikes', 'K'), ('hearts', 'K')]
+    gs.lied_card = ('hearts', '10')
+    gs.players['One'].input_foo = helper_factory(['hearts K, pikes K, hearts K'])
+    deck_len = len(gs.deck)
+
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
+    assert len(gs.deck) == deck_len
+    assert len(gs.table) == 3
+    assert ('hearts', '10') in gs.table
+    assert ('hearts', 'K') in gs.table
+    assert ('pikes', 'K') in gs.table
+    assert len(gs.players['One'].hand) == 0
+    assert gs.lied_card == ('hearts', 'K')
+    assert gs.cards_to_take == 15
+
+
+@pytest.mark.asyncio
+async def test_forbidden_play_move_pack_kings(game_state):
+    gs = game_state
+    gs.players['One'].hand = [('tiles', 'K'), ('pikes', 'K'), ('hearts', 'K')]
+    gs.lied_card = ('tiles', '10')
+    gs.players['One'].input_foo = helper_factory(['tiles K, pikes K, hearts K'])
+    deck_len = len(gs.deck)
+
+    gs.players['One'], gs = await game.play_move(gs.players['One'], gs)
+    assert len(gs.deck) == deck_len - 1
+    assert len(gs.table) == 0
+    assert len(gs.players['One'].hand) == 4
+    assert gs.lied_card == ('tiles', '10')
+
+
+@pytest.mark.asyncio
 async def test_play_round_mundane_moves_logic():
     gs = game.GameState()
     gs.deck, gs.table, gs.players = game.prepare_game(['One', 'Two'])
