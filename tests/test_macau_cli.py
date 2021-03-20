@@ -49,15 +49,17 @@ def server():
 
 def test_start_server(server):
     assert server is None
+    sleep(2)
 
 
 def test_find_server(server):
     assert server is None
-    host = client.find_server(address, input, print)
-    assert host == address
 
     def helper(_):
         return address
+
+    host = client.find_server(address, helper, print)
+    assert host == address
 
     host = client.find_server('localhost:1234', helper, print)
     assert host == address
