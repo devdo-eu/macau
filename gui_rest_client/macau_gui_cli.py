@@ -10,6 +10,10 @@ import gui_rest_client.menu_wnd_functions as menu_wnd
 import gui_rest_client.game_wnd_functions as game_wnd
 
 
+class Card(pyglet.sprite.Sprite):
+    zero_x = 0
+
+
 class GameState:
     def __init__(self):
         self.menu_window = None
@@ -273,14 +277,17 @@ def draw_deck_pile(gs, objects):
 
 
 def draw_players_hand(gs, objects):
-    num_cards = len(gs.hand)
+    ratio = len(gs.hand) / 6
+    if len(gs.hand) < 9:
+        ratio = 1.5
     hand_0_x, hand_0_y = gs.coord['hand_0_x'], gs.coord['hand_0_y']
     gs.draw_hand = []
     for index, card in enumerate(gs.hand):
         card_name = f'{card[0]}_{card[1]}.png'
         card_image = resize_center_card_image(gs.card_images[card_name], gs.screen.height)
-        pan = index * (card_image.width / (num_cards / 6))
-        card = pyglet.sprite.Sprite(img=card_image, x=hand_0_x + pan, y=hand_0_y)
+        pan = index * (card_image.width / ratio)
+        card = Card(img=card_image, x=hand_0_x + pan, y=hand_0_y)
+        card.zero_x = card.x
         gs.draw_hand.append(card)
         objects.append(card)
 

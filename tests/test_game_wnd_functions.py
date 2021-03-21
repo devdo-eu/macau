@@ -30,6 +30,7 @@ class DrawableMock:
         self.y = zero_y + height / 2
         self.width = width
         self.height = height
+        self.zero_x = self.x
 
     def draw(self):
         self.visible = True
@@ -205,3 +206,15 @@ def test_on_mouse_release_factory_with_aces(setup):
     on_mouse_release(200, 200, pyglet.window.mouse.RIGHT, None)
     assert len(setup.my_move) == 2
     assert setup.my_move == ['tiles A', 'hearts']
+
+
+def test_move_cards_aside(setup):
+    setup.draw_hand = [DrawableMock(0, 0, 100, 100), DrawableMock(30, 0, 100, 100), DrawableMock(60, 0, 100, 100),
+                       DrawableMock(90, 0, 100, 100), DrawableMock(120, 0, 100, 100), DrawableMock(150, 0, 100, 100)]
+    game_wnd.move_cards_aside(setup, setup.draw_hand[2])
+    assert setup.draw_hand[0].x == 50
+    assert setup.draw_hand[1].x == 80
+    assert setup.draw_hand[2].x == 110
+    assert setup.draw_hand[3].x == 140 + setup.draw_hand[3].width * 0.17
+    assert setup.draw_hand[4].x == 170 + setup.draw_hand[4].width * 0.17
+    assert setup.draw_hand[5].x == 200 + setup.draw_hand[5].width * 0.17

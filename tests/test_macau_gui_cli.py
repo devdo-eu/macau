@@ -279,15 +279,15 @@ def test_draw_players_hand(entry_setup):
     assert len(draw) == len(gs.hand)
     assert len(gs.draw_hand) == len(gs.hand)
     assert round(draw[0].x) == 103 and round(draw[0].y) == 145
-    assert round(draw[2].x) == 616 and round(draw[2].y) == 145
+    assert round(draw[2].x) == 274 and round(draw[2].y) == 145
 
     gs.hand = gs.hand * 2
     draw = []
     gui.draw_players_hand(gs, draw)
     assert len(draw) == 6
     assert round(draw[0].x) == 103
-    assert round(draw[2].x) == 359
-    assert round(draw[5].x) == 744
+    assert round(draw[2].x) == 274
+    assert round(draw[5].x) == 530
 
     gs.hand = gs.hand * 4
     draw = []
