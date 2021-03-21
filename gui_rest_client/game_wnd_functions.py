@@ -13,10 +13,26 @@ def on_draw_factory(gs):
 def on_mouse_motion_factory(gs):
     def functor(x, y, _dx, _dy):
         for card in gs.draw_hand:
+            card.x = card.zero_x
+        to_be_seen = None
+        for card in gs.draw_hand:
             if gs.check_if_inside(x, y, card):
                 distance = round(100 * abs(x - card.x) + abs(y - card.y))
+                to_be_seen = card
                 print(distance)
+
+        if to_be_seen is not None and len(gs.draw_hand) > 30:
+            move_cards_aside(gs, to_be_seen)
     return functor
+
+
+def move_cards_aside(gs, to_be_seen):
+    move_next = False
+    for card in gs.draw_hand:
+        if move_next:
+            card.x = card.x + card.width * 0.17
+        elif card == to_be_seen:
+            move_next = True
 
 
 def on_mouse_release_factory(gs):
