@@ -163,15 +163,18 @@ def draw_wait_warnings(gs, objects):
         pan_y = gs.screen.height / 2
         index = 0
         data = [
-            ['Wait for others...', gs.screen.width / 4, (210, 105, 30, 255), 70],
+            ['Wait for others...', gs.screen.width / 4, (210, 105, 30, 255), 50],
             [f'You lost the game! {gs.outputs[-1]}!', gs.screen.width / 20, (200, 60, 30, 255), 50],
-            ['You won the game!', gs.screen.width / 4, (40, 100, 200, 255), 70],
+            ['You won the game!', gs.screen.width / 4, (40, 100, 200, 255), 50],
         ]
         if 'Game won' in gs.outputs[-1] and gs.my_name not in gs.outputs[-1]:
             index = 1
         elif 'Game won' in gs.outputs[-1]:
             index = 2
         data = data[index]
+        background = pyglet.shapes.Rectangle(0, pan_y-30, gs.screen.width, 110, (0, 0, 0))
+        background.opacity = 220
+        objects.append(background)
         label = pyglet.text.Label(text=data[0], x=data[1], y=pan_y, bold=True, color=data[2], font_size=data[3])
         objects.append(label)
 
