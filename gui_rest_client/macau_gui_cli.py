@@ -336,6 +336,9 @@ def data_update(gs):
 
 
 def update(_dt, gs):
+    if gs.game_window.has_exit and gs.menu_window.has_exit:
+        exit(0)
+
     if gs.game_started:
         create_game(gs)
         return
@@ -400,7 +403,7 @@ def create_game(gs):
     data_update(gs)
     generate_request_choose_boxes(gs)
     game_wnd.register_game_events(gs)
-    pyglet.clock.schedule_interval(update, 1 / 10, gs)
+    pyglet.clock.schedule_interval(update, 1 / 5, gs)
     gs.game_started = False
 
 
@@ -413,7 +416,7 @@ def create_menu(gs):
     gs.access_token = ''
     gs.last_raw_state = None
     menu_wnd.register_menu_events(gs)
-    pyglet.clock.schedule_interval(update, 1 / 120, gs)
+    pyglet.clock.schedule_interval(update, 1 / 60, gs)
     gs.game_finished = False
 
 

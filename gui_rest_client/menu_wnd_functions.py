@@ -150,6 +150,10 @@ def register_menu_events(gs):
     def on_mouse_release(x, y, button, modifiers):
         on_mouse_release_factory(gs)(x, y, button, modifiers)
 
+    @gs.menu_window.event
+    def on_close():
+        gs.game_window.has_exit = gs.menu_window.has_exit = True
+
 
 def switch_windows(gs):
     if gs.menu_window.visible:

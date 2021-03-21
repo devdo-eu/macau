@@ -101,3 +101,9 @@ def register_game_events(gs):
     @gs.game_window.event
     def on_mouse_release(x, y, button, modifiers):
         on_mouse_release_factory(gs)(x, y, button, modifiers)
+
+    @gs.game_window.event
+    def on_close():
+        gs.game_finished = True
+        gs.game_window.has_exit = False
+        return True
