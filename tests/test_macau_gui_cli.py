@@ -560,8 +560,9 @@ def test_draw_wait_warnings(entry_setup):
     gs.outputs = ['Tommy move now.']
     draw = []
     gui.draw_wait_warnings(gs, draw)
-    assert len(draw) == 1
-    assert draw[0].text == 'Wait for others...'
+    assert len(draw) == 2
+    assert type(draw[0]) is pyglet.shapes.Rectangle
+    assert draw[1].text == 'Wait for others...'
 
     gs.outputs = [gs.questions[0]]
     draw = []
@@ -571,14 +572,16 @@ def test_draw_wait_warnings(entry_setup):
     gs.outputs = ['Game won by Tommy']
     draw = []
     gui.draw_wait_warnings(gs, draw)
-    assert len(draw) == 1
-    assert draw[0].text == 'You lost the game! Game won by Tommy!'
+    assert len(draw) == 2
+    assert type(draw[0]) is pyglet.shapes.Rectangle
+    assert draw[1].text == 'You lost the game! Game won by Tommy!'
 
     gs.outputs = ['Game won by John']
     draw = []
     gui.draw_wait_warnings(gs, draw)
-    assert len(draw) == 1
-    assert draw[0].text == 'You won the game!'
+    assert len(draw) == 2
+    assert type(draw[0]) is pyglet.shapes.Rectangle
+    assert draw[1].text == 'You won the game!'
 
 
 def test_objects_to_draw(entry_setup):
@@ -597,7 +600,7 @@ def test_objects_to_draw(entry_setup):
     gui.calculate_zero_coordinates(gs)
     gs.objects_to_draw()
     assert round(gs.coord['info_0_y']) == 398
-    assert len(gs.draw_objects) == 9
+    assert len(gs.draw_objects) == 10
     assert gs.draw_objects[-1].text == 'Wait for others...'
 
 
