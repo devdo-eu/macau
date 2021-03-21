@@ -397,9 +397,7 @@ def test_draw_rivals(entry_setup):
     draw, gs.outputs = [], ['Tommy has move.']
     gui.draw_rivals(gs, draw)
     assert len(draw) == 2 + 2
-    assert len(gs.outputs) == 3
-    assert 'Tommy has macau!' in gs.outputs
-    assert 'Smith has macau!' in gs.outputs
+    assert len(gs.outputs) == 1
 
     gs.rivals = {'Tommy': 7, 'Smith': 7}
     draw = []
@@ -521,18 +519,18 @@ def test_draw_events_data(entry_setup):
     gs.outputs *= 11
     draw = []
     gui.draw_events_data(gs, draw)
-    assert len(draw) == 31
+    assert len(draw) == 29
     assert len(gs.outputs) == 33
     assert type(draw[0]) == pyglet.shapes.Rectangle
-    assert draw[30].color == (255, 255, 255, 255)
-    assert draw[30].y == gs.coord['outputs_0_y'] - 12 * 29
+    assert draw[28].color == (255, 255, 255, 255)
+    assert draw[28].y == gs.coord['outputs_0_y'] - 12 * 27
 
     count = 0
     for label in draw:
         if label.color != (255, 255, 255, 255):
             count += 1
 
-    assert count == 11
+    assert count == 10
 
     gs.outputs = ['John move now.', gs.questions[0], gs.questions[1], gs.questions[2]]
     draw = []
@@ -552,7 +550,7 @@ def test_draw_events_data_macau(entry_setup):
     assert not draw[1].bold
     assert draw[2].color == (210, 105, 30, 255)
     assert not draw[2].bold
-    assert draw[3].color == (10, 0, 100, 255)
+    assert draw[3].color == (30, 30, 100, 255)
     assert draw[3].bold
 
 

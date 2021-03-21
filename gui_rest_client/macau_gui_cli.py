@@ -85,9 +85,9 @@ class GameState:
         objects = []
         draw_deck_pile(self, objects)
         draw_table_pile(self, objects)
-        draw_rivals(self, objects)
         draw_game_state(self, objects)
         draw_events_data(self, objects)
+        draw_rivals(self, objects)
         draw_players_hand(self, objects)
         draw_wait_warnings(self, objects)
         self.draw_objects = objects
@@ -130,14 +130,8 @@ def get_token(gs):
 
 def draw_events_data(gs, objects):
     outputs_0_x, outputs_0_y = gs.coord['outputs_0_x'], gs.coord['outputs_0_y']
-    if len(gs.outputs) >= 30:
-        outputs = copy(gs.outputs[-30:])
-    else:
-        outputs = copy(gs.outputs)
-    pan_y = outputs_0_y - (12 * 27)
-    background = pyglet.shapes.Rectangle(outputs_0_x - 18, pan_y, 430, 12 * 29, (0, 0, 0))
-    background.opacity = 90
-    objects.append(background)
+    outputs = prepare_events_data(gs, objects)
+    maximum_message_length = 66
 
     for line in outputs:
         show_line = True
@@ -145,8 +139,8 @@ def draw_events_data(gs, objects):
             if question in line:
                 show_line = False
                 break
-        if len(line) > 56:
-            line = line[:54] + '(...)'
+        if len(line) > maximum_message_length:
+            line = line[:(maximum_message_length-2)] + '(...)'
 
         if show_line:
             bold = False
@@ -154,12 +148,33 @@ def draw_events_data(gs, objects):
             if gs.my_name in line:
                 color = (210, 105, 30, 255)
             elif 'macau' in line:
-                color = (10, 0, 100, 255)
+                color = (30, 30, 100, 255)
                 bold = True
 
             label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9, bold=bold)
             objects.append(label)
             outputs_0_y -= 12
+
+
+def prepare_events_data(gs, objects):
+    outputs_0_x, outputs_0_y = gs.coord['outputs_0_x'], gs.coord['outputs_0_y']
+    report_macau = []
+    for name, num_of_cards in gs.rivals.items():
+        if num_of_cards == 1:
+            report_macau.append(f"{name} has macau!")
+    if len(gs.outputs) > 0:
+        last = [gs.outputs.pop()]
+        gs.outputs = gs.outputs + report_macau + last
+
+    if len(gs.outputs) >= 28:
+        outputs = copy(gs.outputs[-28:])
+    else:
+        outputs = copy(gs.outputs)
+    pan_y = outputs_0_y - (12 * 27)
+    background = pyglet.shapes.Rectangle(outputs_0_x - 18, pan_y, 430, 12 * 29, (0, 0, 0))
+    background.opacity = 90
+    objects.append(background)
+    return outputs
 
 
 def draw_wait_warnings(gs, objects):
@@ -173,9 +188,9 @@ def draw_wait_warnings(gs, objects):
         pan_y = gs.screen.height / 2
         index = 0
         data = [
-            ['Wait for others...', gs.screen.width / 4, (210, 105, 30, 255), 50],
-            [f'You lost the game! {gs.outputs[-1]}!', gs.screen.width / 20, (200, 60, 30, 255), 50],
-            ['You won the game!', gs.screen.width / 4, (40, 100, 200, 255), 50],
+            ['Wait for others...', gs.screen.width / 3, (210, 105, 30, 255), 50, 120],
+            [f'You lost the game! {gs.outputs[-1]}!', gs.screen.width / 20, (200, 60, 30, 255), 50, 220],
+            ['You won the game!', gs.screen.width / 4, (40, 100, 200, 255), 50, 220],
         ]
         if 'Game won' in gs.outputs[-1] and gs.my_name not in gs.outputs[-1]:
             index = 1
@@ -183,7 +198,7 @@ def draw_wait_warnings(gs, objects):
             index = 2
         data = data[index]
         background = pyglet.shapes.Rectangle(0, pan_y-30, gs.screen.width, 110, (0, 0, 0))
-        background.opacity = 220
+        background.opacity = data[4]
         objects.append(background)
         label = pyglet.text.Label(text=data[0], x=data[1], y=pan_y, bold=True, color=data[2], font_size=data[3])
         objects.append(label)
@@ -222,10 +237,7 @@ def draw_rivals(gs, objects):
     place_x = place_0_x
     back_image = resize_center_card_image(gs.card_images['back.png'], gs.screen.height)
     label_y = rivals_0_y - back_image.height / 1.4
-    report_macau = []
     for name, num_of_cards in gs.rivals.items():
-        if num_of_cards == 1:
-            report_macau.append(f"{name} has macau!")
         pan_max = (num_of_cards - 1) * (back_image.width / (1 + (num_of_cards * 6 / 3)))
         for num in range(num_of_cards):
             pan = pan_max * (num + 1) / num_of_cards
@@ -236,10 +248,6 @@ def draw_rivals(gs, objects):
         name_label = pyglet.text.Label(text=name, x=pan, y=label_y, bold=True, color=(255, 255, 255, 255), font_size=15)
         objects.append(name_label)
         place_x += place_0_x
-
-    if len(gs.outputs) > 0:
-        last = [gs.outputs.pop()]
-        gs.outputs = gs.outputs + report_macau + last
 
 
 def draw_table_pile(gs, objects):
