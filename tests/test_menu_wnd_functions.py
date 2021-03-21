@@ -85,8 +85,6 @@ def helper_edit_select(objects, index=0):
         if type(obj) is pyglet.shapes.Rectangle and index == 0:
             obj.color = [255, 255, 128]
             return
-        elif type(obj) is pyglet.shapes.Rectangle:
-            index -= 1
 
 
 def helper_edit_deselect_all(objects):
@@ -98,20 +96,18 @@ def helper_edit_deselect_all(objects):
 def test_on_mouse_release_factory(setup):
     setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:8000')
     setup.draw_objects += helper_edit_create(0, 300, 'Your Name', 'John')
+    assert len(setup.menu_window.event_func) == 0
     on_mouse_release = menu_wnd.on_mouse_release_factory(setup)
     on_mouse_release(500, 500, pyglet.window.mouse.LEFT, None)
     on_mouse_release(50, 250, pyglet.window.mouse.LEFT, None)
     on_mouse_release(25, 50, pyglet.window.mouse.LEFT, None)
+    assert len(setup.menu_window.event_func) == 3
+    setup.menu_window.event_func[-1]('t')
 
 
 def test_on_key_release_factory(setup, server):
     assert server is None
     not_created_id = 0
-    while True:
-        response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
-        if response.status_code == 404 or not_created_id > 10:
-            break
-        not_created_id += 1
     setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:8000')
     setup.draw_objects += helper_edit_create(0, 0, 'Your Name', 'John')
     setup.draw_objects += helper_edit_create(0, 0, 'Number of Cards', '7')
@@ -174,10 +170,23 @@ def test_on_key_release_factory(setup, server):
     assert setup.access_token == '908945555'
     assert not setup.game_started
 
+    example_label = pyglet.text.Label('Text for example')
+    setup.active_edit = example_label
+    on_key_release(pyglet.window.key.BACKSPACE, None)
+    on_key_release(pyglet.window.key.BACKSPACE, None)
+    on_key_release(pyglet.window.key.BACKSPACE, None)
+    on_key_release(pyglet.window.key.BACKSPACE, None)
+    assert example_label.text == 'Text for exa'
+
 
 def test_register_menu_event(setup):
     menu_wnd.register_menu_events(setup)
-    assert len(setup.menu_window.event_func) == 4
+    assert len(setup.menu_window.event_func) == 5
+    setup.menu_window.event_func[0](0, 0)
+    setup.menu_window.event_func[1]()
+    setup.menu_window.event_func[2](0, 0, 0, 0)
+    setup.menu_window.event_func[3](0, 0, 0, 0)
+    setup.menu_window.event_func[4]()
 
 
 def test_on_draw_factory(setup):
@@ -244,3 +253,7 @@ def test_switch_windows(setup):
     assert not setup.menu_window.visible
     assert setup.game_window.visible
     assert len(setup.menu_window.event_func) == 4
+    setup.menu_window.event_func[0](0, 0)
+    setup.menu_window.event_func[1]()
+    setup.menu_window.event_func[2](0, 0, 0, 0)
+    setup.menu_window.event_func[3](0, 0, 0, 0)

@@ -35,16 +35,6 @@ class DrawableMock:
         self.visible = True
 
 
-def objects_to_draw_mock(_):
-    pass
-
-
-def choose_request_mock(_gs, _x, _y, _request_box):
-    for key in _request_box.keys():
-        _gs.my_move.append(key)
-        break
-
-
 @pytest.fixture
 def setup():
     gs = GameState()
@@ -77,7 +67,11 @@ def test_on_mouse_motion_factory(setup):
 
 def test_register_game_events(setup):
     game_wnd.register_game_events(setup)
-    assert len(setup.game_window.event_func) == 3
+    assert len(setup.game_window.event_func) == 4
+    setup.game_window.event_func[0]()
+    setup.game_window.event_func[1](0, 0, 0, 0)
+    setup.game_window.event_func[2](0, 0, 0, 0)
+    setup.game_window.event_func[3]()
 
 
 def test_on_mouse_release_factory(setup):
@@ -106,6 +100,15 @@ def test_on_mouse_release_factory(setup):
 
     setup.game_finished = False
     setup.draw_objects = []
+    on_mouse_release(25, hand_y, pyglet.window.mouse.LEFT, None)
+    assert len(setup.to_play) == 1
+    assert setup.to_play[0] == 'hearts 6'
+    assert len(setup.my_move) == 0
+
+    on_mouse_release(25, hand_y+50, pyglet.window.mouse.LEFT, None)
+    assert len(setup.to_play) == 0
+    assert len(setup.my_move) == 0
+
     on_mouse_release(25, hand_y, pyglet.window.mouse.LEFT, None)
     assert len(setup.to_play) == 1
     assert setup.to_play[0] == 'hearts 6'
