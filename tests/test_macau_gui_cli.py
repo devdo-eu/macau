@@ -389,14 +389,17 @@ def test_draw_table_pile(entry_setup):
 def test_draw_rivals(entry_setup):
     gs = copy(entry_setup)
     gs.rivals = {'Tommy': 0, 'Smith': 0}
-    draw = []
+    draw, gs.outputs = [], []
     gui.draw_rivals(gs, draw)
     assert len(draw) == 2
 
     gs.rivals = {'Tommy': 1, 'Smith': 1}
-    draw = []
+    draw, gs.outputs = [], ['Tommy has move.']
     gui.draw_rivals(gs, draw)
     assert len(draw) == 2 + 2
+    assert len(gs.outputs) == 3
+    assert 'Tommy has macau!' in gs.outputs
+    assert 'Smith has macau!' in gs.outputs
 
     gs.rivals = {'Tommy': 7, 'Smith': 7}
     draw = []
@@ -544,8 +547,11 @@ def test_draw_events_data_macau(entry_setup):
     gui.draw_events_data(gs, draw)
     assert len(draw) == 3
     assert draw[0].color == (210, 105, 30, 255)
+    assert not draw[0].bold
     assert draw[1].color == (210, 105, 30, 255)
-    assert draw[2].color == (245, 45, 10, 255)
+    assert not draw[1].bold
+    assert draw[2].color == (10, 0, 100, 255)
+    assert draw[2].bold
 
 
 def test_draw_wait_warnings(entry_setup):
