@@ -11,13 +11,13 @@ import requests
 import pyglet
 
 
-def serve():
-    uvicorn.run(app)
-
-
 outputs = []
 helper_move = -1
-address = '127.0.0.1:8000'
+address = '127.0.0.1:5000'
+
+
+def serve():
+    uvicorn.run(app, host=address.split(':')[0], port=int(address.split(':')[1]))
 
 
 @pytest.fixture(scope='module')
@@ -609,6 +609,7 @@ def test_objects_to_draw(entry_setup):
 def test_get_token(server, entry_setup):
     assert server is None
     gs = copy(entry_setup)
+    gs.host = address
     gs.my_name = 'John'
     json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
     response = requests.post(f"http://{gs.host}/macau", json=json_data)
@@ -621,6 +622,7 @@ def test_get_token(server, entry_setup):
 def test_data_update(server, entry_setup):
     assert server is None
     gs = copy(entry_setup)
+    gs.host = address
     gs.my_name = 'John'
     json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
     response = requests.post(f"http://{gs.host}/macau", json=json_data)
@@ -673,6 +675,7 @@ def test_switch_send_flag(entry_setup):
 def test_send_player_move(server, entry_setup):
     assert server is None
     gs = copy(entry_setup)
+    gs.host = address
     gs.my_name = 'John'
     json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
     response = requests.post(f"http://{gs.host}/macau", json=json_data)
