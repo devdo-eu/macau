@@ -10,7 +10,7 @@ import requests
 
 
 def serve():
-    uvicorn.run(app)
+    uvicorn.run(app, host="127.0.0.1", port=5000)
 
 
 @pytest.fixture(scope='module')
@@ -108,7 +108,7 @@ def test_on_mouse_release_factory(setup):
 def test_on_key_release_factory(setup, server):
     assert server is None
     not_created_id = 0
-    setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:8000')
+    setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:5000')
     setup.draw_objects += helper_edit_create(0, 0, 'Your Name', 'John')
     setup.draw_objects += helper_edit_create(0, 0, 'Number of Cards', '7')
     setup.draw_objects += helper_edit_create(0, 0, 'Rival A', 'Edward')
@@ -117,15 +117,15 @@ def test_on_key_release_factory(setup, server):
     helper_edit_select(setup.draw_objects)
     on_key_release = menu_wnd.on_key_release_factory(setup)
     on_key_release(pyglet.window.key.C, None)
-    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
+    response = requests.get(f'http://127.0.0.1:5000/macau/{not_created_id}/state')
     assert response.status_code == 404
     on_key_release(pyglet.window.key.J, None)
-    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
+    response = requests.get(f'http://127.0.0.1:5000/macau/{not_created_id}/state')
     assert response.status_code == 404
 
     helper_edit_deselect_all(setup.draw_objects)
     on_key_release(pyglet.window.key.C, None)
-    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id}/state')
+    response = requests.get(f'http://127.0.0.1:5000/macau/{not_created_id}/state')
     assert response.status_code == 200
     assert response.json()['status'] == 'OK'
     state = response.json()['state']
@@ -140,7 +140,7 @@ def test_on_key_release_factory(setup, server):
     helper_edit_edit(setup.draw_objects, 'Your Name', 'Tommy')
     helper_edit_edit(setup.draw_objects, 'Rival A', 'Smith')
     on_key_release(pyglet.window.key.C, None)
-    response = requests.get(f'http://127.0.0.1:8000/macau/{not_created_id + 1}/state')
+    response = requests.get(f'http://127.0.0.1:5000/macau/{not_created_id + 1}/state')
     assert response.status_code == 200
     assert response.json()['status'] == 'OK'
     state = response.json()['state']
@@ -215,7 +215,7 @@ def test_on_draw_factory(setup):
 
 
 def test_on_mouse_motion_factory(setup):
-    setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:8000')
+    setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:5000')
     setup.draw_objects += helper_edit_create(0, 300, 'Your Name', 'John')
     on_mouse_motion = menu_wnd.on_mouse_motion_factory(setup)
     on_mouse_motion(500, 500, 10, 10)
