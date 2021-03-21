@@ -139,13 +139,15 @@ def draw_events_data(gs, objects):
                 break
 
         if show_line:
+            bold = False
             color = (255, 255, 255, 255)
             if gs.my_name in line:
                 color = (210, 105, 30, 255)
             elif 'macau' in line:
-                color = (245, 45, 10, 255)
+                color = (10, 0, 100, 255)
+                bold = True
 
-            label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9)
+            label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9, bold=bold)
             objects.append(label)
             outputs_0_y -= 12
 
@@ -207,7 +209,10 @@ def draw_rivals(gs, objects):
     place_x = place_0_x
     back_image = resize_center_card_image(gs.card_images['back.png'], gs.screen.height)
     label_y = rivals_0_y - back_image.height / 1.4
+    report_macau = []
     for name, num_of_cards in gs.rivals.items():
+        if num_of_cards == 1:
+            report_macau.append(f"{name} has macau!")
         pan_max = (num_of_cards - 1) * (back_image.width / (1 + (num_of_cards * 6 / 3)))
         for num in range(num_of_cards):
             pan = pan_max * (num + 1) / num_of_cards
@@ -218,6 +223,10 @@ def draw_rivals(gs, objects):
         name_label = pyglet.text.Label(text=name, x=pan, y=label_y, bold=True, color=(255, 255, 255, 255), font_size=15)
         objects.append(name_label)
         place_x += place_0_x
+
+    if len(gs.outputs) > 0:
+        last = [gs.outputs.pop()]
+        gs.outputs = gs.outputs + report_macau + last
 
 
 def draw_table_pile(gs, objects):
@@ -455,9 +464,9 @@ def create_menu_edits(gs):
     create_edit(gs, 'Host Address:', 1, -5, 5, gs.host)
     create_edit(gs, 'Your Name:', 1, -4, 5, gs.my_name)
     create_edit(gs, 'Number of Cards:', 1, 3, 7, '5')
-    create_edit(gs, 'Game ID:', 21, 3, 7, '0')
-    create_edit(gs, 'Your Token:', 21, 4, 7, '')
-    gs.draw_objects[-1].font_size = 10
+    create_edit(gs, 'Game ID:', 21, 3, 7, str(gs.game_id))
+    create_edit(gs, 'Your Token:', 21, 4, 7, gs.access_token)
+    gs.draw_objects[-1].font_size = 9.5
     rival_name = 'CPU1'
     for index in range(1, 10):
         create_edit(gs, f'Name of {index} Rival:', 1, 4 + index, 7, rival_name)
