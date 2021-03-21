@@ -79,12 +79,12 @@ class GameState:
 
     def objects_to_draw(self):
         objects = []
-        draw_players_hand(self, objects)
         draw_deck_pile(self, objects)
         draw_table_pile(self, objects)
         draw_rivals(self, objects)
         draw_game_state(self, objects)
         draw_events_data(self, objects)
+        draw_players_hand(self, objects)
         draw_wait_warnings(self, objects)
         self.draw_objects = objects
 
@@ -130,6 +130,10 @@ def draw_events_data(gs, objects):
         outputs = copy(gs.outputs[-30:])
     else:
         outputs = copy(gs.outputs)
+    pan_y = outputs_0_y - (12 * 27)
+    background = pyglet.shapes.Rectangle(outputs_0_x - 18, pan_y, 430, 12 * 29, (0, 0, 0))
+    background.opacity = 90
+    objects.append(background)
 
     for line in outputs:
         show_line = True
@@ -137,6 +141,8 @@ def draw_events_data(gs, objects):
             if question in line:
                 show_line = False
                 break
+        if len(line) > 56:
+            line = line[:54] + '(...)'
 
         if show_line:
             bold = False

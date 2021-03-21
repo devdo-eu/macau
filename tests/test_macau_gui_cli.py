@@ -503,40 +503,42 @@ def test_draw_events_data(entry_setup):
     gs.outputs = ['John move now.', 'example info', 'example info']
     draw = []
     gui.draw_events_data(gs, draw)
-    assert len(draw) == 3
-    assert type(draw[0]) == pyglet.text.Label
-    assert draw[0].color == (210, 105, 30, 255)
-    assert draw[0].x == gs.coord['outputs_0_x']
-    assert draw[0].y == gs.coord['outputs_0_y']
-
-    assert draw[1].color == (255, 255, 255, 255)
+    assert len(draw) == 4
+    assert type(draw[0]) == pyglet.shapes.Rectangle
+    assert type(draw[1]) == pyglet.text.Label
+    assert draw[1].color == (210, 105, 30, 255)
     assert draw[1].x == gs.coord['outputs_0_x']
-    assert draw[1].y == gs.coord['outputs_0_y'] - 12
+    assert draw[1].y == gs.coord['outputs_0_y']
 
     assert draw[2].color == (255, 255, 255, 255)
     assert draw[2].x == gs.coord['outputs_0_x']
-    assert draw[2].y == gs.coord['outputs_0_y'] - 12 * 2
+    assert draw[2].y == gs.coord['outputs_0_y'] - 12
+
+    assert draw[3].color == (255, 255, 255, 255)
+    assert draw[3].x == gs.coord['outputs_0_x']
+    assert draw[3].y == gs.coord['outputs_0_y'] - 12 * 2
 
     gs.outputs *= 11
     draw = []
     gui.draw_events_data(gs, draw)
-    assert len(draw) == 30
+    assert len(draw) == 31
     assert len(gs.outputs) == 33
-    assert draw[29].color == (255, 255, 255, 255)
-    assert draw[29].y == gs.coord['outputs_0_y'] - 12 * 29
+    assert type(draw[0]) == pyglet.shapes.Rectangle
+    assert draw[30].color == (255, 255, 255, 255)
+    assert draw[30].y == gs.coord['outputs_0_y'] - 12 * 29
 
     count = 0
     for label in draw:
         if label.color != (255, 255, 255, 255):
             count += 1
 
-    assert count == 10
+    assert count == 11
 
     gs.outputs = ['John move now.', gs.questions[0], gs.questions[1], gs.questions[2]]
     draw = []
     gui.draw_events_data(gs, draw)
-    assert len(draw) == 1
-    assert draw[0].text == 'John move now.'
+    assert len(draw) == 2
+    assert draw[1].text == 'John move now.'
 
 
 def test_draw_events_data_macau(entry_setup):
@@ -545,13 +547,13 @@ def test_draw_events_data_macau(entry_setup):
     gs.outputs = ['John move now.', 'John have macau!', 'Tommy have macau!']
     draw = []
     gui.draw_events_data(gs, draw)
-    assert len(draw) == 3
-    assert draw[0].color == (210, 105, 30, 255)
-    assert not draw[0].bold
+    assert len(draw) == 4
     assert draw[1].color == (210, 105, 30, 255)
     assert not draw[1].bold
-    assert draw[2].color == (10, 0, 100, 255)
-    assert draw[2].bold
+    assert draw[2].color == (210, 105, 30, 255)
+    assert not draw[2].bold
+    assert draw[3].color == (10, 0, 100, 255)
+    assert draw[3].bold
 
 
 def test_draw_wait_warnings(entry_setup):
@@ -591,7 +593,7 @@ def test_objects_to_draw(entry_setup):
     gui.calculate_zero_coordinates(gs)
     gs.objects_to_draw()
     assert round(gs.coord['info_0_y']) == 398
-    assert len(gs.draw_objects) == 8
+    assert len(gs.draw_objects) == 9
     assert gs.draw_objects[-1].text == 'John move now.'
 
     gs = copy(entry_setup)
@@ -600,7 +602,7 @@ def test_objects_to_draw(entry_setup):
     gui.calculate_zero_coordinates(gs)
     gs.objects_to_draw()
     assert round(gs.coord['info_0_y']) == 398
-    assert len(gs.draw_objects) == 10
+    assert len(gs.draw_objects) == 11
     assert gs.draw_objects[-1].text == 'Wait for others...'
 
 
