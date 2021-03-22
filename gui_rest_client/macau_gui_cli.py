@@ -22,6 +22,7 @@ class GameState:
         self.active_edit = None
         self.game_started = False
         self.game_finished = False
+        self.new_state = False
         self.my_move = []
         self.cards_in_deck = 0
         self.table = []
@@ -324,7 +325,7 @@ def generate_request_choose_boxes(gs):
 
 
 def new_game_state(gs):
-    new_state = False
+    gs.new_state = False
     response = requests.get(f'http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/state?access_token={gs.access_token}')
     if response.status_code == 200:
         state = response.json()['state']
@@ -332,18 +333,15 @@ def new_game_state(gs):
             sleep(0.1)
         elif gs.last_raw_state is None or len(gs.last_raw_state['outputs']) != len(state['outputs']):
             gs.last_raw_state = state
-            new_state = True
-
-    return new_state
+            gs.new_state = True
 
 
 async def data_update(gs):
     while True:
         if gs.game_window.visible:
             snap = datetime.now()
-            new_state = new_game_state(gs)
-
-            if new_state:
+            asyncio.get_event_loop().run_in_executor(None, new_game_state, gs)
+            if gs.new_state:
                 state = gs.last_raw_state
                 gs.rivals = {}
                 gs.hand = state['hand']
@@ -357,6 +355,7 @@ async def data_update(gs):
                 gs.requested_color = state['requested_color']
                 gs.outputs = copy(state['outputs'])
                 gs.objects_to_draw()
+                gs.new_state = False
             print(f'After all: {datetime.now() - snap}')
         await asyncio.sleep(1 / 1.0)
 
@@ -379,6 +378,7 @@ async def update(_dt, gs):
 
         if not gs.ready_to_send:
             switch_send_flag(gs)
+
         await asyncio.sleep(1 / 5.0)
 
 
@@ -403,7 +403,6 @@ def send_player_move(gs):
             f"http://{gs.host}/macau/{gs.game_id}/{gs.my_name}?player_move={move}&access_token={gs.access_token}")
         if response.status_code == 200:
             print(f"{move} was send")
-            sleep(0.1)
             gs.my_move.remove(move)
     gs.to_play = []
     print(f'Sending was done in: {datetime.now() - snap}')

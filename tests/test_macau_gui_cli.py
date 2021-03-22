@@ -602,7 +602,7 @@ async def test_data_update(server, setup):
     gui.get_token(gs)
     assert gs.access_token != ''
     try:
-        await asyncio.wait_for(gui.data_update(gs), timeout=1)
+        await asyncio.wait_for(gui.data_update(gs), timeout=3)
     except asyncio.TimeoutError:
         pass
 
@@ -615,7 +615,7 @@ async def test_data_update(server, setup):
 
     last_state = copy(gs.last_raw_state)
     try:
-        await asyncio.wait_for(gui.data_update(gs), timeout=1)
+        await asyncio.wait_for(gui.data_update(gs), timeout=3)
     except asyncio.TimeoutError:
         pass
 
@@ -669,7 +669,7 @@ async def test_send_player_move(server, setup):
     assert not gs.ready_to_send
 
     try:
-        await asyncio.wait_for(gui.data_update(gs), timeout=1)
+        await asyncio.wait_for(gui.data_update(gs), timeout=3)
     except asyncio.TimeoutError:
         pass
 
