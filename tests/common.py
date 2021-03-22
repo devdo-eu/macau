@@ -50,7 +50,7 @@ def helper_factory(lines, index=0):
     return helper
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def server():
     proc = Process(target=serve, args=(), daemon=True)
     proc.start()

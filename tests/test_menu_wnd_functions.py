@@ -57,6 +57,11 @@ def test_on_mouse_release_factory(setup):
 def test_on_key_release_factory(setup, server):
     assert server is None
     not_created_id = 0
+    while True:
+        response = requests.get(f'http://127.0.0.1:5000/macau/{not_created_id}/state')
+        if response.status_code == 404:
+            break
+        not_created_id += 1
     setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:5000')
     setup.draw_objects += helper_edit_create(0, 0, 'Your Name', 'John')
     setup.draw_objects += helper_edit_create(0, 0, 'Number of Cards', '7')
