@@ -532,12 +532,13 @@ def main():
 
 
 def create_menu_labels(gs):
+    pan_x, pan_y = gs.coord['edits_0_x'], gs.coord['edits_0_y']
     data = [
         ['Macau REST API Client', 3 * gs.screen.width / 20, 18 * gs.screen.height / 20, gs.colors['lbl_menu'], 70],
-        ['Create New Game Settings: ', gs.screen.width / 36, 18 * gs.screen.height / 36, gs.colors['lbl_menu'], 20],
-        ['Join Game Settings: ', 21 * gs.screen.width / 36, 18 * gs.screen.height / 36, gs.colors['lbl_menu'], 20],
-        ['Press c to Create New Game', gs.screen.width / 36, 4 * gs.screen.height / 36, gs.colors['lbl_bot'], 30],
-        ['Press j to Join Game', 21 * gs.screen.width / 36, 4 * gs.screen.height / 36, gs.colors['lbl_bot'], 30]
+        ['Create New Game Settings: ', pan_x, 18 * pan_y, gs.colors['lbl_menu'], 20],
+        ['Join Game Settings: ', 21 * pan_x, 18 * pan_y, gs.colors['lbl_menu'], 20],
+        ['Press c to Create New Game', pan_x, 4 * pan_y, gs.colors['lbl_bot'], 30],
+        ['Press j to Join Game', 21 * pan_x, 4 * pan_y, gs.colors['lbl_bot'], 30]
     ]
     for info in data:
         label = pyglet.text.Label(info[0], x=info[1], y=info[2], bold=True, color=info[3], font_size=info[4])
