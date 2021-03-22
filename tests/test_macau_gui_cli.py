@@ -1,17 +1,20 @@
 from gui_rest_client import macau_gui_cli as gui
 from gui_rest_client.macau_gui_cli import build_resources_path
 from gui_rest_client.macau_gui_cli import GameState
-from tests.common import ScreenMock, DrawableMock, server, address
+from tests.common import ScreenMock, WindowMock, DrawableMock, server, address
 import pytest
 from copy import copy
 import requests
 import pyglet
+import asyncio
 
 
 @pytest.fixture(scope='module')
 def setup():
     gs = GameState()
     gs.screen = ScreenMock()
+    gs.game_window = WindowMock()
+    gs.menu_window = WindowMock()
     pyglet.resource.path = [build_resources_path()]
     pyglet.resource.reindex()
     gs.card_images = gui.load_all_card_images()
@@ -586,7 +589,8 @@ def test_get_token(server, setup):
     assert gs.access_token != ''
 
 
-def test_data_update(server, setup):
+@pytest.mark.asyncio
+async def test_data_update(server, setup):
     assert server is None
     gs = copy(setup)
     gs.host = address
@@ -597,8 +601,11 @@ def test_data_update(server, setup):
     gs.game_id = response.json()['game_id']
     gui.get_token(gs)
     assert gs.access_token != ''
+    try:
+        await asyncio.wait_for(gui.data_update(gs), timeout=.5)
+    except asyncio.TimeoutError:
+        pass
 
-    gui.data_update(gs)
     assert len(gs.last_raw_state) > 0
     assert len(gs.rivals) == 1
     assert len(gs.hand) == 7 or len(gs.hand) == 8
@@ -607,7 +614,11 @@ def test_data_update(server, setup):
     assert len(gs.outputs) > 0
 
     last_state = copy(gs.last_raw_state)
-    gui.data_update(gs)
+    try:
+        await asyncio.wait_for(gui.data_update(gs), timeout=.5)
+    except asyncio.TimeoutError:
+        pass
+
     assert last_state == gs.last_raw_state
 
 
@@ -639,7 +650,8 @@ def test_switch_send_flag(setup):
     assert gs.ready_to_send
 
 
-def test_send_player_move(server, setup):
+@pytest.mark.asyncio
+async def test_send_player_move(server, setup):
     assert server is None
     gs = copy(setup)
     gs.host = address
@@ -655,6 +667,11 @@ def test_send_player_move(server, setup):
     gui.send_player_move(gs)
     assert len(gs.my_move) == 0
     assert not gs.ready_to_send
+
+    try:
+        await asyncio.wait_for(gui.data_update(gs), timeout=.5)
+    except asyncio.TimeoutError:
+        pass
 
     assert len(gs.last_raw_state) > 0
     assert len(gs.rivals) == 1
