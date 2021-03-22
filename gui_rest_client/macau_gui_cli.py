@@ -8,6 +8,7 @@ from random import randint
 from datetime import datetime
 import gui_rest_client.menu_wnd_functions as menu_wnd
 import gui_rest_client.game_wnd_functions as game_wnd
+import asyncio
 
 
 class Card(pyglet.sprite.Sprite):
@@ -46,6 +47,7 @@ class GameState:
         self.color_box = None
         self.card_images = {}
         self.last_raw_state = None
+        self.loop = asyncio.get_event_loop()
         self.questions = [
             "Which card(s) from your hand do you want to play?:",
             "Enter VALUE of requested cards:",
@@ -328,58 +330,70 @@ def new_game_state(gs):
         state = response.json()['state']
         if gs.last_raw_state == state and len(state['outputs']) > 0:
             sleep(0.1)
-        else:
+        elif gs.last_raw_state is None or len(gs.last_raw_state['outputs']) != len(state['outputs']):
             gs.last_raw_state = state
             new_state = True
-    else:
-        gs.game_finished = True
-        sleep(0.1)
 
     return new_state
 
 
-def data_update(gs):
-    snap = datetime.now()
-    new_state = new_game_state(gs)
+async def data_update(gs):
+    while True:
+        if gs.game_window.visible:
+            snap = datetime.now()
+            new_state = new_game_state(gs)
 
-    if new_state:
-        state = gs.last_raw_state
-        gs.rivals = {}
-        gs.hand = state['hand']
-        gs.rivals = state['rivals']
-        gs.cards_in_deck = state['cards_in_deck']
-        gs.table = state['table']
-        gs.lied_card = state['lied_card']
-        gs.cards_to_take = state['cards_to_take']
-        gs.turns_to_wait = state['turns_to_wait']
-        gs.requested_value = state['requested_value']
-        gs.requested_color = state['requested_color']
-        gs.outputs = state['outputs']
-    gs.objects_to_draw()
-    print(f'After all: {datetime.now() - snap}')
+            if new_state:
+                state = gs.last_raw_state
+                gs.rivals = {}
+                gs.hand = state['hand']
+                gs.rivals = state['rivals']
+                gs.cards_in_deck = state['cards_in_deck']
+                gs.table = state['table']
+                gs.lied_card = state['lied_card']
+                gs.cards_to_take = state['cards_to_take']
+                gs.turns_to_wait = state['turns_to_wait']
+                gs.requested_value = state['requested_value']
+                gs.requested_color = state['requested_color']
+                gs.outputs = copy(state['outputs'])
+                gs.objects_to_draw()
+            print(f'After all: {datetime.now() - snap}')
+        await asyncio.sleep(1 / 1.0)
 
 
-def update(_dt, gs):
-    if gs.game_window.has_exit and gs.menu_window.has_exit:
-        exit(0)
+async def update(_dt, gs):
+    while True:
+        if gs.game_window.has_exit and gs.menu_window.has_exit:
+            exit(0)
 
-    if gs.game_started:
-        create_game(gs)
-        return
+        if gs.game_started:
+            create_game(gs)
+            continue
 
-    elif gs.game_finished:
-        create_menu(gs)
-        return
+        elif gs.game_finished:
+            create_menu(gs)
+            continue
 
-    for obj in gs.draw_objects:
-        if type(obj) == pyglet.text.Label and 'Wait for other' in obj.text:
-            data_update(gs)
+        if gs.ready_to_send:
+            send_player_move(gs)
 
-    if gs.ready_to_send:
-        send_player_move(gs)
+        if not gs.ready_to_send:
+            switch_send_flag(gs)
+        await asyncio.sleep(1 / 5.0)
 
-    if not gs.ready_to_send:
-        switch_send_flag(gs)
+
+async def windows_events_loop():
+
+    while True:
+        pyglet.clock.tick()
+
+        for window in pyglet.app.windows:
+            if window.visible:
+                window.switch_to()
+                window.dispatch_events()
+                window.dispatch_event('on_draw')
+                window.flip()
+        await asyncio.sleep(1/60.0)
 
 
 def send_player_move(gs):
@@ -393,7 +407,6 @@ def send_player_move(gs):
             gs.my_move.remove(move)
     gs.to_play = []
     print(f'Sending was done in: {datetime.now() - snap}')
-    data_update(gs)
     generate_request_choose_boxes(gs)
     gs.ready_to_send = False
 
@@ -424,10 +437,8 @@ def calculate_zero_coordinates(gs):
 def create_game(gs):
     menu_wnd.switch_windows(gs)
     get_token(gs)
-    data_update(gs)
     generate_request_choose_boxes(gs)
     game_wnd.register_game_events(gs)
-    pyglet.clock.schedule_interval(update, 1 / 5, gs)
     gs.game_started = False
 
 
@@ -440,7 +451,6 @@ def create_menu(gs):
     gs.access_token = ''
     gs.last_raw_state = None
     menu_wnd.register_menu_events(gs)
-    pyglet.clock.schedule_interval(update, 1 / 60, gs)
     gs.game_finished = False
 
 
@@ -471,7 +481,9 @@ def main():
     calculate_zero_coordinates(gs)
     gs.menu_window.set_visible(False)
     create_menu(gs)
-    pyglet.app.run()
+    futures = [gs.loop.create_task(data_update(gs)), gs.loop.create_task(update(None, gs)),
+               gs.loop.create_task(windows_events_loop())]
+    gs.loop.run_until_complete(asyncio.gather(*futures))
 
 
 def create_menu_labels(gs):
