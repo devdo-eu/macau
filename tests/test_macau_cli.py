@@ -1,50 +1,11 @@
-from macau_server import app
-from multiprocessing import Process
 from time import sleep
-import uvicorn
-import pytest
 from rest_api_client import macau_cli as client
+from tests.common import server, dumper_factory, address, helper_factory
+import tests.common as common
 
 
-def serve():
-    uvicorn.run(app)
-
-
-outputs = []
-helper_move = -1
-address = '127.0.0.1:8000'
-
-
-def dumper_factory():
-    global outputs
-    outputs = []
-
-    def dump(message):
-        global outputs
-        outputs.append(message)
-    return dump
-
-
-def helper_factory(lines):
-    global helper_move
-    helper_move = -1
-
-    def helper(_):
-        global helper_move
-        helper_move += 1
-        commands = lines
-        return commands[helper_move]
-
-    return helper
-
-
-@pytest.fixture(scope='module')
-def server():
-    proc = Process(target=serve, args=(), daemon=True)
-    proc.start()
-    sleep(0.5)
-    yield
-    proc.kill()
+def test_sanity_check():
+    assert server is not None
 
 
 def test_start_server(server):
@@ -88,7 +49,7 @@ def test_crash_on_error():
 def test_main_wrong_option(server):
     assert server is None
     client.main(helper_factory(['x']), dumper_factory())
-    assert outputs[-1] == "Wrong option: x"
+    assert common.outputs[-1] == "Wrong option: x"
 
 
 def test_create_game_too_few_players(server):
@@ -116,7 +77,7 @@ def test_create_game(server):
         client.create_game(address, helper_factory(input_data), dumper_factory())
     except IndexError as ex:
         assert 'list index out of range' == str(ex)
-        assert outputs[-1] == 'Game created. Game ID: 0'
+        assert common.outputs[-1] == 'Game created. Game ID: 0'
 
 
 def test_find_game(server):
@@ -127,7 +88,7 @@ def test_find_game(server):
     assert status_code == 200
     assert len(waiting_for) > 0
     assert waiting_for[0] == 'John'
-    assert outputs[-1] == 'Game ID not valid.'
+    assert common.outputs[-1] == 'Game ID not valid.'
 
 
 def test_join_game(server):
@@ -136,11 +97,11 @@ def test_join_game(server):
         client.join_game(address, helper_factory(['0', 'John', '']), dumper_factory())
     except IndexError as ex:
         assert 'list index out of range' == str(ex)
-    assert 'Joining existing game!' in outputs
-    assert 'Game ID correct.' in outputs
-    assert 'Waiting for players: John' in outputs
-    assert 'User John correctly logged. Wait for your move...' in outputs
-    assert ' is invalid. John makes invalid move.' in outputs
+    assert 'Joining existing game!' in common.outputs
+    assert 'Game ID correct.' in common.outputs
+    assert 'Waiting for players: John' in common.outputs
+    assert 'User John correctly logged. Wait for your move...' in common.outputs
+    assert ' is invalid. John makes invalid move.' in common.outputs
 
 
 def test_watch_game(server):
@@ -150,12 +111,12 @@ def test_watch_game(server):
         client.create_game(address, helper_factory(input_data), dumper_factory())
     except IndexError as ex:
         assert 'list index out of range' == str(ex)
-        assert 'Game created. Game ID: 1' in outputs
+        assert 'Game created. Game ID: 1' in common.outputs
 
     client.watch_game(address, helper_factory(['1']), dumper_factory())
-    assert 'Watching existing game!' in outputs
-    assert 'Game ID correct. Game events will appear below:' in outputs
-    assert 'Game won by' in outputs[-1]
+    assert 'Watching existing game!' in common.outputs
+    assert 'Game ID correct. Game events will appear below:' in common.outputs
+    assert 'Game won by' in common.outputs[-1]
 
 
 def test_main_create_option(server):
@@ -165,7 +126,7 @@ def test_main_create_option(server):
     except IndexError as ex:
         assert 'list index out of range' == str(ex)
 
-    assert "Creating new Macau Game!" in outputs
+    assert "Creating new Macau Game!" in common.outputs
 
 
 def test_main_join_option(server):
@@ -175,7 +136,7 @@ def test_main_join_option(server):
     except IndexError as ex:
         assert 'list index out of range' == str(ex)
 
-    assert "Joining existing game!" in outputs
+    assert "Joining existing game!" in common.outputs
 
 
 def test_main_watch_option(server):
@@ -185,4 +146,4 @@ def test_main_watch_option(server):
     except IndexError as ex:
         assert 'list index out of range' == str(ex)
 
-    assert "Watching existing game!" in outputs
+    assert "Watching existing game!" in common.outputs

@@ -1,36 +1,15 @@
 from gui_rest_client import macau_gui_cli as gui
 from gui_rest_client.macau_gui_cli import build_resources_path
 from gui_rest_client.macau_gui_cli import GameState
-from macau_server import app
+from tests.common import ScreenMock, DrawableMock, server, address
 import pytest
-import uvicorn
-from multiprocessing import Process
-from time import sleep
 from copy import copy
 import requests
 import pyglet
 
 
-outputs = []
-helper_move = -1
-address = '127.0.0.1:5000'
-
-
-def serve():
-    uvicorn.run(app, host=address.split(':')[0], port=int(address.split(':')[1]))
-
-
 @pytest.fixture(scope='module')
-def server():
-    proc = Process(target=serve, args=(), daemon=True)
-    proc.start()
-    sleep(0.5)
-    yield
-    proc.kill()
-
-
-@pytest.fixture(scope='module')
-def entry_setup():
+def setup():
     gs = GameState()
     gs.screen = ScreenMock()
     pyglet.resource.path = [build_resources_path()]
@@ -40,18 +19,8 @@ def entry_setup():
     return gs
 
 
-class ScreenMock:
-    def __init__(self):
-        self.width = 1600
-        self.height = 900
-
-
-class ObjectMock:
-    def __init__(self, x, y, width, height):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
+def test_sanity_check():
+    assert server is not None
 
 
 def test_load_all_card_images():
@@ -63,8 +32,8 @@ def test_load_all_card_images():
         assert '.png' in image
 
 
-def test_create_edit(entry_setup):
-    gs = copy(entry_setup)
+def test_create_edit(setup):
+    gs = copy(setup)
     gs.draw_objects = []
     assert len(gs.draw_objects) == 0
     gui.create_edit(gs, 'New test label', placeholder='Data inside')
@@ -76,8 +45,8 @@ def test_create_edit(entry_setup):
     assert gs.draw_objects[2].text == 'Data inside'
 
 
-def test_make_logo(entry_setup):
-    gs = copy(entry_setup)
+def test_make_logo(setup):
+    gs = copy(setup)
     gs.draw_objects = []
     assert len(gs.draw_objects) == 0
     gui.make_logo(gs)
@@ -86,8 +55,8 @@ def test_make_logo(entry_setup):
     assert type(gs.draw_objects[5]) is pyglet.sprite.Sprite
 
 
-def test_create_menu_edits(entry_setup):
-    gs = copy(entry_setup)
+def test_create_menu_edits(setup):
+    gs = copy(setup)
     gs.draw_objects = []
     assert len(gs.draw_objects) == 0
     gui.create_menu_edits(gs)
@@ -99,8 +68,8 @@ def test_create_menu_edits(entry_setup):
     assert count == 9
 
 
-def test_create_menu_labels(entry_setup):
-    gs = copy(entry_setup)
+def test_create_menu_labels(setup):
+    gs = copy(setup)
     gs.draw_objects = []
     assert len(gs.draw_objects) == 0
     gui.create_menu_labels(gs)
@@ -109,8 +78,8 @@ def test_create_menu_labels(entry_setup):
         assert type(obj) is pyglet.text.Label
 
 
-def test_resize_center_card_image(entry_setup):
-    gs = entry_setup
+def test_resize_center_card_image(setup):
+    gs = setup
     test_image = gui.resize_center_card_image(gs.card_images['back.png'], gs.screen.height)
     assert test_image.anchor_x == test_image.width / 2
     assert test_image.anchor_y == test_image.height / 2
@@ -126,18 +95,18 @@ def test_resize_center_card_image(entry_setup):
     assert round(test_image.height) == 225
 
 
-def test_check_if_inside(entry_setup):
-    test_obj = ObjectMock(26, 151, 50, 300)
-    assert entry_setup.check_if_inside(1, 1, test_obj)
-    assert entry_setup.check_if_inside(5, 60, test_obj)
-    assert entry_setup.check_if_inside(25, 150, test_obj)
-    assert entry_setup.check_if_inside(51, 301, test_obj)
-    assert not entry_setup.check_if_inside(52, 302, test_obj)
-    assert not entry_setup.check_if_inside(0, 0, test_obj)
+def test_check_if_inside(setup):
+    test_obj = DrawableMock(1, 1, 50, 300)
+    assert setup.check_if_inside(1, 1, test_obj)
+    assert setup.check_if_inside(5, 60, test_obj)
+    assert setup.check_if_inside(25, 150, test_obj)
+    assert setup.check_if_inside(51, 301, test_obj)
+    assert not setup.check_if_inside(52, 302, test_obj)
+    assert not setup.check_if_inside(0, 0, test_obj)
 
 
-def test_generate_request_choose_boxes(entry_setup):
-    gs = entry_setup
+def test_generate_request_choose_boxes(setup):
+    gs = setup
     assert len(gs.color_box) == 4
     assert gs.color_box['hearts']
     assert round(gs.color_box['hearts'].x) == 320
@@ -155,23 +124,23 @@ def test_generate_request_choose_boxes(entry_setup):
 
 
 @pytest.mark.parametrize('box_num, loc_x', [(5, 229), (6, 457), (7, 686), (8, 914), (9, 1143), (10, 1371)])
-def test_value_boxes(entry_setup, box_num, loc_x):
-    gs = entry_setup
+def test_value_boxes(setup, box_num, loc_x):
+    gs = setup
     assert gs.value_box[box_num]
     assert round(gs.value_box[box_num].x) == loc_x
     assert round(gs.value_box[box_num].y) == 500
 
 
 @pytest.mark.parametrize('box_color, loc_x', [('hearts', 320), ('tiles', 640), ('pikes', 960), ('clovers', 1280)])
-def test_color_boxes(entry_setup, box_color, loc_x):
-    gs = entry_setup
+def test_color_boxes(setup, box_color, loc_x):
+    gs = setup
     assert gs.color_box[box_color]
     assert round(gs.color_box[box_color].x) == loc_x
     assert round(gs.color_box[box_color].y) == 500
 
 
-def test_choose_request_color(entry_setup):
-    gs = entry_setup
+def test_choose_request_color(setup):
+    gs = setup
     hearts, tiles, pikes, clovers = 330, 660, 990, 1320
     gs.choose_request(hearts, 600)
     assert round(gs.color_box['hearts'].y) == 667
@@ -216,8 +185,8 @@ def test_choose_request_color(entry_setup):
     assert len(gs.to_play) == 0
 
 
-def test_choose_request_value(entry_setup):
-    gs = entry_setup
+def test_choose_request_value(setup):
+    gs = setup
     card_5, card_7, card_10 = 260, 720, 1400
     gs.choose_request(card_5, 600, 'values')
     assert round(gs.value_box[5].y) == 667
@@ -253,8 +222,8 @@ def test_choose_request_value(entry_setup):
     assert len(gs.to_play) == 0
 
 
-def test_calculate_zero_coordinates(entry_setup):
-    gs = entry_setup
+def test_calculate_zero_coordinates(setup):
+    gs = setup
     gui.calculate_zero_coordinates(gs)
     assert len(gs.coord) == 12
     assert round(gs.coord['hand_0_x']) == 103
@@ -271,8 +240,8 @@ def test_calculate_zero_coordinates(entry_setup):
     assert round(gs.coord['outputs_0_y']) == 655
 
 
-def test_draw_players_hand(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_players_hand(setup):
+    gs = copy(setup)
     gs.hand = [['hearts', 'A'], ['pikes', '5'], ['pikes', 'K']]
     draw = []
     gui.draw_players_hand(gs, draw)
@@ -306,8 +275,8 @@ def test_draw_players_hand(entry_setup):
     assert round(draw[95].x) == 864
 
 
-def test_draw_deck_pile(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_deck_pile(setup):
+    gs = copy(setup)
     gs.cards_in_deck = 10
     draw = []
     gui.draw_deck_pile(gs, draw)
@@ -343,8 +312,8 @@ def test_draw_deck_pile(entry_setup):
     assert round(draw[299].y) == gs.coord['deck_0_y'] + 99
 
 
-def test_draw_table_pile(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_table_pile(setup):
+    gs = copy(setup)
     gs.lied_card = ['hearts', '5']
     draw = []
     gui.draw_table_pile(gs, draw)
@@ -386,8 +355,8 @@ def test_draw_table_pile(entry_setup):
     assert gs.coord['table_0_y'] - 20 <= draw[-1].y <= gs.coord['table_0_y'] + 20
 
 
-def test_draw_rivals(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_rivals(setup):
+    gs = copy(setup)
     gs.rivals = {'Tommy': 0, 'Smith': 0}
     draw, gs.outputs = [], []
     gui.draw_rivals(gs, draw)
@@ -461,8 +430,8 @@ def test_draw_rivals(entry_setup):
     assert round(draw[-1].x) == 1293
 
 
-def test_draw_game_state(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_game_state(setup):
+    gs = copy(setup)
     draw = []
     gui.draw_game_state(gs, draw)
     assert len(draw) == 7
@@ -495,8 +464,8 @@ def test_draw_game_state(entry_setup):
     assert len(draw) == 7
 
 
-def test_draw_events_data(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_events_data(setup):
+    gs = copy(setup)
     gs.my_name = 'John'
     gs.outputs = ['John move now.', 'example info', 'example info']
     draw = []
@@ -539,8 +508,8 @@ def test_draw_events_data(entry_setup):
     assert draw[1].text == 'John move now.'
 
 
-def test_draw_events_data_macau(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_events_data_macau(setup):
+    gs = copy(setup)
     gs.my_name = 'John'
     gs.outputs = ['John move now.', 'John have macau!', 'Tommy have macau!']
     draw = []
@@ -554,8 +523,8 @@ def test_draw_events_data_macau(entry_setup):
     assert draw[3].bold
 
 
-def test_draw_wait_warnings(entry_setup):
-    gs = copy(entry_setup)
+def test_draw_wait_warnings(setup):
+    gs = copy(setup)
     gs.my_name = 'John'
     gs.outputs = ['Tommy move now.']
     draw = []
@@ -584,8 +553,8 @@ def test_draw_wait_warnings(entry_setup):
     assert draw[1].text == 'You won the game!'
 
 
-def test_objects_to_draw(entry_setup):
-    gs = copy(entry_setup)
+def test_objects_to_draw(setup):
+    gs = copy(setup)
     gs.my_name = 'John'
     gs.outputs = ['John move now.', gs.questions[0]]
     gui.calculate_zero_coordinates(gs)
@@ -594,7 +563,7 @@ def test_objects_to_draw(entry_setup):
     assert len(gs.draw_objects) == 9
     assert gs.draw_objects[-1].text == 'John move now.'
 
-    gs = copy(entry_setup)
+    gs = copy(setup)
     gs.my_name = 'John'
     gs.outputs = ['Tommy move now.']
     gui.calculate_zero_coordinates(gs)
@@ -604,9 +573,9 @@ def test_objects_to_draw(entry_setup):
     assert gs.draw_objects[-1].text == 'Wait for others...'
 
 
-def test_get_token(server, entry_setup):
+def test_get_token(server, setup):
     assert server is None
-    gs = copy(entry_setup)
+    gs = copy(setup)
     gs.host = address
     gs.my_name = 'John'
     json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
@@ -617,9 +586,9 @@ def test_get_token(server, entry_setup):
     assert gs.access_token != ''
 
 
-def test_data_update(server, entry_setup):
+def test_data_update(server, setup):
     assert server is None
-    gs = copy(entry_setup)
+    gs = copy(setup)
     gs.host = address
     gs.my_name = 'John'
     json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}
@@ -642,8 +611,8 @@ def test_data_update(server, entry_setup):
     assert last_state == gs.last_raw_state
 
 
-def test_switch_send_flag(entry_setup):
-    gs = copy(entry_setup)
+def test_switch_send_flag(setup):
+    gs = copy(setup)
     gs.ready_to_send = False
     gs.my_move = ['hearts 5']
     gui.switch_send_flag(gs)
@@ -670,9 +639,9 @@ def test_switch_send_flag(entry_setup):
     assert gs.ready_to_send
 
 
-def test_send_player_move(server, entry_setup):
+def test_send_player_move(server, setup):
     assert server is None
-    gs = copy(entry_setup)
+    gs = copy(setup)
     gs.host = address
     gs.my_name = 'John'
     json_data = {'how_many_cards': 7, 'players_names': [gs.my_name, 'Test']}

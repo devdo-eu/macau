@@ -1,64 +1,8 @@
 import gui_rest_client.menu_wnd_functions as menu_wnd
-from gui_rest_client.macau_gui_cli import GameState, build_resources_path
-import pytest
+from gui_rest_client.macau_gui_cli import build_resources_path
+from tests.common import DrawableMock, server, setup
 import pyglet
-import uvicorn
-from macau_server import app
-from multiprocessing import Process
-from time import sleep
 import requests
-
-
-def serve():
-    uvicorn.run(app, host="127.0.0.1", port=5000)
-
-
-@pytest.fixture(scope='module')
-def server():
-    proc = Process(target=serve, args=(), daemon=True)
-    proc.start()
-    sleep(0.5)
-    yield
-    proc.kill()
-
-
-class ScreenMock:
-    def __init__(self):
-        self.width = 1600
-        self.height = 900
-
-
-class WindowMock:
-    def __init__(self):
-        self.event_func = []
-        self.visible = True
-
-    def event(self, func):
-        self.event_func.append(func)
-        return func
-
-    def clear(self):
-        pass
-
-    def set_visible(self, visible=True):
-        self.visible = visible
-
-
-class DrawableMock:
-    def __init__(self):
-        self.visible = False
-
-    def draw(self):
-        self.visible = True
-
-
-@pytest.fixture
-def setup():
-    gs = GameState()
-    gs.screen = ScreenMock()
-    gs.menu_window = WindowMock()
-    gs.game_window = WindowMock()
-    return gs
 
 
 def helper_edit_create(x, y, text, data):
@@ -91,6 +35,11 @@ def helper_edit_deselect_all(objects):
     for obj in objects:
         if type(obj) is pyglet.shapes.Rectangle:
             obj.color = [255, 255, 255]
+
+
+def test_sanity_check():
+    assert server is not None
+    assert setup is not None
 
 
 def test_on_mouse_release_factory(setup):
