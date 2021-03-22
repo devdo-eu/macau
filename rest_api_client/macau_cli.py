@@ -18,7 +18,7 @@ def main(input_foo=input, print_foo=print):
     :param input_foo: functor with function used to get input from user
     :param print_foo: functor with function used to show output to user
     """
-    host = "127.0.0.1:8000"
+    host = "127.0.0.1:5000"
     print_foo("Welcome to Macau Game!")
     host = find_server(host, input_foo, print_foo)
     process = {'c': create_game, 'j': join_game, 'w': watch_game}

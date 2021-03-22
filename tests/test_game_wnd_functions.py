@@ -1,47 +1,13 @@
 import gui_rest_client.game_wnd_functions as game_wnd
-from gui_rest_client.macau_gui_cli import GameState, load_all_card_images
+from gui_rest_client.macau_gui_cli import load_all_card_images
 from gui_rest_client.macau_gui_cli import build_resources_path, calculate_zero_coordinates
-import pytest
+from tests.common import DrawableMock, setup, server
 import pyglet
 
 
-class ScreenMock:
-    def __init__(self):
-        self.width = 1600
-        self.height = 900
-
-
-class WindowMock:
-    def __init__(self):
-        self.event_func = []
-
-    def event(self, func):
-        self.event_func.append(func)
-        return func
-
-    def clear(self):
-        pass
-
-
-class DrawableMock:
-    def __init__(self, zero_x=0, zero_y=0, width=0, height=0):
-        self.visible = False
-        self.x = zero_x + width / 2
-        self.y = zero_y + height / 2
-        self.width = width
-        self.height = height
-        self.zero_x = self.x
-
-    def draw(self):
-        self.visible = True
-
-
-@pytest.fixture
-def setup():
-    gs = GameState()
-    gs.screen = ScreenMock()
-    gs.game_window = WindowMock()
-    return gs
+def test_sanity_check():
+    assert server is not None
+    assert setup is not None
 
 
 def test_on_draw_factory(setup):
