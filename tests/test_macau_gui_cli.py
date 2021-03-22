@@ -38,6 +38,7 @@ def test_load_all_card_images():
 def test_create_edit(setup):
     gs = copy(setup)
     gs.draw_objects = []
+    gui.calculate_zero_coordinates(gs)
     assert len(gs.draw_objects) == 0
     gui.create_edit(gs, 'New test label', placeholder='Data inside')
     assert len(gs.draw_objects) == 3
@@ -61,6 +62,7 @@ def test_make_logo(setup):
 def test_create_menu_edits(setup):
     gs = copy(setup)
     gs.draw_objects = []
+    gui.calculate_zero_coordinates(gs)
     assert len(gs.draw_objects) == 0
     gui.create_menu_edits(gs)
     assert len(gs.draw_objects) == 3*5 + 3*9
@@ -228,7 +230,7 @@ def test_choose_request_value(setup):
 def test_calculate_zero_coordinates(setup):
     gs = setup
     gui.calculate_zero_coordinates(gs)
-    assert len(gs.coord) == 12
+    assert len(gs.coord) == 14
     assert round(gs.coord['hand_0_x']) == 103
     assert round(gs.coord['hand_0_y']) == 145
     assert round(gs.coord['deck_0_x']) == 880
@@ -241,6 +243,8 @@ def test_calculate_zero_coordinates(setup):
     assert round(gs.coord['info_0_y']) == 398
     assert round(gs.coord['outputs_0_x']) == 80
     assert round(gs.coord['outputs_0_y']) == 655
+    assert round(gs.coord['edits_0_x']) == 44
+    assert round(gs.coord['edits_0_y']) == 25
 
 
 def test_draw_players_hand(setup):
@@ -518,11 +522,11 @@ def test_draw_events_data_macau(setup):
     draw = []
     gui.draw_events_data(gs, draw)
     assert len(draw) == 4
-    assert draw[1].color == (210, 105, 30, 255)
+    assert draw[1].color == gs.colors['event_my_name']
     assert not draw[1].bold
-    assert draw[2].color == (210, 105, 30, 255)
+    assert draw[2].color == gs.colors['event_my_name']
     assert not draw[2].bold
-    assert draw[3].color == (30, 30, 100, 255)
+    assert draw[3].color == gs.colors['event_macau']
     assert draw[3].bold
 
 
