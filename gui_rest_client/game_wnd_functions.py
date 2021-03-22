@@ -91,7 +91,6 @@ def prepare_move_to_send(gs):
         gs.draw_objects += list(gs.color_box.values())
         gs.to_play = []
     else:
-        color = gs.colors['warn_wait']
         if len(gs.my_move[0]) > 4:
             card = gs.my_move[0].replace(',', '').split()
             for index in range(1, len(card), 2):
@@ -100,8 +99,11 @@ def prepare_move_to_send(gs):
                     gs.table.append(gs.lied_card)
                 gs.lied_card = [card[index - 1], card[index]]
         gs.objects_to_draw()
-        wait_label = pyglet.text.Label(text='Wait for others...', x=gs.screen.width / 4, y=gs.screen.height / 2,
-                                       bold=True, color=color, font_size=70)
+        background = pyglet.shapes.Rectangle(0, gs.screen.height / 2 - 30, gs.screen.width, 110, (0, 0, 0))
+        background.opacity = 120
+        gs.draw_objects.append(background)
+        wait_label = pyglet.text.Label(text='Wait for others...', x=gs.screen.width / 3, y=gs.screen.height / 2,
+                                       bold=True, color=gs.colors['warn_wait'], font_size=50)
         gs.draw_objects.append(wait_label)
 
 

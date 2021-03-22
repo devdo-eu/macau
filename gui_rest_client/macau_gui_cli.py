@@ -335,11 +335,16 @@ def new_game_state(gs):
     response = requests.get(f'http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/state?access_token={gs.access_token}')
     if response.status_code == 200:
         state = response.json()['state']
-        if gs.last_raw_state == state and len(state['outputs']) > 0:
-            sleep(0.1)
-        elif gs.last_raw_state is None or len(gs.last_raw_state['outputs']) != len(state['outputs']):
+        if gs.last_raw_state is None:
+            conditions = [True]
+        else:
+            conditions = [len(gs.last_raw_state['outputs']) != len(state['outputs']),
+                          state['requested_value'] != gs.last_raw_state['requested_value'],
+                          state['requested_color'] != gs.last_raw_state['requested_color']]
+        if True in conditions:
             gs.last_raw_state = state
             gs.new_state = True
+        sleep(0.1)
 
 
 async def data_update(gs):
