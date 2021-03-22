@@ -91,7 +91,7 @@ def prepare_move_to_send(gs):
         gs.draw_objects += list(gs.color_box.values())
         gs.to_play = []
     else:
-        color = (210, 105, 30, 255)
+        color = gs.colors['warn_wait']
         if len(gs.my_move[0]) > 4:
             card = gs.my_move[0].replace(',', '').split()
             for index in range(1, len(card), 2):

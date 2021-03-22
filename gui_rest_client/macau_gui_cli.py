@@ -54,6 +54,11 @@ class GameState:
             "Enter VALUE of requested cards:",
             "Enter COLOR of requested cards:"
         ]
+        self.colors = {'event_macau': (188, 71, 73, 255), 'event_my_name': (210, 105, 30, 255),
+                       'event': (255, 255, 255, 255), 'warn_wait': (210, 105, 30, 255), 'warn_win': (40, 100, 200, 255),
+                       'warn_lose': (200, 60, 30, 255), 'server_on': (106, 153, 78, 255),
+                       'server_off': (188, 71, 73, 255), 'lbl_menu': (244, 241, 222, 255),
+                       'lbl_bot': (129, 178, 154, 255)}
 
     @staticmethod
     def check_if_inside(x, y, obj):
@@ -147,11 +152,11 @@ def draw_events_data(gs, objects):
 
         if show_line:
             bold = False
-            color = (255, 255, 255, 255)
+            color = gs.colors['event']
             if gs.my_name in line:
-                color = (210, 105, 30, 255)
+                color = gs.colors['event_my_name']
             elif 'macau' in line:
-                color = (30, 30, 100, 255)
+                color = gs.colors['event_macau']
                 bold = True
 
             label = pyglet.text.Label(text=line, x=outputs_0_x, y=outputs_0_y, color=color, font_size=9, bold=bold)
@@ -191,9 +196,9 @@ def draw_wait_warnings(gs, objects):
         pan_y = gs.screen.height / 2
         index = 0
         data = [
-            ['Wait for others...', gs.screen.width / 3, (210, 105, 30, 255), 50, 120],
-            [f'You lost the game! {gs.outputs[-1]}!', gs.screen.width / 20, (200, 60, 30, 255), 50, 220],
-            ['You won the game!', gs.screen.width / 4, (40, 100, 200, 255), 50, 220],
+            ['Wait for others...', gs.screen.width / 3, gs.colors['warn_wait'], 50, 120],
+            [f'You lost the game! {gs.outputs[-1]}!', gs.screen.width / 20, gs.colors['warn_lose'], 50, 220],
+            ['You won the game!', gs.screen.width / 4, gs.colors['warn_lose'], 50, 220],
         ]
         if 'Game won' in gs.outputs[-1] and gs.my_name not in gs.outputs[-1]:
             index = 1
@@ -219,7 +224,7 @@ def draw_game_state(gs, objects):
     ]
     for index, info in enumerate(data):
         info_y = info_0_y - index * 20
-        label = pyglet.text.Label(text=info[0], x=info_0_x, y=info_y, color=(255, 255, 255, 255), font_size=info[1])
+        label = pyglet.text.Label(text=info[0], x=info_0_x, y=info_y, color=gs.colors['lbl_menu'], font_size=info[1])
         objects.append(label)
 
     name = choice(['red_joker.png', 'black_joker.png'])
@@ -248,7 +253,8 @@ def draw_rivals(gs, objects):
             objects.append(card)
 
         pan = place_x - (13 * (len(name) - 1) / 2 - back_image.width / 6.4)
-        name_label = pyglet.text.Label(text=name, x=pan, y=label_y, bold=True, color=(255, 255, 255, 255), font_size=15)
+        name_label = pyglet.text.Label(text=name, x=pan, y=label_y, bold=True, color=gs.colors['lbl_menu'],
+                                       font_size=15)
         objects.append(name_label)
         place_x += place_0_x
 
@@ -431,6 +437,8 @@ def calculate_zero_coordinates(gs):
     gs.coord['info_0_y'] = 3 * screen.height / 8 + 60
     gs.coord['outputs_0_y'] = 8 * screen.height / 11
     gs.coord['outputs_0_x'] = screen.width / 20
+    gs.coord['edits_0_x'] = gs.screen.width / 36
+    gs.coord['edits_0_y'] = gs.screen.height / 36
 
 
 def create_game(gs):
@@ -451,6 +459,44 @@ def create_menu(gs):
     gs.last_raw_state = None
     menu_wnd.register_menu_events(gs)
     gs.game_finished = False
+
+
+def check_connection(gs, host, server_state, online, offline):
+    try:
+        response = requests.get(f'http://{host}/')
+        if response.status_code == 200:
+            server_state.text = online
+            server_state.color = gs.colors['server_on']
+    except requests.exceptions.ConnectionError:
+        server_state.text = offline
+        server_state.color = gs.colors['server_off']
+
+
+async def check_server_alive(gs):
+    while True:
+        if not gs.menu_window.visible:
+            await asyncio.sleep(5)
+            continue
+        pan_x, pan_y = 6 * gs.coord['edits_0_x'], 25 * gs.coord['edits_0_y']
+        online, offline = 'SERVER ONLINE', 'SERVER OFFLINE'
+        labels = []
+        server_state = None
+        for obj in gs.draw_objects:
+            if type(obj) is pyglet.text.Label:
+                labels.append(obj)
+                if obj.text in [offline, online]:
+                    server_state = obj
+        if type(server_state) is not pyglet.text.Label:
+            server_state = pyglet.text.Label(offline, x=pan_x, y=pan_y, bold=True, color=gs.colors['server_off'],
+                                             font_size=20)
+            gs.draw_objects.append(server_state)
+        host = gs.host
+        for index, label in enumerate(labels):
+            if 'Host Address' in label.text:
+                host = labels[index + 1].text
+
+        asyncio.get_event_loop().run_in_executor(None, check_connection, gs, host, server_state, online, offline)
+        await asyncio.sleep(1)
 
 
 def build_resources_path():
@@ -481,17 +527,17 @@ def main():
     gs.menu_window.set_visible(False)
     create_menu(gs)
     futures = [gs.loop.create_task(data_update(gs)), gs.loop.create_task(update(None, gs)),
-               gs.loop.create_task(windows_events_loop())]
+               gs.loop.create_task(windows_events_loop()), gs.loop.create_task(check_server_alive(gs))]
     gs.loop.run_until_complete(asyncio.gather(*futures))
 
 
 def create_menu_labels(gs):
     data = [
-        ['Macau REST API Client', 3 * gs.screen.width / 20, 18 * gs.screen.height / 20, (255, 255, 255, 255), 70],
-        ['Create New Game Settings: ', gs.screen.width / 36, 18 * gs.screen.height / 36, (255, 255, 255, 255), 20],
-        ['Join Game Settings: ', 21 * gs.screen.width / 36, 18 * gs.screen.height / 36, (255, 255, 255, 255), 20],
-        ['Press c to Create New Game', gs.screen.width / 36, 4 * gs.screen.height / 36, (255, 255, 128, 255), 30],
-        ['Press j to Join Game', 21 * gs.screen.width / 36, 4 * gs.screen.height / 36, (255, 255, 128, 255), 30]
+        ['Macau REST API Client', 3 * gs.screen.width / 20, 18 * gs.screen.height / 20, gs.colors['lbl_menu'], 70],
+        ['Create New Game Settings: ', gs.screen.width / 36, 18 * gs.screen.height / 36, gs.colors['lbl_menu'], 20],
+        ['Join Game Settings: ', 21 * gs.screen.width / 36, 18 * gs.screen.height / 36, gs.colors['lbl_menu'], 20],
+        ['Press c to Create New Game', gs.screen.width / 36, 4 * gs.screen.height / 36, gs.colors['lbl_bot'], 30],
+        ['Press j to Join Game', 21 * gs.screen.width / 36, 4 * gs.screen.height / 36, gs.colors['lbl_bot'], 30]
     ]
     for info in data:
         label = pyglet.text.Label(info[0], x=info[1], y=info[2], bold=True, color=info[3], font_size=info[4])
@@ -520,18 +566,15 @@ def make_logo(gs):
 
 
 def create_edit(gs, label, x0=1, y0=1, edit0=7, placeholder=''):
-    divider = 36
-    pan_y = (20-y0) * gs.screen.height / divider - 25
-    label_pan_x = x0 * gs.screen.width / divider
-    edit_pan_x = (edit0 + x0) * gs.screen.width / divider
-    host_label = pyglet.text.Label(label, x=label_pan_x, y=pan_y, bold=True, color=(255, 255, 255, 255), font_size=20)
+    label_pan_x, pan_y = x0 * gs.coord['edits_0_x'], (20-y0) * gs.coord['edits_0_y'] - 25
+    edit_pan_x = (edit0 + x0) * gs.coord['edits_0_x']
+    label = pyglet.text.Label(label, x=label_pan_x, y=pan_y, bold=True, color=gs.colors['lbl_menu'], font_size=20)
     square = pyglet.shapes.Rectangle(x=edit_pan_x, y=pan_y, width=240 * 7 / edit0, height=22, color=(255, 255, 255))
     square.anchor_x, square.anchor_y = square.width / 2, square.height / 2
     square.x += square.anchor_x
     square.y += square.anchor_y
-    host_edit = pyglet.text.Label(placeholder, x=edit_pan_x + 5, y=pan_y + 1, bold=True,
-                                  color=(0, 0, 0, 255), font_size=20)
-    gs.draw_objects += [host_label, square, host_edit]
+    edit = pyglet.text.Label(placeholder, x=edit_pan_x + 5, y=pan_y + 1, bold=True, color=(0, 0, 0, 255), font_size=20)
+    gs.draw_objects += [label, square, edit]
 
 
 if __name__ == '__main__':

@@ -105,7 +105,7 @@ def on_mouse_release_factory(gs):
             candidates = find_pointed_edits(gs, x, y, gs.check_if_inside)
             if len(candidates) > 0:
                 gs.active_edit = candidates[min(candidates.keys())]
-                gs.active_edit.color = (0, 0, 255)
+                gs.active_edit.color = (129, 178, 154)
                 for obj in gs.draw_objects:
                     if type(obj) is pyglet.text.Label and gs.check_if_inside(obj.x, obj.y, gs.active_edit):
                         gs.active_edit = obj
