@@ -332,7 +332,8 @@ def generate_request_choose_boxes(gs):
 
 def new_game_state(gs):
     gs.new_state = False
-    response = requests.get(f'http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/state?access_token={gs.access_token}')
+    end_point = f'http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/state?access_token={gs.access_token}'
+    response = requests.get(end_point, timeout=0.8)
     if response.status_code == 200:
         state = response.json()['state']
         if gs.last_raw_state is None:
@@ -468,7 +469,7 @@ def create_menu(gs):
 
 def check_connection(gs, host, server_state, online, offline):
     try:
-        response = requests.get(f'http://{host}/')
+        response = requests.get(f'http://{host}/', timeout=0.8)
         if response.status_code == 200:
             server_state.text = online
             server_state.color = gs.colors['server_on']
