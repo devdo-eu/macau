@@ -1,5 +1,8 @@
 import pyglet
 import requests
+import uvicorn
+from macau_server import app
+from multiprocessing import Process
 
 
 def on_key_release_factory(gs):
@@ -28,6 +31,30 @@ def switch_to_game(gs, symbol):
     elif symbol == pyglet.window.key.J:
         print("Joining Game!")
         join_existing_game(gs, labels)
+    elif symbol == pyglet.window.key.S:
+        start_game_server(gs, labels)
+
+
+def serve(host, port):
+    uvicorn.run(app, host=host, port=port)
+
+
+def start_game_server(gs, labels):
+    host = gs.host
+    no_server = True
+    for index, label in enumerate(labels):
+        if 'Host Address' in label.text:
+            host = labels[index + 1].text
+        if 'SERVER ONLINE' in label.text:
+            no_server = False
+
+    port = int(host.split(':')[1])
+    host = host.split(':')[0]
+    if no_server:
+        if gs.own_server is not None:
+            gs.own_server.kill()
+        gs.own_server = Process(target=serve, args=(host, port), daemon=True)
+        gs.own_server.start()
 
 
 def join_existing_game(gs, labels):

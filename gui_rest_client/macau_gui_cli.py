@@ -49,6 +49,7 @@ class GameState:
         self.card_images = {}
         self.last_raw_state = None
         self.loop = asyncio.get_event_loop()
+        self.own_server = None
         self.questions = [
             "Which card(s) from your hand do you want to play?:",
             "Enter VALUE of requested cards:",
@@ -542,6 +543,7 @@ def create_menu_labels(gs):
         ['Create New Game Settings: ', pan_x, 18 * pan_y, gs.colors['lbl_menu'], 20],
         ['Join Game Settings: ', 21 * pan_x, 18 * pan_y, gs.colors['lbl_menu'], 20],
         ['Press c to Create New Game', pan_x, 4 * pan_y, gs.colors['lbl_bot'], 30],
+        ['Press s to Start Server', 2 * pan_x, 27 * pan_y, gs.colors['lbl_bot'], 30],
         ['Press j to Join Game', 21 * pan_x, 4 * pan_y, gs.colors['lbl_bot'], 30]
     ]
     for info in data:
