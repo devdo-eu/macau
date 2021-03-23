@@ -195,13 +195,8 @@ def pikes_king_punishment(player, game_state):
     for index in range(len(players_list) - 1):
         if players_list[index + 1] == player.name:
             rival = gs.players[players_list[index]]
-            rival.print_foo(f'{rival.name} will have to take {gs.cards_to_take} cards.')
-            cards, gs.deck, how_many = rules.deal_cards(gs.deck, gs.cards_to_take)
-            rival.hand += cards
-            rival.print_foo(f'{len(cards)} cards dealt to {rival.name}. | on hand: {len(rival.hand)} cards.')
-            gs.cards_to_take = 0
-            gs.table.append(gs.lied_card)
-            gs.lied_card = None
+            gs.deck, gs.table, gs.lied_card, gs.cards_to_take = \
+                rules.take_cards_punishment(rival, gs.deck, gs.table, gs.lied_card, gs.cards_to_take)
             break
     return gs
 
