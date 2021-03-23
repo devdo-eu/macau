@@ -333,19 +333,16 @@ def generate_request_choose_boxes(gs):
 def new_game_state(gs):
     gs.new_state = False
     end_point = f'http://{gs.host}/macau/{gs.game_id}/{gs.my_name}/state?access_token={gs.access_token}'
-    response = requests.get(end_point, timeout=0.8)
+    response = requests.get(end_point, timeout=0.5)
     if response.status_code == 200:
         state = response.json()['state']
         if gs.last_raw_state is None:
             conditions = [True]
         else:
-            conditions = [len(gs.last_raw_state['outputs']) != len(state['outputs']),
-                          state['requested_value'] != gs.last_raw_state['requested_value'],
-                          state['requested_color'] != gs.last_raw_state['requested_color']]
+            conditions = [len(gs.last_raw_state['outputs']) != len(state['outputs'])]
         if True in conditions:
             gs.last_raw_state = state
             gs.new_state = True
-        sleep(0.1)
 
 
 async def data_update(gs):
@@ -353,7 +350,9 @@ async def data_update(gs):
         if gs.game_window.visible:
             snap = datetime.now()
             asyncio.get_event_loop().run_in_executor(None, new_game_state, gs)
+            await asyncio.sleep(1 / 2)
             if gs.new_state:
+                gs.new_state = False
                 state = gs.last_raw_state
                 gs.rivals = {}
                 gs.hand = state['hand']
@@ -367,9 +366,8 @@ async def data_update(gs):
                 gs.requested_color = state['requested_color']
                 gs.outputs = copy(state['outputs'])
                 gs.objects_to_draw()
-                gs.new_state = False
             print(f'After all: {datetime.now() - snap}')
-        await asyncio.sleep(1 / 1.0)
+        await asyncio.sleep(1 / 5)
 
 
 async def update(_dt, gs):
@@ -441,7 +439,7 @@ def calculate_zero_coordinates(gs):
     gs.coord['rivals_0_y'] = screen.height - screen.height / 10 - 5
     gs.coord['info_0_x'] = 7 * screen.width / 9
     gs.coord['info_0_y'] = 3 * screen.height / 8 + 60
-    gs.coord['outputs_0_y'] = 8 * screen.height / 11
+    gs.coord['outputs_0_y'] = 8 * screen.height / 11 - 24
     gs.coord['outputs_0_x'] = screen.width / 20
     gs.coord['edits_0_x'] = gs.screen.width / 36
     gs.coord['edits_0_y'] = gs.screen.height / 36

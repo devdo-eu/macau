@@ -71,7 +71,7 @@ def stage_card_to_play(gs, x, y):
     if len(candidates) > 0:
         chosen = candidates[min(candidates.keys())]
         if chosen['image'].y == hand_0_y:
-            chosen['image'].y = hand_0_y + chosen['image'].y / 1.5
+            chosen['image'].y = hand_0_y + chosen['image'].y / 3
             gs.to_play.append(chosen['name'])
         else:
             chosen['image'].y = hand_0_y
