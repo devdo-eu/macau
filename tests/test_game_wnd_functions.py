@@ -1,6 +1,6 @@
-import gui_rest_client.game_wnd_functions as game_wnd
-from gui_rest_client.macau_gui_cli import load_all_card_images
-from gui_rest_client.macau_gui_cli import build_resources_path, calculate_zero_coordinates
+import gui_rest_client.game_window as game_wnd
+from gui_rest_client.macau_gui import load_all_card_images
+from gui_rest_client.macau_gui import build_resources_path, calculate_zero_coordinates
 from tests.common import DrawableMock, setup, server
 import pyglet
 

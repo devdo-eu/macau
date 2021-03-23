@@ -1,6 +1,6 @@
-from gui_rest_client import macau_gui_cli as gui
-from gui_rest_client.macau_gui_cli import build_resources_path
-from gui_rest_client.macau_gui_cli import GameState
+from gui_rest_client import macau_gui as gui
+from gui_rest_client.macau_gui import build_resources_path
+from gui_rest_client.macau_gui import MacauGUI
 from tests.common import ScreenMock, WindowMock, DrawableMock, server, address
 import pytest
 from copy import copy
@@ -11,7 +11,7 @@ import asyncio
 
 @pytest.fixture(scope='module')
 def setup():
-    gs = GameState()
+    gs = MacauGUI()
     gs.screen = ScreenMock()
     gs.game_window = WindowMock()
     gs.menu_window = WindowMock()

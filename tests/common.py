@@ -2,7 +2,7 @@ import uvicorn
 import pytest
 from macau_server import app
 from multiprocessing import Process
-from gui_rest_client.macau_gui_cli import GameState
+from gui_rest_client.macau_gui import MacauGUI
 from time import sleep
 
 outputs = []
@@ -61,7 +61,7 @@ def server():
 
 @pytest.fixture
 def setup():
-    gs = GameState()
+    gs = MacauGUI()
     gs.screen = ScreenMock()
     gs.menu_window = WindowMock()
     gs.game_window = WindowMock()
