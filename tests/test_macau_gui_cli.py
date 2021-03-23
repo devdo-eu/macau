@@ -700,30 +700,30 @@ async def test_check_server_alive(server, setup):
 
 
 @pytest.mark.asyncio
-async def test_check_server_alive_offline(server, setup):
-    assert server is None
-    gs = copy(setup)
-    gs.menu_window.visible = True
-    gs.host = '122.54.67.211:4990'
-    try:
-        await asyncio.wait_for(gui.check_server_alive(gs), timeout=3)
-    except asyncio.TimeoutError:
-        pass
-    for obj in gs.draw_objects:
-        if type(obj) is pyglet.text.Label:
-            assert obj.text == 'SERVER OFFLINE'
-
-
-@pytest.mark.asyncio
 async def test_check_server_alive_online(server, setup):
     assert server is None
     gs = copy(setup)
     gs.menu_window.visible = True
     gs.host = address
     try:
-        await asyncio.wait_for(gui.check_server_alive(gs), timeout=3)
+        await asyncio.wait_for(gui.check_server_alive(gs), timeout=1)
     except asyncio.TimeoutError:
         pass
     for obj in gs.draw_objects:
         if type(obj) is pyglet.text.Label:
             assert obj.text == 'SERVER ONLINE'
+
+
+@pytest.mark.asyncio
+async def test_check_server_alive_offline(server, setup):
+    assert server is None
+    gs = copy(setup)
+    gs.menu_window.visible = True
+    gs.host = '122.54.67.211:4990'
+    try:
+        await asyncio.wait_for(gui.check_server_alive(gs), timeout=2)
+    except asyncio.TimeoutError:
+        pass
+    for obj in gs.draw_objects:
+        if type(obj) is pyglet.text.Label:
+            assert obj.text == 'SERVER OFFLINE'
