@@ -1,6 +1,7 @@
 import gui_rest_client.menu_wnd_functions as menu_wnd
 from gui_rest_client.macau_gui_cli import build_resources_path
 from tests.common import DrawableMock, server, setup
+from time import sleep
 import pyglet
 import requests
 
@@ -52,6 +53,31 @@ def test_on_mouse_release_factory(setup):
     on_mouse_release(25, 50, pyglet.window.mouse.LEFT, None)
     assert len(setup.menu_window.event_func) == 3
     setup.menu_window.event_func[-1]('t')
+
+
+def test_on_key_release_factory_server_start(setup):
+    setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:4090')
+    label = pyglet.text.Label('SERVER ONLINE')
+    setup.draw_objects.append(label)
+    on_key_release = menu_wnd.on_key_release_factory(setup)
+    on_key_release(pyglet.window.key.S, None)
+    offline = False
+    try:
+        response = requests.get('http://127.0.0.1:4090/', timeout=1)
+    except requests.exceptions.ConnectionError:
+        offline = True
+    assert offline
+
+    label = pyglet.text.Label('SERVER OFFLINE')
+    setup.draw_objects = helper_edit_create(0, 0, 'Host Address', '127.0.0.1:4090')
+    setup.draw_objects.append(label)
+    on_key_release(pyglet.window.key.S, None)
+    sleep(1)
+    online = False
+    response = requests.get('http://127.0.0.1:4090/', timeout=1)
+    if response.status_code == 200:
+        online = True
+    assert online
 
 
 def test_on_key_release_factory(setup, server):

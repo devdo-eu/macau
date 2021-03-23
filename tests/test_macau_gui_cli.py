@@ -78,7 +78,7 @@ def test_create_menu_labels(setup):
     gs.draw_objects = []
     assert len(gs.draw_objects) == 0
     gui.create_menu_labels(gs)
-    assert len(gs.draw_objects) == 5
+    assert len(gs.draw_objects) == 6
     for obj in gs.draw_objects:
         assert type(obj) is pyglet.text.Label
 
