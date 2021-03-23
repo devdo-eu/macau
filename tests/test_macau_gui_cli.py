@@ -242,7 +242,7 @@ def test_calculate_zero_coordinates(setup):
     assert round(gs.coord['info_0_x']) == 1244
     assert round(gs.coord['info_0_y']) == 398
     assert round(gs.coord['outputs_0_x']) == 80
-    assert round(gs.coord['outputs_0_y']) == 655
+    assert round(gs.coord['outputs_0_y']) == 631
     assert round(gs.coord['edits_0_x']) == 44
     assert round(gs.coord['edits_0_y']) == 25
 
