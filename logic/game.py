@@ -75,22 +75,46 @@ async def play_move(player, game_state):
     message = await player.gui_foo(gs, top_card, possible_plays)
     played = await player.input_foo(message)
     played = played.replace('*', '')
-    if len(played.split(',')) > 1:
-        packs, played_cards, valid = convert_input_to_cards(player, played, possible_plays)
-        if not valid:
-            player.print_foo(f'{played} is invalid. {player.name} makes invalid move.')
-            gs = punish_player(player, gs)
-            return player, gs
-    else:
-        played_cards = [rules.convert_to_card(played)]
-
-    if played_cards[0] not in possible_plays:
+    valid_play, played_cards = validate_move(player.hand, game_state, played)
+    if not valid_play:
         player.print_foo(f'{played} is invalid. {player.name} makes invalid move.')
         gs = punish_player(player, gs)
         return player, gs
 
     gs = await cards_play_evaluate(player, played_cards, gs)
     return player, gs
+
+
+def validate_move(hand, game_state, played):
+    """
+    Helper function used to check if potential player's move is valid and possible.
+    :param hand: list of cards on player hand
+    :param game_state: GameState object with all information about state of game
+    :param played: string with players potential move
+    :return: bool value of move validity, player's move as list of cards
+    """
+    gs = game_state
+    top_card = gs.lied_card
+    valid = True
+    if not top_card:
+        top_card = gs.table[-1]
+
+    active = rules.check_card_played_active(top_card)
+    if active and gs.lied_card:
+        possible_plays, can_move = \
+            rules.active_card_possible_plays(hand, top_card, gs.requested_color, gs.requested_value)
+    else:
+        possible_plays, can_move = rules.nonactive_card_possible_plays(hand, top_card, gs.requested_value)
+
+    if len(played.split(',')) > 1:
+        packs, played_cards, valid = convert_input_to_cards(hand, played, possible_plays)
+    else:
+        played_cards = [rules.convert_to_card(played)]
+
+    if played_cards[0] not in possible_plays:
+        valid = False
+
+    return valid, played_cards
 
 
 async def play_round(game_state):
@@ -208,10 +232,10 @@ async def cards_play_evaluate(player, played_cards, game_state):
     return gs
 
 
-def convert_input_to_cards(player, played, possible_plays):
+def convert_input_to_cards(hand, played, possible_plays):
     """
     Function used to convert player input to list of cards
-    :param player: Player objects
+    :param hand: list of cards on player hand
     :param played: input given by player
     :param possible_plays: list of possible plays from players hand
     :return: packs of cards possible to be played, list of cards played by player, True if cards are valid or False
@@ -219,14 +243,14 @@ def convert_input_to_cards(player, played, possible_plays):
     played_cards = []
     valid = True
     cards_value = ''
-    packs = rules.check_if_pack_on_hand(player.hand)
+    packs = rules.check_if_pack_on_hand(hand)
     packs = rules.check_if_packs_can_be_played(packs, possible_plays)
     for card_data in played.split(','):
         card = rules.convert_to_card(card_data)
         if card is None:
             continue
         cards_value = card[1]
-        if cards_value not in packs or card not in player.hand:
+        if cards_value not in packs or card not in hand:
             valid = False
         played_cards.append(card)
 
