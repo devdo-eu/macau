@@ -1,4 +1,6 @@
 import pyglet
+import logic.logic as rules
+from logic.game import validate_move
 
 
 def on_draw_factory(gs):
@@ -7,7 +9,28 @@ def on_draw_factory(gs):
         gs.game_window.clear()
         for obj in gs.draw_objects:
             obj.draw()
+        indicator = pyglet.shapes.Rectangle(16, 60, 3, 155, [166, 161, 94])
+        if not assistant(gs):
+            indicator.color = [147, 3, 46]
+        indicator.draw()
     return functor
+
+
+def assistant(gs):
+    hand = []
+    played = ' '
+    for card in gs.hand:
+        hand.append((card[0], card[1]))
+
+    for card in gs.to_play:
+        if len(str(card)) > 3 and card not in rules.colors:
+            played += f'{card},'
+
+    played = played[:-1]
+    if len(played) == 0:
+        return True
+
+    return validate_move(hand, gs, played)[0]
 
 
 def on_mouse_motion_factory(gs):
