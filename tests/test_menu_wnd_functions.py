@@ -1,5 +1,5 @@
-import gui_rest_client.menu_wnd_functions as menu_wnd
-from gui_rest_client.macau_gui_cli import build_resources_path
+import gui_rest_client.menu_window as menu_wnd
+from gui_rest_client.macau_gui import build_resources_path
 from tests.common import DrawableMock, server, setup
 from time import sleep
 import pyglet
