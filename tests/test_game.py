@@ -608,17 +608,21 @@ async def test_play_round_pikes_king_logic():
     assert ('hearts', 'K') in gs.table
 
     gs = deepcopy(saved_gs)
+    deck_len = len(gs.deck)
+    gs.table = gs.deck[:deck_len-3]
+    table_len = len(gs.table)
+    gs.deck = gs.deck[-3:]
     gs.players['One'].hand = [('hearts', 'K'), ('pikes', '3')]
     gs.players['One'].input_foo = helper_factory_async(['hearts K', 'pikes 3'])
     gs.players['Two'].hand = [('pikes', 'K'), ('clovers', '7')]
     gs.players['Two'].input_foo = helper_factory_async(['pikes K', 'clovers 7'], 1)
-    gs.table = [('hearts', '10')]
+    gs.table.append(('hearts', '10'))
     gs = await game.play_round(gs)
     assert len(gs.players['One'].hand) == 11
     assert len(gs.players['Two'].hand) == 1
-    assert len(gs.deck) == deck_len - 10
     assert gs.cards_to_take == 0
-    assert len(gs.table) == 3
+    assert table_len > len(gs.table)
+    assert len(gs.table) == 2
     assert ('hearts', 'K') in gs.table
     assert ('pikes', 'K') in gs.table
 
