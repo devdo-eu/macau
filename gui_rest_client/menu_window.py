@@ -21,7 +21,6 @@ class MenuWindow:
         self.access_token = ''
         self.draw_objects = []
         self.game_started = False
-        pass
 
     def create_menu(self):
         self.draw_objects = []
