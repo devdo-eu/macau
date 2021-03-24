@@ -117,7 +117,7 @@ class MacauGUI:
 
     def check_connection(self, host, server_state, online, offline):
         try:
-            response = requests.get(f'http://{host}/', timeout=0.8)
+            response = requests.get(f'http://{host}/', timeout=0.5)
             if response.status_code == 200:
                 server_state.text = online
                 server_state.color = self.colors['server_on']
@@ -151,19 +151,3 @@ class MacauGUI:
 
             asyncio.get_event_loop().run_in_executor(None, self.check_connection, host, server_state, online, offline)
             await asyncio.sleep(1)
-
-
-def main(display_factory=pyglet.canvas.Display, window_factory=pyglet.window.Window):
-    pyglet.resource.path = [common.build_resources_path()]
-    pyglet.resource.reindex()
-    card_images = common.load_all_card_images()
-    display = display_factory()
-    screen = display.get_default_screen()
-    menu_window = MenuWindow(screen, card_images, window_factory)
-    game_window = GameWindow(screen, card_images, window_factory)
-    macau_gui = MacauGUI(menu_window, game_window)
-    macau_gui.loop.run_until_complete(asyncio.gather(*macau_gui.tasks))
-
-
-if __name__ == '__main__':
-    main()

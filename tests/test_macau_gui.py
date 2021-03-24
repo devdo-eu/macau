@@ -186,3 +186,46 @@ async def test_check_server_alive_offline(server, macau_gui):
     for obj in mg.menu_window.draw_objects:
         if type(obj) is pyglet.text.Label:
             assert obj.text == 'SERVER OFFLINE'
+
+
+@pytest.mark.asyncio
+async def test_update(server, macau_gui):
+    assert server is None
+    mg = macau_gui
+    mg.menu_window.window.visible = True
+    mg.menu_window.game_started = True
+    mg.menu_window.host = address
+    mg.host = address
+    mg.my_name = 'Albert'
+    mg.access_token = ''
+    json_data = {'how_many_cards': 7, 'players_names': [mg.my_name, 'Test']}
+    response = requests.post(f"http://{mg.host}/macau", json=json_data)
+    assert response.status_code == 200
+    mg.game_id = response.json()['game_id']
+    mg.get_token()
+    assert mg.access_token != ''
+    try:
+        await asyncio.wait_for(mg.update(), timeout=0.5)
+    except asyncio.TimeoutError:
+        pass
+    assert not mg.menu_window.window.visible
+    assert not mg.menu_window.game_started
+    assert mg.game_window.window.visible
+
+    mg.ready_to_send = True
+    mg.game_window.my_move = ['invalid']
+    mg.game_window.to_play = ['invalid']
+    try:
+        await asyncio.wait_for(mg.update(), timeout=0.5)
+    except asyncio.TimeoutError:
+        pass
+    assert mg.game_window.to_play == []
+
+    mg.game_window.game_finished = True
+    try:
+        await asyncio.wait_for(mg.update(), timeout=0.5)
+    except asyncio.TimeoutError:
+        pass
+    assert not mg.game_window.game_finished
+    assert not mg.game_window.window.visible
+    assert mg.menu_window.window.visible

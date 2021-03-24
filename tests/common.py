@@ -66,6 +66,7 @@ class WindowMock:
         self.event_name = ''
         self.width = width
         self.height = height
+        self.has_exit = False
 
     def event(self, func):
         self.event_func.append(func)
@@ -89,3 +90,11 @@ class DrawableMock:
 
     def draw(self):
         self.visible = True
+
+
+class DisplayMock:
+    def __init__(self):
+        self.screen = ScreenMock()
+
+    def get_default_screen(self):
+        return self.screen
