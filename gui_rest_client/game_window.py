@@ -9,6 +9,9 @@ from copy import copy
 
 
 class GameWindow:
+    """
+    Class used to encapsulate all functionality related to game window of macau gui client.
+    """
     def __init__(self, screen, card_images, window_factory=pyglet.window.Window):
         self.screen = screen
         self.card_images = card_images
@@ -70,12 +73,18 @@ class GameWindow:
         return self.state['requested_color']
 
     def create_game(self, my_name, access_token, game_id):
+        """
+        Method used to create and register all important callback functions on window object.
+        """
         self.my_name = my_name
         self.access_token = access_token
         self.game_id = game_id
         handlers.register_game_events(self)
 
     def generate_request_choose_boxes(self):
+        """
+        Method used to generate visible cards to make color/value requests possible.
+        """
         colors = ['hearts', 'tiles', 'pikes', 'clovers']
         req_color = choice(colors)
         screen = self.screen
@@ -94,12 +103,20 @@ class GameWindow:
             pan += screen.width / 7
 
     def objects_to_draw(self, state):
+        """
+        Method used to draw all objects on game window to be visible for user.
+        :param state: dictionary with most of the data about state of macau game
+        """
         self.state = state
         self.draw_objects = []
         for draw in self.draw_queue:
             draw()
 
     def prepare_events_data(self):
+        """
+        Helper method used to prepare outputs from macau game state to be drawn on game window.
+        :return: list with few last important events from macau game
+        """
         report_macau = []
         outputs = copy(self.state['outputs'])
         for name, num_of_cards in self.rivals.items():
@@ -114,6 +131,9 @@ class GameWindow:
         return outputs
 
     def draw_events_data(self):
+        """
+        Helper method used to prepare events history sub-field on game window.
+        """
         outputs_0_x, outputs_0_y = self.coord['outputs_0_x'], self.coord['outputs_0_y']
         outputs = self.prepare_events_data()
         maximum_message_length = 66
@@ -146,6 +166,9 @@ class GameWindow:
                 outputs_0_y -= 12
 
     def draw_wait_warnings(self):
+        """
+        Helper method used to draw big caption in the middle of the game window screen.
+        """
         my_turn_now = False
         outputs = copy(self.state['outputs'])
         for question in self.questions:
@@ -173,6 +196,9 @@ class GameWindow:
             self.draw_objects.append(label)
 
     def draw_game_state(self):
+        """
+        Helper method used to draw additional information about macau game state at game window.
+        """
         info_0_x, info_0_y = self.coord['info_0_x'], self.coord['info_0_y']
         data = [
             [f'Game ID: {self.game_id}', 10],
@@ -200,6 +226,9 @@ class GameWindow:
         self.draw_objects.append(card)
 
     def draw_rivals(self):
+        """
+        Helper method used to draw player's rivals on the top of game window.
+        """
         rivals_0_x, rivals_0_y = self.coord['rivals_0_x'], self.coord['rivals_0_y']
         place_0_x = rivals_0_x / (len(self.rivals) + 1)
         place_x = place_0_x
@@ -219,6 +248,9 @@ class GameWindow:
             place_x += place_0_x
 
     def draw_table_pile(self):
+        """
+        Helper method used to draw played cards on the middle of game window.
+        """
         table_0_x, table_0_y = self.coord['table_0_x'], self.coord['table_0_y']
         offset = 40
         for card in self.table:
@@ -237,6 +269,9 @@ class GameWindow:
             self.draw_objects.append(card)
 
     def draw_deck_pile(self):
+        """
+        Helper method used to draw pile of fresh cards in the deck at the middle of the game window.
+        """
         deck = self.cards_in_deck
         if self.cards_in_deck > 300:
             deck = 300
@@ -252,6 +287,9 @@ class GameWindow:
             self.draw_objects.append(card)
 
     def draw_players_hand(self):
+        """
+        Helper method used to draw cards in player's hand on game window.
+        """
         ratio = len(self.hand) / 6
         if len(self.hand) < 9:
             ratio = 1.5
@@ -267,6 +305,9 @@ class GameWindow:
             self.draw_objects.append(card)
 
     def assistant(self):
+        """
+        Helper method used to draw small rectangle indicator as an assist for validity of player's move.
+        """
         hand = []
         played = ' '
         for card in self.hand:
@@ -283,6 +324,11 @@ class GameWindow:
         return validate_move(hand, self, played)[0]
 
     def move_cards_aside(self, to_be_seen):
+        """
+        Helper method used to move cards on the right from pointed card when there are a lot of cards
+        in player's hand
+        :param to_be_seen: cards pointed by mouse pointer
+        """
         move_next = False
         for card in self.draw_hand:
             if move_next:
@@ -291,6 +337,12 @@ class GameWindow:
                 move_next = True
 
     def choose_request(self, x, y, request='colors'):
+        """
+        Method used to choose card from value/color request
+        :param x: integer value of x axis
+        :param y: integer value of y axis
+        :param request: string with information what kind of request player triggers
+        """
         candidates = {}
         height = self.screen.height / 1.8
         request_box = self.color_box
@@ -310,6 +362,11 @@ class GameWindow:
                 self.to_play.remove(chosen['name'])
 
     def stage_card_to_play(self, x, y):
+        """
+        Method used to select card to be played as an next move from player's hand
+        :param x: integer value of x axis
+        :param y: integer value of y axis
+        """
         hand_0_x, hand_0_y = self.coord['hand_0_x'], self.coord['hand_0_y']
         candidates = {}
         for index, card in enumerate(self.draw_hand):
@@ -328,6 +385,9 @@ class GameWindow:
                 self.to_play.remove(chosen['name'])
 
     def prepare_move_to_send(self):
+        """
+        Method used to prepare player's move to be send to game server
+        """
         move = ''
         for card in self.to_play:
             move += f'{card}, '
