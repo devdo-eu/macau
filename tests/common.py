@@ -1,17 +1,11 @@
-import uvicorn
 import pytest
-from macau_server import app
 from multiprocessing import Process
-from gui_rest_client.macau_gui import MacauGUI
 from time import sleep
+from gui_rest_client.common import serve
 
 outputs = []
 helper_move = [-1, -1]
 address = '127.0.0.1:5000'
-
-
-def serve():
-    uvicorn.run(app, host="127.0.0.1", port=5000)
 
 
 def dumper_factory():
@@ -52,20 +46,11 @@ def helper_factory(lines, index=0):
 
 @pytest.fixture(scope='session')
 def server():
-    proc = Process(target=serve, args=(), daemon=True)
+    proc = Process(target=serve, args=('127.0.0.1', 5000), daemon=True)
     proc.start()
     sleep(0.5)
     yield
     proc.kill()
-
-
-@pytest.fixture
-def setup():
-    gs = MacauGUI()
-    gs.screen = ScreenMock()
-    gs.menu_window = WindowMock()
-    gs.game_window = WindowMock()
-    return gs
 
 
 class ScreenMock:
@@ -75,9 +60,12 @@ class ScreenMock:
 
 
 class WindowMock:
-    def __init__(self):
+    def __init__(self, width=0, height=0):
         self.event_func = []
         self.visible = True
+        self.event_name = ''
+        self.width = width
+        self.height = height
 
     def event(self, func):
         self.event_func.append(func)
