@@ -82,7 +82,7 @@ class MenuWindow:
         for obj in self.draw_objects:
             if type(obj) is pyglet.text.Label:
                 labels.append(obj)
-    
+
         if symbol == pyglet.window.key.C:
             print('Creating Game!')
             self.create_and_enter_new_game(labels)
@@ -100,7 +100,7 @@ class MenuWindow:
                 host = labels[index + 1].text
             if 'SERVER ONLINE' in label.text:
                 no_server = False
-    
+
         port = int(host.split(':')[1])
         host = host.split(':')[0]
         if no_server:

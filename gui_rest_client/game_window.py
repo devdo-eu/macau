@@ -16,7 +16,7 @@ class GameWindow:
         self.coord = common.calculate_zero_coordinates(screen)
         self.colors = common.color_palette()
         self.state = {'hand': [], 'rivals': {}, 'cards_in_deck': 0, 'table': [], 'lied_card': None, 'cards_to_take': 0,
-                      'turns_to_wait': 0, 'requested_value': None, 'requested_color': None}
+                      'turns_to_wait': 0, 'requested_value': None, 'requested_color': None, 'outputs': []}
         self.draw_objects = []
         self.draw_hand = []
         self.to_play = []
@@ -73,7 +73,6 @@ class GameWindow:
         self.my_name = my_name
         self.access_token = access_token
         self.game_id = game_id
-        self.generate_request_choose_boxes()
         handlers.register_game_events(self)
 
     def generate_request_choose_boxes(self):
@@ -96,24 +95,22 @@ class GameWindow:
 
     def objects_to_draw(self, state):
         self.state = state
-        self.outputs = copy(state['outputs'])
         self.draw_objects = []
         for draw in self.draw_queue:
             draw()
 
     def prepare_events_data(self):
         report_macau = []
+        outputs = copy(self.state['outputs'])
         for name, num_of_cards in self.rivals.items():
             if num_of_cards == 1:
                 report_macau.append(f"{name} has macau!")
-        if len(self.outputs) > 0:
-            last = [self.outputs.pop()]
-            self.outputs = self.outputs + report_macau + last
+        if len(outputs) > 0:
+            last = [outputs.pop()]
+            outputs = outputs + report_macau + last
 
-        if len(self.outputs) >= 28:
-            outputs = copy(self.outputs[-28:])
-        else:
-            outputs = copy(self.outputs)
+        if len(outputs) >= 28:
+            outputs = outputs[-28:]
         return outputs
 
     def draw_events_data(self):
@@ -150,22 +147,23 @@ class GameWindow:
 
     def draw_wait_warnings(self):
         my_turn_now = False
+        outputs = copy(self.state['outputs'])
         for question in self.questions:
-            if len(self.outputs) > 0 and question in self.outputs[-1]:
+            if len(outputs) > 0 and question in outputs[-1]:
                 my_turn_now = True
                 break
 
-        if not my_turn_now and len(self.outputs) > 0:
+        if not my_turn_now and len(outputs) > 0:
             pan_y = self.screen.height / 2
             index = 0
             data = [
                 ['Wait for others...', self.screen.width / 3, self.colors['warn_wait'], 50, 120],
-                [f'You lost the game! {self.outputs[-1]}!', self.screen.width / 20, self.colors['warn_lose'], 50, 220],
+                [f'You lost the game! {outputs[-1]}!', self.screen.width / 20, self.colors['warn_lose'], 50, 220],
                 ['You won the game!', self.screen.width / 4, self.colors['warn_lose'], 50, 220],
             ]
-            if 'Game won' in self.outputs[-1] and self.my_name not in self.outputs[-1]:
+            if 'Game won' in outputs[-1] and self.my_name not in outputs[-1]:
                 index = 1
-            elif 'Game won' in self.outputs[-1]:
+            elif 'Game won' in outputs[-1]:
                 index = 2
             data = data[index]
             background = pyglet.shapes.Rectangle(0, pan_y - 30, self.screen.width, 110, (0, 0, 0))
@@ -273,15 +271,15 @@ class GameWindow:
         played = ' '
         for card in self.hand:
             hand.append((card[0], card[1]))
-    
+
         for card in self.to_play:
             if len(str(card)) > 3 and card not in rules.colors:
                 played += f'{card},'
-    
+
         played = played[:-1]
         if len(played) == 0:
             return True
-    
+
         return validate_move(hand, self, played)[0]
 
     def move_cards_aside(self, to_be_seen):
@@ -335,11 +333,10 @@ class GameWindow:
             move += f'{card}, '
         self.my_move.append(move[:-2])
         print(self.my_move)
-        if 'J' in move:
-            self.draw_objects += list(self.value_box.values())
-            self.to_play = []
-        elif 'A' in move:
-            self.draw_objects += list(self.color_box.values())
+        if 'J' in move or 'A' in move:
+            self.generate_request_choose_boxes()
+            boxes = {True: list(self.value_box.values()), False: list(self.color_box.values())}
+            self.draw_objects += boxes['J' in move]
             self.to_play = []
         else:
             background = pyglet.shapes.Rectangle(0, self.screen.height / 2 - 30, self.screen.width, 110, (0, 0, 0))

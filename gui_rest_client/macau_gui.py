@@ -34,7 +34,7 @@ class MacauGUI:
             else:
                 self.game_window.game_finished = True
                 sleep(0.1)
-    
+
         print(f'TOKEN: {self.access_token}')
 
     def new_game_state(self):
@@ -68,7 +68,7 @@ class MacauGUI:
         while True:
             if self.menu_window.window.has_exit:
                 exit(0)
-    
+
             if self.menu_window.game_started:
                 common.switch_windows(self.game_window.window, self.menu_window.window)
                 self.host = self.menu_window.host
@@ -78,7 +78,7 @@ class MacauGUI:
                 self.game_window.create_game(self.my_name, self.access_token, self.game_id)
                 self.menu_window.game_started = False
                 continue
-    
+
             elif self.game_window.game_finished:
                 common.switch_windows(self.game_window.window, self.menu_window.window)
                 self.menu_window.create_menu()
@@ -86,13 +86,13 @@ class MacauGUI:
                 self.last_raw_state = None
                 self.game_window.game_finished = False
                 continue
-    
+
             if self.ready_to_send:
                 self.send_player_move()
 
             if not self.ready_to_send:
                 self.switch_send_flag()
-    
+
             await asyncio.sleep(1 / 5.0)
 
     def send_player_move(self):
@@ -106,7 +106,6 @@ class MacauGUI:
                 self.game_window.my_move.remove(move)
         self.game_window.to_play = []
         print(f'Sending was done in: {datetime.now() - snap}')
-        # self.generate_request_choose_boxes()
         self.ready_to_send = False
 
     def switch_send_flag(self):
@@ -149,16 +148,16 @@ class MacauGUI:
             for index, label in enumerate(labels):
                 if 'Host Address' in label.text:
                     host = labels[index + 1].text
-    
+
             asyncio.get_event_loop().run_in_executor(None, self.check_connection, host, server_state, online, offline)
             await asyncio.sleep(1)
 
 
-def main(display_factory=pyglet.canvas.Display(), window_factory=pyglet.window.Window):
+def main(display_factory=pyglet.canvas.Display, window_factory=pyglet.window.Window):
     pyglet.resource.path = [common.build_resources_path()]
     pyglet.resource.reindex()
     card_images = common.load_all_card_images()
-    display = display_factory
+    display = display_factory()
     screen = display.get_default_screen()
     menu_window = MenuWindow(screen, card_images, window_factory)
     game_window = GameWindow(screen, card_images, window_factory)
