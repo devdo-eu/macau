@@ -3,6 +3,11 @@ import pyglet
 
 
 def on_key_release_factory(window):
+    """
+    Function used to create specific on_key_release method for window property of MenuWindow object.
+    :param window: MenuWindow object
+    :return: functor with prepared on_key_release method
+    """
     def functor(symbol, _modifiers):
         if symbol == pyglet.window.key.BACKSPACE and type(window.active_edit) is pyglet.text.Label:
             window.active_edit.text = window.active_edit.text[:-1]
@@ -17,6 +22,11 @@ def on_key_release_factory(window):
 
 
 def on_draw_factory(window):
+    """
+    Function used to create specific on_draw method for window property of MenuWindow object.
+    :param window: MenuWindow object
+    :return: functor with prepared on_draw method
+    """
     def functor():
         pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
         window.window.clear()
@@ -31,6 +41,11 @@ def on_draw_factory(window):
 
 
 def on_mouse_motion_factory(window):
+    """
+    Function used to create specific on_mouse_motion method for window property of MenuWindow object.
+    :param window: MenuWindow object
+    :return: functor with prepared on_mouse_motion method
+    """
     def functor(x, y, _dx, _dy):
         for obj in window.draw_objects:
             if type(obj) is pyglet.shapes.Rectangle and common.check_if_inside(x, y, obj):
@@ -41,6 +56,11 @@ def on_mouse_motion_factory(window):
 
 
 def on_mouse_release_factory(window):
+    """
+    Function used to create specific on_mouse_release method for window property of MenuWindow object.
+    :param window: MenuWindow object
+    :return: functor with prepared on_mouse_release method
+    """
     def functor(x, y, button, _modifiers):
         window.active_edit = None
         if button == pyglet.window.mouse.LEFT:
@@ -65,6 +85,10 @@ def on_mouse_release_factory(window):
 
 
 def register_menu_events(window):
+    """
+    Function used to register all prepared methods inside window property of MenuWindow object.
+    :param window: MenuWindow object
+    """
     @window.window.event
     def on_key_release(symbol, modifiers):
         on_key_release_factory(window)(symbol, modifiers)
@@ -87,6 +111,10 @@ def register_menu_events(window):
 
 
 def empty_on_text_factory():
+    """
+    Function used to un-register on_text method of window property of MenuWindow object.
+    :return: functor with empty on_text method
+    """
     def functor(_text):
         pass
     return functor

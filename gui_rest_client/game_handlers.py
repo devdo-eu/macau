@@ -3,6 +3,11 @@ import pyglet
 
 
 def on_draw_factory(window):
+    """
+    Function used to create specific on_draw method for window property of GameWindow object.
+    :param window: GameWindow object
+    :return: functor with prepared on_draw method
+    """
     def functor():
         pyglet.gl.glClearColor(65 / 256.0, 65 / 256.0, 70 / 256.0, 1)
         window.window.clear()
@@ -17,6 +22,11 @@ def on_draw_factory(window):
 
 
 def on_mouse_motion_factory(window):
+    """
+    Function used to create specific on_mouse_motion method for window property of GameWindow object.
+    :param window: GameWindow object
+    :return: functor with prepared on_mouse_motion method
+    """
     def functor(x, y, _dx, _dy):
         for card in window.draw_hand:
             card.x = card.zero_x
@@ -34,6 +44,11 @@ def on_mouse_motion_factory(window):
 
 
 def on_mouse_release_factory(window):
+    """
+    Function used to create specific on_mouse_release method for window property of GameWindow object.
+    :param window: GameWindow object
+    :return: functor with prepared on_mouse_release method
+    """
     def functor(x, y, button, _modifiers):
         print(f'x: {x}, y: {y}')
 
@@ -58,6 +73,10 @@ def on_mouse_release_factory(window):
 
 
 def register_game_events(window):
+    """
+    Function used to register all prepared methods inside window property of GameWindow object.
+    :param window: GameWindow object
+    """
     @window.window.event
     def on_draw():
         on_draw_factory(window)()

@@ -9,6 +9,9 @@ import asyncio
 
 
 class MacauGUI:
+    """
+    Class responsible for all logic necessary to create and control macau gui client application.
+    """
     def __init__(self, menu_window: MenuWindow, game_window: GameWindow):
         self.game_window = game_window
         self.menu_window = menu_window
@@ -27,6 +30,9 @@ class MacauGUI:
                       self.loop.create_task(self.check_server_alive())]
 
     def get_token(self):
+        """
+        Method used to get valid token for game id and user name.
+        """
         if self.access_token == '':
             response = requests.get(f"http://{self.host}/macau/{self.game_id}/{self.my_name}/key")
             if response.status_code == 200:
@@ -38,6 +44,9 @@ class MacauGUI:
         print(f'TOKEN: {self.access_token}')
 
     def new_game_state(self):
+        """
+        Helper method used to check if there is available new game state at game server.
+        """
         self.new_state = False
         end_point = f'http://{self.host}/macau/{self.game_id}/{self.my_name}/state?access_token={self.access_token}'
         response = requests.get(end_point, timeout=0.5)
@@ -52,6 +61,9 @@ class MacauGUI:
                 self.new_state = True
 
     async def data_update(self):
+        """
+        Method used to refresh state of game at client application.
+        """
         while True:
             if self.game_window.window.visible:
                 snap = datetime.now()
@@ -65,6 +77,9 @@ class MacauGUI:
             await asyncio.sleep(1 / 5)
 
     async def update(self):
+        """
+        Method used to update all windows and state of game at client application.
+        """
         while True:
             if self.menu_window.window.has_exit:
                 exit(0)
@@ -96,6 +111,9 @@ class MacauGUI:
             await asyncio.sleep(1 / 5.0)
 
     def send_player_move(self):
+        """
+        Method used to send player's move from gui client to game server.
+        """
         snap = datetime.now()
         for move in self.game_window.my_move:
             response = requests.post(
@@ -109,6 +127,9 @@ class MacauGUI:
         self.ready_to_send = False
 
     def switch_send_flag(self):
+        """
+        Helper method used to check if player's move is ready to be send.
+        """
         move = self.game_window.my_move
         if len(move) == 1 and 'J' not in move[0] and 'A' not in move[0]:
             self.ready_to_send = True
@@ -116,6 +137,13 @@ class MacauGUI:
             self.ready_to_send = True
 
     def check_connection(self, host, server_state, online, offline):
+        """
+        Helper method used to check if server with given data is available.
+        :param host: string with IP:PORT format
+        :param server_state: Label object visible on menu window.
+        :param online: string with caption in case server is ONLINE
+        :param offline: string with caption in case server is OFFLINE
+        """
         try:
             response = requests.get(f'http://{host}/', timeout=0.5)
             if response.status_code == 200:
@@ -126,6 +154,9 @@ class MacauGUI:
             server_state.color = self.colors['server_off']
 
     async def check_server_alive(self):
+        """
+        Method used to check and update information visible on menu window about server availability
+        """
         while True:
             if not self.menu_window.window.visible:
                 await asyncio.sleep(5)

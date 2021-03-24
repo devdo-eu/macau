@@ -7,6 +7,9 @@ import gui_rest_client.common as common
 
 
 class MenuWindow:
+    """
+    Class used to encapsulate all functionality related to menu window of macau gui client.
+    """
     def __init__(self, screen, card_images, window_factory=pyglet.window.Window):
         self.screen = screen
         self.card_images = card_images
@@ -23,6 +26,9 @@ class MenuWindow:
         self.game_started = False
 
     def create_menu(self):
+        """
+        Method used to create and register all important callback functions on window object.
+        """
         self.draw_objects = []
         self.make_logo()
         self.create_menu_edits()
@@ -31,6 +37,9 @@ class MenuWindow:
         handlers.register_menu_events(self)
 
     def create_menu_labels(self):
+        """
+        Method used to create labels on menu window.
+        """
         pan_x, pan_y = self.coord['edits_0_x'], self.coord['edits_0_y']
         data = [
             ['Macau REST API Client', 3 * self.screen.width / 20,
@@ -46,6 +55,9 @@ class MenuWindow:
             self.draw_objects.append(label)
 
     def create_menu_edits(self):
+        """
+        Method used to create all edit fields on menu window.
+        """
         self.create_edit('Host Address:', 1, -5, 5, self.host)
         self.create_edit('Your Name:', 1, -4, 5, self.my_name)
         self.create_edit('Number of Cards:', 1, 3, 7, '5')
@@ -58,6 +70,14 @@ class MenuWindow:
             rival_name = ''
 
     def create_edit(self, label, x0=1, y0=1, edit0=7, placeholder=''):
+        """
+        Helper method used to create single edit field.
+        :param label: string object with caption on left side of edit field
+        :param x0: integer with shift value on x axis
+        :param y0: integer with shift value on y axis
+        :param edit0: integer with shift value of edit field on x axis
+        :param placeholder: string object with placeholder inside edit field
+        """
         label_pan_x, pan_y = x0 * self.coord['edits_0_x'], (20-y0) * self.coord['edits_0_y'] - 25
         edit_pan_x = (edit0 + x0) * self.coord['edits_0_x']
         label = pyglet.text.Label(label, x=label_pan_x, y=pan_y, bold=True, color=self.colors['lbl_menu'], font_size=20)
@@ -70,6 +90,9 @@ class MenuWindow:
         self.draw_objects += [label, square, edit]
 
     def make_logo(self):
+        """
+        Method used to create menu window logo
+        """
         for _ in range(6):
             card_name = choice(list(self.card_images.keys()))
             card_image = common.resize_center_card_image(self.card_images[card_name], self.screen.height, 4)
@@ -77,6 +100,10 @@ class MenuWindow:
             self.draw_objects.append(card)
 
     def switch_to_game(self, symbol):
+        """
+        Helper method used to get input from user and do required command
+        :param symbol: input key from user
+        """
         labels = []
         for obj in self.draw_objects:
             if type(obj) is pyglet.text.Label:
@@ -92,6 +119,10 @@ class MenuWindow:
             self.start_game_server(labels)
 
     def start_game_server(self, labels):
+        """
+        Method used to start internal game server on user request.
+        :param labels: list with Label object contains all labels visible on menu window
+        """
         host = self.host
         no_server = True
         for index, label in enumerate(labels):
@@ -109,6 +140,10 @@ class MenuWindow:
             self.own_server.start()
 
     def join_existing_game(self, labels):
+        """
+        Method used to join existing game with use of data inputted on menu window by user.
+        :param labels: list with Label object contains all labels visible on menu window
+        """
         for index, label in enumerate(labels):
             if 'Host Address' in label.text:
                 self.host = labels[index + 1].text
@@ -121,6 +156,10 @@ class MenuWindow:
         self.game_started = True
 
     def create_and_enter_new_game(self, labels):
+        """
+        Methos used to create and enter game with use of data inputted on menu window by user.
+        :param labels: list with Label object contains all labels visible on menu window
+        """
         num_of_cards = 5
         names = []
         for index, label in enumerate(labels):
@@ -140,6 +179,12 @@ class MenuWindow:
             self.game_started = True
 
     def find_pointed_edits(self, x, y):
+        """
+        Helper method used to find edit field selected on menu window by user.
+        :param x: integer with value of x axis
+        :param y: integer with value of y axis
+        :return: list of candidates to being selected
+        """
         candidates = {}
         for obj in self.draw_objects:
             if type(obj) is pyglet.shapes.Rectangle:
