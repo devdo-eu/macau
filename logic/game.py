@@ -1,6 +1,7 @@
 import logic.logic as rules
 from player.player import Player
 from player.cpu_player import CPUPlayer
+from copy import copy
 
 
 class GameState:
@@ -113,6 +114,13 @@ def validate_move(hand, game_state, played):
 
     if played_cards[0] not in possible_plays:
         valid = False
+
+    hand_copy = copy(hand)
+    for card in played_cards:
+        if card in hand_copy:
+            hand_copy.remove(card)
+        else:
+            valid = False
 
     return valid, played_cards
 
