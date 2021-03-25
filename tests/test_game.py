@@ -865,6 +865,20 @@ def test_pikes_king_punishment_with_skip_turn():
     assert len(gs.players['3'].hand) == 10
 
 
+def test_validate_move():
+    gs = game.GameState()
+    names = ['1', '2']
+    gs.deck, gs.table, gs.players = game.prepare_game(names)
+    gs.table = [('tiles', '7')]
+    gs.players['1'].hand = [('clovers', '7'), ('tiles', '7'), ('pikes', '7')]
+    valid, _ = game.validate_move(gs.players['1'].hand, gs, 'tiles 7, tiles 7, pikes 7')
+    assert not valid
+
+    valid, _ = game.validate_move(gs.players['1'].hand, gs, 'tiles 7, clovers 7, pikes 7')
+    assert valid
+
+
+
 @pytest.mark.asyncio
 async def test_play_game_logic(game_state):
     gs = game_state
@@ -900,6 +914,8 @@ async def test_cpu_self_game():
     game_state = game.GameState()
     names = [f'CPU{index}' for index in range(1, 18)]
     game_state.deck, game_state.table, game_state.players = game.prepare_game(names, 20, 50)
+    for player in game_state.players.values():
+        player.print_foo = dumper_factory()
     winners = await game.play_game(game_state)
     assert len(winners) > 0
     assert len(game_state.players[winners[0]].hand) == 0
