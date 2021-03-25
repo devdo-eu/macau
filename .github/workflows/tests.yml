@@ -16,11 +16,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8 with conda
+    - name: Set up Python 3.9 with conda
       uses: s-weigand/setup-conda@v1
       with:
         update-conda: true
-        python-version: 3.8
+        python-version: 3.9
         conda-channels: anaconda, conda-forge, conda-canary
     - name: Install dependencies
       run: |

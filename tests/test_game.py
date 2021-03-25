@@ -878,7 +878,6 @@ def test_validate_move():
     assert valid
 
 
-
 @pytest.mark.asyncio
 async def test_play_game_logic(game_state):
     gs = game_state
