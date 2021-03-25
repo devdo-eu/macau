@@ -117,9 +117,11 @@ class CPUPlayer(Player):
         hand_copy = copy(self.hand)
         if type(self.next_moves[0]) is list:
             for card in self.next_moves[0]:
-                hand_copy.remove(card)
+                if card in hand_copy:
+                    hand_copy.remove(card)
         else:
-            hand_copy.remove(self.next_moves[0])
+            if self.next_moves[0] in hand_copy:
+                hand_copy.remove(self.next_moves[0])
         return hand_copy
 
     def find_biggest(self, what='color'):
